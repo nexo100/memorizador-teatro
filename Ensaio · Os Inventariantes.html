@@ -103,7 +103,7 @@
     .app-container {
       max-width: 680px;
       margin: 0 auto;
-      padding: 12px 16px 88px;
+      padding: 12px 16px 120px;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -971,6 +971,23 @@
           </button>
         </div>
 
+        <!-- Backup & Restauração -->
+        <div class="form-group" style="background:var(--border-subtle); padding:12px; border-radius:10px;">
+          <label>💾 Backup de Segurança (Dados e Vozes):</label>
+          <p style="font-size:0.78rem; color:var(--fg-muted); margin:0 0 8px;">
+            Baixe um arquivo com todas as suas gravações reais e progresso para não perder nada se limpar ou trocar de celular.
+          </p>
+          <div style="display:flex; gap:8px;">
+            <button id="btnExportBackup" class="btn" style="flex:1; min-height:40px; font-size:0.85rem;">
+              📤 Exportar Backup
+            </button>
+            <label class="btn" style="flex:1; min-height:40px; font-size:0.85rem; cursor:pointer; text-align:center; display:inline-flex; align-items:center; justify-content:center;">
+              📥 Restaurar
+              <input type="file" id="fileImportBackup" accept=".json" style="display:none;">
+            </label>
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Zerar Progresso:</label>
           <button id="btnResetProgress" class="btn" style="width:100%; border-color:var(--danger); color:var(--danger); font-size:0.85rem;">
@@ -1564,15 +1581,23 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       if (el) el.textContent = msg;
     }
 
-    /* ==========================================================================
-       GRAVAÇÃO DE VOZ (MICROFONE NATIVO)
-       ========================================================================== */
+    function getSupportedMimeType() {
+      if (typeof MediaRecorder === 'undefined') return '';
+      const types = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/aac'];
+      for (const t of types) {
+        if (MediaRecorder.isTypeSupported(t)) return t;
+      }
+      return '';
+    }
+
     async function startCastRecording(speechIndex) {
       try {
         stopAllAudio();
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
+        const mimeType = getSupportedMimeType();
+        const options = mimeType ? { mimeType } : {};
+        mediaRecorder = new MediaRecorder(stream, options);
         recordingTargetIndex = speechIndex;
         isRecordingNow = true;
 
@@ -1581,7 +1606,8 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         };
 
         mediaRecorder.onstop = async () => {
-          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          const finalMime = mediaRecorder.mimeType || mimeType || 'audio/webm';
+          const blob = new Blob(audioChunks, { type: finalMime });
           stream.getTracks().forEach(t => t.stop());
           await saveCastAudio(speechIndex, blob);
           isRecordingNow = false;
@@ -1598,6 +1624,9 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           recordingSeconds++;
           const recCounter = $('recSeconds');
           if (recCounter) recCounter.textContent = `${recordingSeconds}s`;
+          if (recordingSeconds >= 60) {
+            stopCastRecording();
+          }
         }, 1000);
 
       } catch (err) {
@@ -1608,7 +1637,10 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
     }
 
     function stopCastRecording() {
-      if (recordingTimer) clearInterval(recordingTimer);
+      if (recordingTimer) {
+        clearInterval(recordingTimer);
+        recordingTimer = null;
+      }
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
       }
@@ -1923,7 +1955,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
               <span class="mastery-pill">Fala do parceiro</span>
             </div>
             <div class="speech-content">
-              ${speech.segments.map(seg => seg.type === 'rubric' ? ` <span class="rubric">(${escapeHtml(seg.text)})</span> `; : escapeHtml(seg.text)).join('')}
+              ${speech.segments.map(seg => seg.type === 'rubric' ? ` <span class="rubric">(${escapeHtml(seg.text)})</span> ` : escapeHtml(seg.text)).join('')}
             </div>
             <div class="action-row">
               <button class="btn btn-audio" id="btnSpeakPartner">🔊 Ouvir</button>
@@ -1973,6 +2005,18 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             <div class="pingpong-timer-box">
               <div class="pingpong-countdown" id="pingPongCountdownNum">${pingPongCountdown}</div>
               <div class="pingpong-label">⚡ Dispare a fala assim que a deixa terminar!</div>
+              <button class="btn btn-primary" style="margin-top:8px; min-height:42px; width:100%;" id="btnPingPongDone">⚡ Já falei! Conferir</button>
+            </div>
+          `;
+        }
+
+        // Modo Ponto Eletrônico: Botão de Pausa/Continuar
+        if (rehearsalMode === 'ponto') {
+          html += `
+            <div style="margin-bottom:12px; text-align:center;">
+              <button class="btn" style="min-height:38px; font-size:0.85rem;" id="btnTogglePonto">
+                ${pontoPaused ? '▶️ Continuar Ponto' : '⏸️ Pausar Ponto'}
+              </button>
             </div>
           `;
         }
@@ -2004,12 +2048,16 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         if (level === 0) {
           html += `
             <button class="btn btn-audio" id="btnAudioMy">🔊 Ouvir</button>
+            <button class="btn btn-record" id="btnRecordMy">${hasRealAudio ? '🎙️ Regravar voz' : '🎙️ Gravar voz'}</button>
+            ${hasRealAudio ? `<button class="btn" style="min-width:40px; padding:0 8px;" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
             <button class="btn btn-primary" id="btnHideWords">Já li — Esconder palavras ➔</button>
           `;
         } else if (!isRevealed) {
           html += `
             <button class="btn btn-hint" id="btnHint" title="Revela a próxima palavra oculta (D)">💡 Dica</button>
             <button class="btn btn-audio" id="btnAudioMy">🔊 Ouvir</button>
+            <button class="btn btn-record" id="btnRecordMy">${hasRealAudio ? '🎙️ Regravar voz' : '🎙️ Gravar voz'}</button>
+            ${hasRealAudio ? `<button class="btn" style="min-width:40px; padding:0 8px;" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
             <button class="btn btn-primary" id="btnCheck">👁️ Conferir (Espaço)</button>
           `;
         } else {
@@ -2017,6 +2065,8 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             <button class="btn btn-danger" id="btnWrong">❌ Errei (1)</button>
             <button class="btn btn-success" id="btnCorrect">✅ Acertei (2)</button>
             <button class="btn btn-audio" id="btnAudioMy">🔊</button>
+            <button class="btn btn-record" id="btnRecordMy">${hasRealAudio ? '🎙️ Regravar voz' : '🎙️ Gravar voz'}</button>
+            ${hasRealAudio ? `<button class="btn" style="min-width:40px; padding:0 8px;" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
           `;
         }
 
@@ -2057,6 +2107,23 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         startCastRecording(currentIndex);
       } else if (id === 'btnRecordCue') {
         if (currentIndex > 0) startCastRecording(currentIndex - 1);
+      } else if (id === 'btnRecordMy') {
+        startCastRecording(currentIndex);
+      } else if (id === 'btnPingPongDone') {
+        if (pingPongInterval) clearInterval(pingPongInterval);
+        pingPongInterval = null;
+        isRevealed = true;
+        renderView();
+      } else if (id === 'btnTogglePonto') {
+        pontoPaused = !pontoPaused;
+        if (pontoPaused) {
+          stopAllAudio();
+          showStatus('⏸️ Modo Ponto pausado.');
+        } else {
+          showStatus('▶️ Retomando Modo Ponto...');
+          startPontoFlow();
+        }
+        renderView();
       } else if (id === 'btnStopRecord') {
         stopCastRecording();
       } else if (id === 'btnDeleteCastAudio') {
@@ -2291,6 +2358,131 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         });
       }
     };
+
+    // BACKUP E RESTAURAÇÃO (SEGURANÇA DE DADOS NO CELULAR)
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function base64ToBlob(base64Data) {
+      const parts = base64Data.split(';base64,');
+      const contentType = parts[0].split(':')[1];
+      const raw = atob(parts[1]);
+      const rawLength = raw.length;
+      const uInt8Array = new Uint8Array(rawLength);
+      for (let i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+      }
+      return new Blob([uInt8Array], { type: contentType });
+    }
+
+    async function exportFullBackup() {
+      try {
+        showStatus('Gerando arquivo de backup...');
+        const db = await getIndexedDB();
+        const recordings = await new Promise((resolve, reject) => {
+          const tx = db.transaction('recordings', 'readonly');
+          const req = tx.objectStore('recordings').getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        const serializedRecordings = [];
+        for (const rec of recordings) {
+          if (rec.blob) {
+            const base64 = await blobToBase64(rec.blob);
+            serializedRecordings.push({ id: rec.id, base64, mime: rec.blob.type, timestamp: rec.timestamp });
+          }
+        }
+
+        const backupData = {
+          app: 'memorizador-teatro',
+          version: 2,
+          exportDate: new Date().toISOString(),
+          localStorage: {
+            memorizador_custom_script: localStorage.getItem('memorizador_custom_script'),
+            memorizador_actor: localStorage.getItem('memorizador_actor'),
+            memorizador_rate: localStorage.getItem('memorizador_rate'),
+            memorizador_voice: localStorage.getItem('memorizador_voice'),
+            memorizador_autoadvance: localStorage.getItem('memorizador_autoadvance'),
+            memorizador_wakelock: localStorage.getItem('memorizador_wakelock'),
+            memorizador_mode: localStorage.getItem('memorizador_mode'),
+            voice_actor_SERGIO: localStorage.getItem('voice_actor_SERGIO'),
+            voice_actor_BARBARA: localStorage.getItem('voice_actor_BARBARA'),
+            memorizador_niveis_SERGIO: localStorage.getItem('memorizador_niveis_SERGIO'),
+            memorizador_niveis_BARBARA: localStorage.getItem('memorizador_niveis_BARBARA'),
+          },
+          recordings: serializedRecordings
+        };
+
+        const jsonStr = JSON.stringify(backupData);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup-ensaio-teatro-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showStatus('Backup baixado com sucesso!');
+      } catch (err) {
+        alert('Erro ao exportar backup: ' + err.message);
+      }
+    }
+
+    async function importFullBackup(file) {
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data.localStorage || !Array.isArray(data.recordings)) {
+          throw new Error('Arquivo de backup inválido.');
+        }
+
+        Object.keys(data.localStorage).forEach(key => {
+          const val = data.localStorage[key];
+          if (val !== null && val !== undefined) {
+            localStorage.setItem(key, val);
+          }
+        });
+
+        const db = await getIndexedDB();
+        const tx = db.transaction('recordings', 'readwrite');
+        const store = tx.objectStore('recordings');
+        await store.clear();
+
+        for (const rec of data.recordings) {
+          if (rec.base64) {
+            const blob = base64ToBlob(rec.base64);
+            store.put({ id: rec.id, blob, timestamp: rec.timestamp || Date.now() });
+          }
+        }
+
+        tx.oncomplete = () => {
+          alert('Backup restaurado com sucesso! Seus dados e áudios foram recuperados.');
+          initializeApp();
+          $('modalSettings').hidden = true;
+        };
+      } catch (err) {
+        alert('Erro ao restaurar backup: ' + err.message);
+      }
+    }
+
+    $('btnExportBackup').onclick = exportFullBackup;
+    $('fileImportBackup').onchange = (e) => {
+      if (e.target.files && e.target.files[0]) {
+        importFullBackup(e.target.files[0]);
+      }
+    };
+
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
 
     $('btnResetProgress').onclick = () => {
       if (confirm(`Zerar todo o histórico de memorização para ${selectedActor}?`)) {
