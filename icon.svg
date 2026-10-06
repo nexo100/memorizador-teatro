@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#2a1f1d"/>
+      <stop offset="100%" stop-color="#141311"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd54f"/>
+      <stop offset="100%" stop-color="#d4af37"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e06e5e"/>
+      <stop offset="100%" stop-color="#8e2a2a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  
+  <!-- Máscara da Tragédia -->
+  <g transform="translate(140, 160)">
+    <path d="M 0,40 C 0,-20 120,-20 120,40 C 120,130 90,170 60,170 C 30,170 0,130 0,40 Z" fill="url(#accent)" stroke="#ffd54f" stroke-width="6"/>
+    <!-- Olhos caídos -->
+    <ellipse cx="35" cy="45" rx="14" ry="8" fill="#141311" transform="rotate(-15, 35, 45)"/>
+    <ellipse cx="85" cy="45" rx="14" ry="8" fill="#141311" transform="rotate(15, 85, 45)"/>
+    <!-- Boca triste -->
+    <path d="M 35,120 Q 60,85 85,120" stroke="#141311" stroke-width="10" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Máscara da Comédia -->
+  <g transform="translate(250, 190)">
+    <path d="M 0,40 C 0,-20 120,-20 120,40 C 120,130 90,170 60,170 C 30,170 0,130 0,40 Z" fill="#f8f5f0" stroke="#ffd54f" stroke-width="6"/>
+    <!-- Olhos alegres -->
+    <path d="M 22,50 Q 36,30 50,50" stroke="#141311" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M 70,50 Q 84,30 98,50" stroke="#141311" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <!-- Boca sorrindo -->
+    <path d="M 30,100 Q 60,140 90,100 Z" fill="#141311"/>
+  </g>
+</svg>

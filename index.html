@@ -1,0 +1,2372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#8e2a2a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ensaio">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>🎭 Ensaio Teatral · Os Inventariantes</title>
+  <style>
+    :root {
+      --bg: #f8f5f0;
+      --card-bg: #ffffff;
+      --fg: #1d1b18;
+      --fg-muted: #6e675d;
+      --border: #dfd7cb;
+      --border-subtle: #eee7dc;
+      --accent: #8e2a2a;
+      --accent-hover: #752020;
+      --accent-soft: rgba(142, 42, 42, 0.08);
+      --accent-text: #ffffff;
+      --success: #2e7d32;
+      --success-soft: rgba(46, 125, 50, 0.12);
+      --danger: #c62828;
+      --danger-soft: rgba(198, 40, 40, 0.12);
+      --hint-bg: #fff8e1;
+      --hint-border: #ffd54f;
+      --hint-fg: #8d6e15;
+      --recording: #e53935;
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.07);
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #141311;
+        --card-bg: #1e1b17;
+        --fg: #ede7dc;
+        --fg-muted: #9c9486;
+        --border: #353028;
+        --border-subtle: #25221c;
+        --accent: #e06e5e;
+        --accent-hover: #ea8172;
+        --accent-soft: rgba(224, 110, 94, 0.14);
+        --accent-text: #141311;
+        --success: #66bb6a;
+        --success-soft: rgba(102, 187, 106, 0.15);
+        --danger: #ef5350;
+        --danger-soft: rgba(239, 83, 80, 0.15);
+        --hint-bg: #2b2513;
+        --hint-border: #795d13;
+        --hint-fg: #ffe082;
+        --recording: #ef5350;
+        --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+        --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #141311;
+      --card-bg: #1e1b17;
+      --fg: #ede7dc;
+      --fg-muted: #9c9486;
+      --border: #353028;
+      --border-subtle: #25221c;
+      --accent: #e06e5e;
+      --accent-hover: #ea8172;
+      --accent-soft: rgba(224, 110, 94, 0.14);
+      --accent-text: #141311;
+      --success: #66bb6a;
+      --success-soft: rgba(102, 187, 106, 0.15);
+      --danger: #ef5350;
+      --danger-soft: rgba(239, 83, 80, 0.15);
+      --hint-bg: #2b2513;
+      --hint-border: #795d13;
+      --hint-fg: #ffe082;
+      --recording: #ef5350;
+    }
+
+    *, *:before, *:after { box-sizing: inherit; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button, input, select, textarea {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .app-container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 12px 16px 88px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .app-header {
+      margin-bottom: 12px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .play-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      border-radius: 9px;
+      padding: 6px 11px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+    .btn-header:hover {
+      background: var(--border-subtle);
+      border-color: var(--fg-muted);
+    }
+
+    /* TABS DE PERSONAGEM */
+    .character-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 8px 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .character-tabs::-webkit-scrollbar { display: none; }
+
+    .char-tab {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+      touch-action: manipulation;
+    }
+    .char-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+      box-shadow: var(--shadow-sm);
+    }
+    .char-badge {
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.07);
+    }
+    .char-tab.active .char-badge {
+      background: rgba(255,255,255,0.22);
+    }
+
+    /* PROGRESS BAR */
+    .progress-section {
+      margin: 8px 0 10px;
+    }
+    .progress-bar-bg {
+      height: 6px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      margin-top: 5px;
+      font-family: system-ui, sans-serif;
+    }
+
+    /* FILTRO DE BEATS DRAMÁTICOS */
+    .beat-selector-bar {
+      margin-bottom: 8px;
+    }
+    .beat-select {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--fg);
+      cursor: pointer;
+    }
+
+    /* TOOLBAR ROW */
+    .toolbar-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 10px;
+      margin-bottom: 10px;
+    }
+    .mode-select {
+      background: transparent;
+      border: none;
+      color: var(--fg);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+    .mode-select:focus {
+      outline: 2px solid var(--accent);
+    }
+    .toolbar-toggles {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .toggle-chip {
+      font-size: 0.82rem;
+      color: var(--fg-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      user-select: none;
+    }
+    .toggle-chip input {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* STATUS DE VOZ E TOAST */
+    .status-toast {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      font-family: system-ui, sans-serif;
+      margin-bottom: 6px;
+      min-height: 1.2em;
+    }
+
+    /* ÁREA DO ENSAIO */
+    .rehearsal-card-container {
+      flex: 1;
+    }
+
+    /* DIDASCÁLIA / AÇÃO DE CENA */
+    .scene-direction {
+      font-style: italic;
+      color: var(--fg-muted);
+      font-size: 0.92rem;
+      background: var(--accent-soft);
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      line-height: 1.45;
+    }
+
+    /* CARTÃO DA DEIXA (CUE) */
+    .cue-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    .cue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .cue-tag {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .cue-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .btn-cue-audio {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      cursor: pointer;
+      color: var(--fg);
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-cue-audio:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-cue-record {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      cursor: pointer;
+      color: var(--recording);
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .cue-text {
+      font-size: 1.05rem;
+      color: var(--fg-muted);
+      font-style: italic;
+      line-height: 1.45;
+      margin: 0;
+    }
+    .cue-highlight-end {
+      color: var(--fg);
+      font-weight: 600;
+      font-style: normal;
+    }
+
+    /* CARTÃO DA FALA PRINCIPAL */
+    .speech-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+
+    .card-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .speaker-meta-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .speaker-name {
+      font-family: system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg);
+    }
+    .real-audio-badge {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: rgba(229, 57, 53, 0.12);
+      color: var(--recording);
+      font-weight: 700;
+      font-family: system-ui, sans-serif;
+    }
+    .mastery-pill {
+      font-family: system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: var(--border-subtle);
+      color: var(--fg-muted);
+    }
+    .mastery-pill.lv0 { background: rgba(198, 40, 40, 0.1); color: var(--danger); }
+    .mastery-pill.lv1, .mastery-pill.lv2 { background: rgba(230, 150, 0, 0.15); color: #b7791f; }
+    .mastery-pill.lv3, .mastery-pill.lv4 { background: var(--success-soft); color: var(--success); }
+
+    /* TEXTO DA FALA */
+    .speech-content {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      margin: 14px 0 20px;
+      word-break: break-word;
+    }
+    .speech-content .rubric {
+      font-family: system-ui, sans-serif;
+      font-style: italic;
+      color: var(--fg-muted);
+      font-size: 0.95rem;
+      display: inline;
+      padding: 0 3px;
+    }
+    .masked-word {
+      letter-spacing: 0.12em;
+      color: var(--fg-muted);
+      font-weight: 600;
+      background: var(--border-subtle);
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+    .first-letter-word {
+      color: var(--fg);
+      font-weight: 700;
+      background: var(--border-subtle);
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+    .first-letter-word .dots {
+      color: var(--fg-muted);
+      letter-spacing: 0.08em;
+      font-weight: normal;
+    }
+    .hint-revealed {
+      background: var(--hint-bg);
+      border-bottom: 2px solid var(--hint-border);
+      color: var(--hint-fg);
+      font-weight: 700;
+      padding: 0 4px;
+      border-radius: 3px;
+    }
+    .full-memory-placeholder {
+      display: inline-block;
+      font-style: italic;
+      color: var(--fg-muted);
+      font-size: 1rem;
+      padding: 12px;
+      background: var(--border-subtle);
+      border-radius: 8px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* MODO PING-PONG / TIMER */
+    .pingpong-timer-box {
+      margin-bottom: 14px;
+      text-align: center;
+      padding: 12px;
+      background: var(--accent-soft);
+      border-radius: 10px;
+      border: 1px solid var(--accent);
+    }
+    .pingpong-countdown {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: system-ui, sans-serif;
+      line-height: 1;
+    }
+    .pingpong-label {
+      font-size: 0.82rem;
+      color: var(--fg-muted);
+      margin-top: 4px;
+    }
+
+    /* BARRA DE GRAVAÇÃO ATIVA */
+    .recording-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(229, 57, 53, 0.12);
+      border: 1px solid var(--recording);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+      color: var(--recording);
+      font-weight: 700;
+    }
+    .recording-pulse {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--recording);
+      animation: pulse 1s infinite;
+      margin-right: 6px;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(1.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* BOTÕES DE AÇÃO */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .btn {
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--fg);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+      touch-action: manipulation;
+    }
+    .btn:active {
+      transform: scale(0.97);
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+      flex: 1;
+      min-width: 140px;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+    .btn-success {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+      flex: 1;
+    }
+    .btn-danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+      flex: 1;
+    }
+    .btn-hint {
+      background: var(--hint-bg);
+      border-color: var(--hint-border);
+      color: var(--hint-fg);
+    }
+    .btn-record {
+      border-color: var(--recording);
+      color: var(--recording);
+    }
+
+    /* FOOTER FIXO / NAVEGAÇÃO */
+    .app-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+      z-index: 100;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .footer-inner {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .nav-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-nav {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn-nav:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .btn-nav-center {
+      background: transparent;
+      border: none;
+      color: var(--fg);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+    }
+    .keyboard-guide {
+      font-size: 0.72rem;
+      color: var(--fg-muted);
+      text-align: center;
+      margin-top: 4px;
+      font-family: system-ui, sans-serif;
+    }
+    kbd {
+      background: var(--border-subtle);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-family: inherit;
+    }
+
+    /* MODAIS */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-backdrop[hidden] {
+      display: none !important;
+    }
+    .modal-content {
+      background: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h2 {
+      font-size: 1.15rem;
+      margin: 0;
+    }
+    .btn-close {
+      background: transparent;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--fg-muted);
+      padding: 0 6px;
+      line-height: 1;
+    }
+    .modal-filter-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--card-bg);
+      overflow-x: auto;
+    }
+    .filter-tab {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .filter-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-text);
+    }
+    .modal-body {
+      padding: 16px 18px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* LISTA DO ÍNDICE */
+    .index-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: var(--card-bg);
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.15s;
+    }
+    .index-item:hover {
+      border-color: var(--accent);
+    }
+    .index-item.current {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .index-item-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-family: system-ui, sans-serif;
+    }
+    .index-item-who {
+      font-weight: 700;
+      color: var(--fg);
+    }
+    .index-item-text {
+      font-size: 0.92rem;
+      color: var(--fg-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0;
+    }
+
+    /* FORMULÁRIO DE OPÇÕES */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--fg);
+      font-family: system-ui, sans-serif;
+    }
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--fg);
+      font-size: 0.9rem;
+    }
+    .voice-select-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    textarea.form-control {
+      font-family: monospace;
+      font-size: 0.82rem;
+      min-height: 160px;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-top">
+        <h1 class="play-title" id="playTitle">🎭 Os Inventariantes</h1>
+        <div class="header-actions">
+          <button id="btnOpenIndex" class="btn-header" title="Índice de Falas (Atalho: I)">📋 Falas</button>
+          <button id="btnOpenSettings" class="btn-header" title="Opções & Vozes">⚙️ Opções</button>
+        </div>
+      </div>
+
+      <!-- Abas de Personagens -->
+      <div class="character-tabs" id="characterTabs"></div>
+
+      <!-- Barra de Progresso e Métricas -->
+      <div class="progress-section">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <div class="progress-info">
+          <span id="masteryText">0 de 0 dominadas</span>
+          <span id="counterText">Fala 1 de 58</span>
+        </div>
+      </div>
+
+      <!-- Filtro de Beats Dramáticos -->
+      <div class="beat-selector-bar">
+        <select id="selectBeat" class="beat-select" title="Filtrar por bloco dramático da cena">
+          <option value="all">🎭 Cena Completa (Todas as 58 falas)</option>
+          <option value="0">Beat 1: A Fuga & A Captura (Falas 1-11)</option>
+          <option value="1">Beat 2: A Arma & O Desprezo (Falas 12-23)</option>
+          <option value="2">Beat 3: Os Primeiros Disparos (Falas 24-34)</option>
+          <option value="3">Beat 4: O Desabafo dos 10 Anos (Falas 35-44)</option>
+          <option value="4">Beat 5: A Loucura & Clímax (Falas 45-58)</option>
+        </select>
+      </div>
+
+      <!-- Barra de Modos e Áudio -->
+      <div class="toolbar-row">
+        <div>
+          <select id="selectMode" class="mode-select" title="Modo de ensaio">
+            <option value="cena">Modo: Cena Toda (sequencial)</option>
+            <option value="minhas">Modo: Só Minhas Falas + Deixas</option>
+            <option value="fraquezas">Modo: Foco nas Fraquezas</option>
+            <option value="pingpong">Modo: Ping-Pong de Deixas (Reflexo)</option>
+            <option value="ponto">Modo: Ponto Eletrônico (Fone de Ouvido)</option>
+          </select>
+        </div>
+        <div class="toolbar-toggles">
+          <label class="toggle-chip" title="Ouvir áudio da fala do colega">
+            <input type="checkbox" id="chkVoice" checked>
+            <span>🔊 Voz</span>
+          </label>
+          <label class="toggle-chip" title="Avançar sozinho quando o colega terminar">
+            <input type="checkbox" id="chkAutoAdvance">
+            <span>⚡ Auto</span>
+          </label>
+          <label class="toggle-chip" title="Manter tela do celular ligada no ensaio">
+            <input type="checkbox" id="chkWakeLock" checked>
+            <span>👁️ Tela</span>
+          </label>
+        </div>
+      </div>
+      <div class="status-toast" id="statusMessage"></div>
+    </header>
+
+    <!-- ÁREA PRINCIPAL DO ENSAIO -->
+    <main id="mainApp" class="rehearsal-card-container">
+      <!-- Injetado dinamicamente via JavaScript -->
+    </main>
+
+    <!-- NAVEGAÇÃO FIXA NO RODAPÉ -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <div class="nav-controls">
+          <button id="btnPrev" class="btn-nav" title="Fala anterior (←)">‹ Anterior</button>
+          <button id="btnNavIndex" class="btn-nav-center" title="Abrir índice completo">
+            <span id="navCounterLabel">Fala 1 / 58</span>
+          </button>
+          <button id="btnNext" class="btn-nav" title="Próxima fala (→)">Próxima ›</button>
+        </div>
+        <div class="keyboard-guide">
+          Atalhos: <kbd>Espaço</kbd> Ler/Conferir • <kbd>1</kbd> Errei • <kbd>2</kbd> Acertei • <kbd>D</kbd> Dica • <kbd>←</kbd><kbd>→</kbd> Navegar
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL: ÍNDICE DE FALAS -->
+  <div id="modalIndex" class="modal-backdrop" hidden>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📋 Falas da Cena</h2>
+        <button id="btnCloseIndex" class="btn-close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-filter-tabs">
+        <button class="filter-tab active" data-filter="all">Todas</button>
+        <button class="filter-tab" data-filter="mine">Minhas falas</button>
+        <button class="filter-tab" data-filter="weak">Em aprendizado</button>
+        <button class="filter-tab" data-filter="recorded">Com voz real 🎙️</button>
+      </div>
+      <div class="modal-body" id="indexListContainer"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: OPÇÕES, VOZES E ROTEIRO -->
+  <div id="modalSettings" class="modal-backdrop" hidden>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚙️ Opções & Vozes do Elenco</h2>
+        <button id="btnCloseSettings" class="btn-close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Nível A: Seletor de Vozes Nativas do Celular -->
+        <div class="form-group">
+          <label>🎙️ Voz do Celular para SÉRGIO:</label>
+          <div class="voice-select-row">
+            <select id="voiceSelect_SERGIO" class="form-control"></select>
+            <button class="btn" style="min-height:38px; padding:0 10px;" id="btnTestVoice_SERGIO">🔊</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>🎙️ Voz do Celular para BÁRBARA:</label>
+          <div class="voice-select-row">
+            <select id="voiceSelect_BARBARA" class="form-control"></select>
+            <button class="btn" style="min-height:38px; padding:0 10px;" id="btnTestVoice_BARBARA">🔊</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="rangeSpeechRate">Velocidade da Voz: <span id="rateLabel">0.95x</span></label>
+          <input type="range" id="rangeSpeechRate" min="0.75" max="1.3" step="0.05" value="0.95" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label>Gerenciar Áudios Reais Gravados:</label>
+          <button id="btnClearAllRecordings" class="btn" style="width:100%; font-size:0.85rem; border-color:var(--border);">
+            🗑️ Excluir todas as gravações de voz do elenco
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>Zerar Progresso:</label>
+          <button id="btnResetProgress" class="btn" style="width:100%; border-color:var(--danger); color:var(--danger); font-size:0.85rem;">
+            Zerar níveis de memorização deste personagem
+          </button>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;">
+
+        <div class="form-group">
+          <label for="scriptEditor">Texto da Peça (Formato Dramatúrgico):</label>
+          <textarea id="scriptEditor" class="form-control"></textarea>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button id="btnSaveScript" class="btn btn-primary" style="flex:1;">Salvar e Carregar Texto</button>
+            <button id="btnRestoreOriginal" class="btn" style="flex:1;">Restaurar "Os Inventariantes"</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEXTO PADRÃO DA PEÇA -->
+  <script type="text/plain" id="defaultPlay">**OS**** INVENTARIANTES**
+
+**Texto Teatral de Walter Paiva (Adaptação Dramatúrgica Depurada e Lapidada)**
+
+**Personagens:**
+
+- **Juliano:** Um ancião mefítico (65 a 70 anos aproximadamente).
+
+- **Bárbara:** Mulher de Juliano (60 a 65 anos aproximadamente).
+
+- **Sérgio:** Filho de Juliano e Bárbara (35 anos aproximadamente).
+
+**Cenário:**
+
+Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atmosfera lúdica de sombria degradação.
+
+*(Entra Juliano, um ancião mefítico pelas moléstias que o torturam com requintes de crueldade, movendo-se desesperadamente e com intensa fragilidade. Impossibilitado de falar, seus olhos turvos clamam por socorro. Em sua perseguição, entram Sérgio e Bárbara, cada qual com sua peculiar caracterização ameaçadora. Sérgio exala a agressividade irônica e cansada de quem definhou naquele ambiente; Bárbara traz uma rigidez contida, arrastando uma dor antiga. Sérgio delicia-se com a vulnerabilidade e o desespero do pai.)*
+
+**SÉRGIO:** *(Sarcástico.)* Aonde vai com tanta pressa, papai?
+
+**BÁRBARA:** Não corra, Juliano. Não corra mais!
+
+**SÉRGIO:** Está desperdiçando seu tão precioso fôlego!
+
+**BÁRBARA:** *(Tentando abraçá-lo com condescendência distante.)* Venha cá! *(Juliano tenta escapar das duas criaturas. Após correr muito, imobiliza-se. Está alucinado de dor. Fixa o olhar na plateia com grande dificuldade. Busca o olhar de Bárbara, mas ela desvia o rosto.)* O que está vendo, querido?
+
+**SÉRGIO:** *(Dando uma gargalhada.)* Encontrou uma luz no fim do túnel? *(Aproxima-se.)* Aposto que é a morte vindo em sua direção... *(Juliano clama por todas as suas forças para fugir, mas não consegue mover um músculo sequer. Suas energias estão esgotadas. Fatalmente, só consegue suspirar.)*
+
+**BÁRBARA:** *(Ajeita a cabeça de Juliano com frieza mecânica.)* Eu sabia que você não ia conseguir, Juliano. Sinto muito. *(Acomodando-o.)* Sente-se aqui e descanse.
+
+**SÉRGIO:** *(Amarrando-o com ataduras usadas e sujas.)* Fique tranquilo. Isto é só para termos certeza de que você não fugirá de novo, seu cagão!
+
+**BÁRBARA:** *(Censurando-o com voz seca.)* Sérgio!
+
+**SÉRGIO:** *(Irônico.)* O que foi?
+
+**BÁRBARA:** Você fala demais!
+
+**SÉRGIO:** Como devo me dirigir a esta... assombração?
+
+**BÁRBARA:** *(Chegando às lágrimas.)* Pare, Sérgio!
+
+**SÉRGIO:** *(Abraçando-a.)* Ei, o que há? Nada disso, nada de lamentos. Já é tarde e todos têm seus objetivos nesta vida, *(Encara Juliano.)* por mais insanos que possam parecer a certos demônios... *(Voltando-se a Bárbara.)* E estamos aqui dispostos a cumprir a nossa missão "divina". Esqueceu, mamãe?
+
+**BÁRBARA:** *(Encarando-o.)* Sérgio...
+
+**SÉRGIO:** *(Acentuando a eloquência.)* Seja forte, dona Bárbara! Não deixe a emoção dissimular sua consciência. Pelo menos uma vez na vida, encare a realidade de frente!
+
+**BÁRBARA:** *(Breve pausa. Vagarosamente, desenrola de um lenço um revólver. Fixa seu olhar em Juliano. Dirige-se a ele sendo seguida por Sérgio.)* Vamos acabar logo com isso. *(Sérgio aplaude. Juliano, atônito, procura livrar-se das amarras, mas não consegue.)*
+
+**SÉRGIO:** Seja um bom menino e comporte-se!
+
+**BÁRBARA:** *(Sentando-se ao lado de Juliano.)* Juliano, você está horrível. Seu aspecto é repugnante e nojento, o cheiro de sua pele chega a dar náuseas e você se sangra todo ao urinar.
+
+**SÉRGIO:** *(Agarrando-o violentamente pelos testículos.)* Isto aqui fede, sangra e faz a gente vomitar! Está entendendo? *(Juliano solta um gemido abafado, quase desfalecendo.)* Que que há? Já cagou de novo? *(Examina-o. Grita.)* De novo? Sabe há quantos anos a gente aguenta isso? Alguma vez na vida você já limpou as suas cagadas? Responda!
+
+**BÁRBARA:** *(Suspira.)* Não sabemos mais como cuidar de você, Juliano. Você não come mais nada. Não é mesmo, Sérgio? *(Sérgio continua examinando-o com desdém.)* Tudo lhe faz mal, Juliano. Também não sabemos quando descansa, pois você dorme com os olhos abertos! *(Amargurada.)* Estou assustada, Juliano. Não suporto mais!
+
+**SÉRGIO:** *(Sorridente, pega a arma de Bárbara.)* Mas, veja só! Conseguimos, enfim, encontrar uma solução para esta tortura, um modo plenamente justo de realizar este ato de misericórdia familiar. *(Fitando-o nos olhos.)* Chame de eutanásia, se quiser.
+
+**BÁRBARA:** Desejamos que tudo termine bem, Juliano. Sem dor, sem sofrimento...
+
+**SÉRGIO:** Sem culpa, também!
+
+**BÁRBARA:** Sim, é isto. Suplicamos que o destino decida tudo — somente ele.
+
+**SÉRGIO:** *(Prepara o revólver entusiasticamente.)* Pronto: a “roleta russa” pode começar. O revólver é passado a cada jogador, que deverá acionar o gatilho contra a própria cabeça. Se a câmara estiver vazia e ressoar apenas um “clic”, muito bem: é um ponto. Do contrário, é o perdedor... *(Sorrindo.)* para sempre! *(Aponta a arma contra a própria têmpora.)* Posso começar? *(Momento de hesitação. O clima é tenso. Aciona o gatilho. Disparo 1 — Sérgio: apenas um "clic". Alívio sutil na cena. A arma é passada para Bárbara.)*
+
+**BÁRBARA:** *(Colocando-se em pé.)* Sabe, Juliano. A proposta foi de Sérgio, mas eu gostei muito da ideia. Dessa forma não há injustiça, não há erro. Ninguém aqui está assassinando ninguém. Eu preciso acreditar que o destino de cada um aqui será o mesmo de antes, entende? Só estamos dando um jeito de apressar as coisas... *(Engatilha o revólver.)* Eu pensei que iria sofrer neste momento, Juliano. Mas, pelo contrário, estou sentindo uma sensação boa, muito boa. Uma sensação de alívio... *(Suspira.)* Sinto que talvez eu possa descansar, enfim. *(Virando-se para Sérgio, que lhe estende um sorriso.)* A propósito, Juliano, é preciso que saiba que, se você for o perdedor, um novo mundo será tomado em nossas vidas. *(Encarando-o.)* Mas, se um de nós deixar de viver, o outro continuará cuidando de você – amargurado ou não. *(Encostando a arma no crânio e fechando os olhos.)* Que tudo siga o seu caminho... *(Aciona o gatilho. Disparo 2 — Bárbara: apenas um “clic”. Chora em silêncio.)*
+
+**SÉRGIO:** *(Toma a arma com ímpeto, encarando Juliano, que se contorce em pavor.)* Muito bem, meu pai: chegou a sua vez de jogar! Está ansioso, não? Dá para perceber. *(Forte.)* Eu queria ter um espelho aqui para você ver a sua fuça roxa de pavor!
+
+**BÁRBARA:** Sérgio!
+
+**SÉRGIO:** *(Extremamente irônico. Juliano tenta mover a cabeça.)* Oh, queira desculpar-me. Havia me esquecido que, além de mudo, você está quase completamente cego, também. É uma pena que talvez não consiga mesmo se ver assim: tão ativo, disposto, cheio de energia — até tentando lutar como um homem de verdade. *(Acentuando a eloquência.)* Só que é tarde demais para você buscar um ideal. *(Engatilha a arma. Aponta a arma para Juliano, que permanece inerte, incapaz de segurar o objeto.)* Mesmo que seja o ideal de viver! *(Constatando a incapacidade do pai, Sérgio encosta a arma na própria cabeça.)* Como você nunca consegue fazer nada... eu jogo por você! *(Aciona o gatilho. Disparo 3 — Sérgio joga por Juliano: câmara vazia. Permanece em silêncio por um segundo. Encarando a nuca de Juliano.)* Por que você voltou?
+
+**BÁRBARA:** *(Em tom baixo.)* Ele não tinha para onde ir.
+
+**SÉRGIO:** *(Rindo sem humor, numa respiração curta.)* Não tinha... Pai pródigo. Sumiu quando eu era um garoto e voltou dez anos atrás arrebentado, arrastando esse bagaço pra cá. *(Pausa.)* Dez anos. Limpando fralda. Lavando pus. Larguei o curso... larguei o trabalho... larguei tudo. Eu fiquei nesta casa por você, mãe.
+
+*(Silêncio denso. Bárbara desvia o olhar lentamente, incapaz de olhar para Sérgio.)*
+
+**SÉRGIO:** *(Voz baixa.)* Quando ele ainda tinha braço pra rachar a sua cara... eu entrava na frente. E quando ele voltou caindo aos pedaços... você nem precisou pedir. Eu vi nos seus olhos. Como é que eu ia embora?
+
+**BÁRBARA:** *(Com voz rasgada.)* Eu devia ter mandado você ir.
+
+**SÉRGIO:** *(Seco.)* Você nunca mandou.
+
+**BÁRBARA:** *(Pausa longa. Olha para a parede desbotada.)* Eu sei. Eu tinha pavor de ficar sozinha com os restos dele. *(Passa a mão pelo próprio braço.)* Eu vi a sua vida parar aqui do meu lado, Sérgio... e eu me calei.
+
+*(Sérgio engole em seco. Limpa o rosto com brutalidade. Respira fundo, força um sorriso largo e assume novamente uma postura empertigada, usando a teatralidade como escudo.)*
+
+**SÉRGIO:** *(Com ironia grandiloquente.)* Mas passaram-se os anos, dona Bárbara... e é muito bom saber que, dentro de alguns instantes, eu poderei começar tudo de novo! Embora eu já esteja com esta idade e tão atormentado por tudo isso, pode acreditar que estou com mais garra do que nunca! Fatalmente, irei reconquistar o meu espaço neste mundo tão grande e maravilhoso! *(Olhando para o revólver.)* Ou, se o jogo do destino preferir assim, irei brilhar em outra dimensão. Lá no alto, com certeza, entre os mais lindos deuses do Olimpo! *(Dá uma risada histriônica. Encosta a arma na própria têmpora.)* Você admira esta minha força, não é mesmo, pai? Confesse! Eu sei o porquê: eu simplesmente represento toda aquela determinação que você sempre quis possuir um dia na vida e nunca conseguiu. Sempre evitou, fugiu ou fracassou! *(Segura o queixo de Juliano, direcionando o rosto do pai para si, embora saiba da visão quase nula dele.)* Olhe para mim, "papai"! Veja o meu sorriso, sinta o brilho dos meus olhos: eu quero que você olhe para mim! *(Sérgio aciona o gatilho. Disparo 4 — Sérgio: câmara vazia. Pausa. Sérgio sorri.)* Ainda está vivo? Até que suas pontes de safena estão mais sólidas do que eu pensava... *(Oferece o revólver a Bárbara. Bárbara recua dois passos, encarando a arma com pavor.)*
+
+**BÁRBARA:** *(Grito contido.)* Chega!
+
+**SÉRGIO:** *(Estranhando.)* O que houve?
+
+**BÁRBARA:** Pare, Sérgio. Por favor, pare!
+
+**SÉRGIO:** *(Segurando o revólver. Balança a cabeça negativamente.)* Não, minha mãe!
+
+**BÁRBARA:** Sérgio! Pense bem no que estamos fazendo. Não tem sentido!
+
+**SÉRGIO:** É claro que tem!
+
+**BÁRBARA:** Sinto que vou morrer!
+
+**SÉRGIO:** *(Num tom baixo, definitivo.)* Talvez, mãe!
+
+**BÁRBARA:** Sérgio. Ouça-me!
+
+**SÉRGIO:** É a sua vez de jogar, dona Bárbara. *(Grita.)* Jogue agora!
+
+**BÁRBARA:** *(Súplice.)* Não...
+
+**SÉRGIO:** *(Voz embargada.)* Pois, então, eu jogo por você!
+
+**BÁRBARA:** *(Sobressalto.)* Não! *(Sérgio encosta a arma na própria cabeça e dispara. Disparo 5 — Sérgio joga por Bárbara: câmara vazia. O estalo seco ecoa. Bárbara e Sérgio se agarram num abraço tenso e exausto. Juliano move os lábios sem emitir som, tremendo na cadeira. Sérgio e Bárbara soltam-se lentamente e olham para Juliano com um sorriso estático. Dirigem-se a ele.)*
+
+**SÉRGIO:** *(Numa melodia sarcástica.)* Olá, perdedor! Este é o disparo número seis!
+
+**BÁRBARA:** *(Carinhosa.)* Descanse em paz, querido. Seja feliz.
+
+**SÉRGIO:** *(Radiante.)* Bem feliz!
+
+**BÁRBARA:** *(Ajeita o colarinho sujo de Juliano com cuidado automático. Beija-lhe a testa.)* Fique tranquilo. Não vai doer nada!
+
+**SÉRGIO:** *(Tira um lenço do bolso, limpa delicadamente uma nesga de saliva no canto da boca de Juliano.)* Sabe por que você tem medo da morte? Porque você nunca teve coragem de viver!
+
+**BÁRBARA:** Lembre-se agora dos bons momentos, querido.
+
+**SÉRGIO:** Viva este momento como nunca!
+
+**BÁRBARA:** Adeus... *(Sérgio engatilha o revólver e o encosta na têmpora de Juliano. Blecaute imediato. Ouve-se o disparo seco. Foco de luz em resistência sobre Juliano morto na cadeira de rodas. A cadeira gira lentamente e a iluminação vai se esvaziando até a escuridão total.)*
+
+**SÉRGIO:** *(Em off. Num sussurro comedido.)* Perdão, pai!
+
+**FIM**</script>
+
+  <!-- LÓGICA DO APLICATIVO -->
+  <script>
+    /* ==========================================================================
+       APLICATIVO DE ENSAIO E MEMORIZAÇÃO TEATRAL (PWA MOBILE)
+       ========================================================================== */
+
+    const $ = id => document.getElementById(id);
+    const escapeHtml = str => (str || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+    // BEATS DRAMÁTICOS DE "OS INVENTARIANTES"
+    const DRAMA_BEATS = [
+      { name: "Beat 1: A Fuga & A Captura (Falas 1-11)", start: 0, end: 10 },
+      { name: "Beat 2: A Arma & O Desprezo (Falas 12-23)", start: 11, end: 22 },
+      { name: "Beat 3: Os Primeiros Disparos (Falas 24-34)", start: 23, end: 33 },
+      { name: "Beat 4: O Desabafo dos 10 Anos (Falas 35-44)", start: 34, end: 43 },
+      { name: "Beat 5: A Loucura & Clímax (Falas 45-58)", start: 44, end: 57 }
+    ];
+
+    // ESTADO GLOBAL
+    let speeches = [];
+    let characters = [];
+    let selectedActor = '';
+    let currentIndex = 0;
+    let rehearsalMode = 'cena'; // 'cena' | 'minhas' | 'fraquezas' | 'pingpong' | 'ponto'
+    let selectedBeat = 'all'; // 'all' ou índice do beat
+    let masteryLevels = [];
+    let isRevealed = false;
+    let hintsUsedThisLine = 0;
+    let partnerVoiceEnabled = true;
+    let autoAdvanceEnabled = false;
+    let wakeLockEnabled = true;
+    let speechRate = 0.95;
+    let availableVoices = [];
+    let activeUtterance = null;
+    let activeAudioPlayer = null;
+    let autoAdvanceTimer = null;
+    let wakeLock = null;
+
+    // Gravação de voz real
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingTimer = null;
+    let recordingSeconds = 0;
+    let recordingTargetIndex = -1;
+    let isRecordingNow = false;
+
+    // Estado do Ping-Pong e Ponto
+    let pingPongCountdown = 4;
+    let pingPongInterval = null;
+    let pontoStep = 0; // 0=deixa, 1=espera ator, 2=sussurro
+
+    /* ==========================================================================
+       PWA SERVICE WORKER & WAKE LOCK
+       ========================================================================== */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    async function updateWakeLock() {
+      try {
+        if (wakeLockEnabled && 'wakeLock' in navigator) {
+          if (!wakeLock) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => { wakeLock = null; });
+          }
+        } else if (!wakeLockEnabled && wakeLock) {
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      } catch (err) {}
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && wakeLockEnabled) {
+        updateWakeLock();
+      }
+    });
+
+    function triggerHaptic(type = 'tap') {
+      try {
+        if ('vibrate' in navigator) {
+          if (type === 'tap') navigator.vibrate(25);
+          else if (type === 'success') navigator.vibrate([20, 30, 20]);
+          else if (type === 'error') navigator.vibrate([40, 50, 40]);
+        }
+      } catch (e) {}
+    }
+
+    /* ==========================================================================
+       INDEXEDDB: GRAVAÇÃO DA VOZ REAL DO ELENCO (NÍVEL C)
+       ========================================================================== */
+    let dbInstance = null;
+    function getIndexedDB() {
+      if (dbInstance) return Promise.resolve(dbInstance);
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('EnsaioTeatralDB', 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('recordings')) {
+            db.createObjectStore('recordings', { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = () => {
+          dbInstance = req.result;
+          resolve(dbInstance);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveCastAudio(speechIdx, blob) {
+      const db = await getIndexedDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('recordings', 'readwrite');
+        tx.objectStore('recordings').put({ id: speechIdx, blob, timestamp: Date.now() });
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function getCastAudio(speechIdx) {
+      const db = await getIndexedDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('recordings', 'readonly');
+        const req = tx.objectStore('recordings').get(speechIdx);
+        req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function deleteCastAudio(speechIdx) {
+      const db = await getIndexedDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('recordings', 'readwrite');
+        tx.objectStore('recordings').delete(speechIdx);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function clearAllCastAudios() {
+      const db = await getIndexedDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('recordings', 'readwrite');
+        tx.objectStore('recordings').clear();
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    /* ==========================================================================
+       PARSER DRAMATÚRGICO
+       ========================================================================== */
+    function parseScriptText(rawText) {
+      const lines = rawText.split(/\r?\n/);
+      const parsed = [];
+      let pendingDirections = [];
+
+      for (let rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        const charMatch = line.match(/^\*\*([^*:]+):\*\*\s*(.*)$/);
+        if (charMatch) {
+          const who = charMatch[1].trim();
+          const rawContent = charMatch[2].trim();
+
+          if (!rawContent && (who === 'Personagens' || who === 'Cenário' || who === 'Texto')) {
+            continue;
+          }
+
+          const regex = /(\*?\([^\)]+\)\*?)/g;
+          const parts = rawContent.split(regex);
+          const segments = [];
+          const spokenParts = [];
+
+          for (let part of parts) {
+            if (!part) continue;
+            const isRubric = /^\*?\(.*\)\*?$/.test(part.trim());
+            if (isRubric) {
+              const cleanRubric = part.replace(/^\*?\(\s*/, '').replace(/\s*\)\*?$/, '').replace(/\*/g, '').trim();
+              if (cleanRubric) segments.push({ type: 'rubric', text: cleanRubric });
+            } else {
+              const cleanText = part.replace(/\*/g, '').trim();
+              if (cleanText) {
+                segments.push({ type: 'speech', text: cleanText });
+                spokenParts.push(cleanText);
+              }
+            }
+          }
+
+          if (segments.length > 0) {
+            parsed.push({
+              who,
+              segments,
+              spokenText: spokenParts.join(' '),
+              directions: [...pendingDirections]
+            });
+            pendingDirections = [];
+          }
+        } else if (line.startsWith('*(') && line.endsWith(')*')) {
+          const cleanDir = line.slice(2, -2).replace(/\*/g, '').trim();
+          pendingDirections.push(cleanDir);
+        }
+      }
+
+      return parsed;
+    }
+
+    /* ==========================================================================
+       MECANISMO DE MÁSCARA E MEMORIZAÇÃO
+       ========================================================================== */
+    function hashCoord(i, j) {
+      let x = (i * 73856093) ^ (j * 19349663);
+      x = Math.imul(x ^ (x >>> 13), 1274126177);
+      return Math.abs(x ^ (x >>> 16)) % 100;
+    }
+
+    function maskWord(word, mode) {
+      const match = word.match(/^([^\p{L}\p{N}]*)([\p{L}\p{N}]+)([^\p{L}\p{N}]*)$/u);
+      if (!match) return escapeHtml(word);
+      const [, lead, core, trail] = match;
+
+      if (mode === 'initial') {
+        const first = core[0];
+        const restDots = '.'.repeat(Math.max(1, Math.min(3, core.length - 1)));
+        return `${escapeHtml(lead)}<span class="first-letter-word">${escapeHtml(first)}<span class="dots">${restDots}</span></span>${escapeHtml(trail)}`;
+      } else {
+        const blank = '_'.repeat(Math.max(2, core.length));
+        return `${escapeHtml(lead)}<span class="masked-word">${blank}</span>${escapeHtml(trail)}`;
+      }
+    }
+
+    function renderSpeechHtml(speechObj, speechIndex, level, hintsRevealed) {
+      if (level === 0 || isRevealed) {
+        return speechObj.segments.map(seg => {
+          if (seg.type === 'rubric') {
+            return ` <span class="rubric">(${escapeHtml(seg.text)})</span> `;
+          }
+          return escapeHtml(seg.text);
+        }).join('');
+      }
+
+      if (level >= 4 && hintsRevealed === 0) {
+        const totalWords = speechObj.spokenText.split(/\s+/).filter(Boolean).length;
+        return speechObj.segments.map(seg => {
+          if (seg.type === 'rubric') {
+            return ` <span class="rubric">(${escapeHtml(seg.text)})</span> `;
+          }
+          return '';
+        }).join('') + `<div class="full-memory-placeholder">🔒 De memória total (${totalWords} palavras) — diga em voz alta!</div>`;
+      }
+
+      let wordCounter = 0;
+      let hintGiven = 0;
+
+      return speechObj.segments.map(seg => {
+        if (seg.type === 'rubric') {
+          return ` <span class="rubric">(${escapeHtml(seg.text)})</span> `;
+        }
+
+        const words = seg.text.split(/(\s+)/);
+        return words.map(w => {
+          if (/^\s+$/.test(w) || !w) return w;
+          const currentWordIdx = wordCounter++;
+
+          let isHidden = false;
+          let mode = 'blank';
+
+          if (level === 1) {
+            isHidden = hashCoord(speechIndex, currentWordIdx) < 35;
+          } else if (level === 2) {
+            isHidden = hashCoord(speechIndex, currentWordIdx) < 68;
+          } else if (level === 3) {
+            isHidden = true;
+            mode = 'initial';
+          } else if (level >= 4) {
+            isHidden = true;
+            mode = 'blank';
+          }
+
+          if (isHidden && hintGiven < hintsRevealed) {
+            hintGiven++;
+            return `<span class="hint-revealed" title="Palavra revelada">${escapeHtml(w)}</span>`;
+          }
+
+          if (isHidden) {
+            return maskWord(w, mode);
+          }
+          return escapeHtml(w);
+        }).join('');
+      }).join('');
+    }
+
+    /* ==========================================================================
+       ÁUDIO HÍBRIDO (VOZ REAL OU SINTETIZADOR DE VOZ)
+       ========================================================================== */
+    function loadVoices() {
+      try {
+        if (window.speechSynthesis) {
+          availableVoices = speechSynthesis.getVoices() || [];
+          populateVoiceSelectors();
+        }
+      } catch (e) {
+        availableVoices = [];
+      }
+    }
+
+    if (window.speechSynthesis) {
+      loadVoices();
+      try { speechSynthesis.addEventListener('voiceschanged', loadVoices); } catch (e) {}
+    }
+
+    function populateVoiceSelectors() {
+      const ptVoices = availableVoices.filter(v => /^pt/i.test(v.lang));
+      const listToUse = ptVoices.length > 0 ? ptVoices : availableVoices;
+
+      ['SERGIO', 'BARBARA'].forEach(charKey => {
+        const select = $('voiceSelect_' + charKey);
+        if (!select) return;
+        const savedVoiceName = localStorage.getItem('voice_actor_' + charKey);
+
+        select.innerHTML = listToUse.map(v => {
+          const isSelected = savedVoiceName ? v.name === savedVoiceName : (charKey === 'BARBARA' ? /female|feminina|luciana|francisca/i.test(v.name) : true);
+          return `<option value="${escapeHtml(v.name)}" ${isSelected ? 'selected' : ''}>${escapeHtml(v.name)} (${v.lang})</option>`;
+        }).join('');
+      });
+    }
+
+    function stopAllAudio() {
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+        autoAdvanceTimer = null;
+      }
+      if (pingPongInterval) {
+        clearInterval(pingPongInterval);
+        pingPongInterval = null;
+      }
+      if (activeAudioPlayer) {
+        activeAudioPlayer.pause();
+        activeAudioPlayer = null;
+      }
+      try {
+        if (window.speechSynthesis) speechSynthesis.cancel();
+      } catch (e) {}
+      activeUtterance = null;
+    }
+
+    async function playSpeechAudio(speechIndex, onEndCallback) {
+      stopAllAudio();
+      if (speechIndex < 0 || speechIndex >= speeches.length) return;
+
+      const currentSpeech = speeches[speechIndex];
+
+      // 1. Tenta reproduzir áudio gravado do elenco (Nível C)
+      try {
+        const castBlob = await getCastAudio(speechIndex);
+        if (castBlob) {
+          const audioUrl = URL.createObjectURL(castBlob);
+          const audio = new Audio(audioUrl);
+          activeAudioPlayer = audio;
+          audio.onended = () => {
+            URL.revokeObjectURL(audioUrl);
+            activeAudioPlayer = null;
+            if (onEndCallback) onEndCallback();
+          };
+          audio.onerror = () => {
+            activeAudioPlayer = null;
+            speakSynthesized(currentSpeech.spokenText, currentSpeech.who, onEndCallback);
+          };
+          audio.play();
+          showStatus('▶️ Tocando voz real gravada do elenco...');
+          return;
+        }
+      } catch (e) {}
+
+      // 2. Se não houver gravação, usa o sintetizador de voz (Nível A)
+      speakSynthesized(currentSpeech.spokenText, currentSpeech.who, onEndCallback);
+    }
+
+    function speakSynthesized(text, characterName, onEndCallback) {
+      if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+        showStatus('Voz indisponível neste navegador.');
+        return;
+      }
+
+      try {
+        loadVoices();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'pt-BR';
+
+        // Recupera voz específica escolhida pelo usuário
+        const charKey = characterName.toUpperCase().includes('BÁRBARA') || characterName.toUpperCase().includes('BARBARA') ? 'BARBARA' : 'SERGIO';
+        const savedVoiceName = localStorage.getItem('voice_actor_' + charKey);
+
+        let chosenVoice = availableVoices.find(v => v.name === savedVoiceName);
+        if (!chosenVoice) {
+          chosenVoice = availableVoices.find(v => /^pt[-_]BR/i.test(v.lang)) || availableVoices.find(v => /^pt/i.test(v.lang));
+        }
+        if (chosenVoice) utterance.voice = chosenVoice;
+
+        utterance.pitch = characterName.startsWith('B') ? 1.15 : 0.85;
+        utterance.rate = speechRate;
+
+        utterance.onstart = () => showStatus('');
+        utterance.onend = () => {
+          activeUtterance = null;
+          if (onEndCallback) onEndCallback();
+        };
+        utterance.onerror = (e) => {
+          if (e.error !== 'canceled' && e.error !== 'interrupted') {
+            showStatus('Erro no áudio (' + (e.error || 'falha') + ').');
+          }
+        };
+
+        activeUtterance = utterance;
+        setTimeout(() => {
+          try { speechSynthesis.speak(utterance); } catch (e) {}
+        }, 50);
+      } catch (e) {
+        showStatus('Erro ao inicializar voz.');
+      }
+    }
+
+    function showStatus(msg) {
+      const el = $('statusMessage');
+      if (el) el.textContent = msg;
+    }
+
+    /* ==========================================================================
+       GRAVAÇÃO DE VOZ (MICROFONE NATIVO)
+       ========================================================================== */
+    async function startCastRecording(speechIndex) {
+      try {
+        stopAllAudio();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        recordingTargetIndex = speechIndex;
+        isRecordingNow = true;
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          stream.getTracks().forEach(t => t.stop());
+          await saveCastAudio(speechIndex, blob);
+          isRecordingNow = false;
+          showStatus('Gravação salva com sucesso!');
+          triggerHaptic('success');
+          renderView();
+        };
+
+        mediaRecorder.start();
+        recordingSeconds = 0;
+        renderView();
+
+        recordingTimer = setInterval(() => {
+          recordingSeconds++;
+          const recCounter = $('recSeconds');
+          if (recCounter) recCounter.textContent = `${recordingSeconds}s`;
+        }, 1000);
+
+      } catch (err) {
+        alert('Não foi possível acessar o microfone. Verifique as permissões do navegador.');
+        isRecordingNow = false;
+        renderView();
+      }
+    }
+
+    function stopCastRecording() {
+      if (recordingTimer) clearInterval(recordingTimer);
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+    }
+
+    /* ==========================================================================
+       GESTÃO DE ESTADO & ARMAZENAMENTO (LOCALSTORAGE)
+       ========================================================================== */
+    function getStorageKey() {
+      return 'memorizador_niveis_' + (selectedActor || 'padrao');
+    }
+
+    function loadProgress() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(getStorageKey()));
+        if (Array.isArray(saved) && saved.length === speeches.length) {
+          masteryLevels = saved;
+          return;
+        }
+      } catch (e) {}
+      masteryLevels = speeches.map(() => 0);
+    }
+
+    function saveProgress() {
+      try {
+        localStorage.setItem(getStorageKey(), JSON.stringify(masteryLevels));
+      } catch (e) {}
+    }
+
+    function loadSettings() {
+      try {
+        const rate = parseFloat(localStorage.getItem('memorizador_rate'));
+        if (!isNaN(rate)) speechRate = rate;
+        $('rangeSpeechRate').value = speechRate;
+        $('rateLabel').textContent = speechRate.toFixed(2) + 'x';
+
+        partnerVoiceEnabled = localStorage.getItem('memorizador_voice') !== 'false';
+        $('chkVoice').checked = partnerVoiceEnabled;
+
+        autoAdvanceEnabled = localStorage.getItem('memorizador_autoadvance') === 'true';
+        $('chkAutoAdvance').checked = autoAdvanceEnabled;
+
+        wakeLockEnabled = localStorage.getItem('memorizador_wakelock') !== 'false';
+        $('chkWakeLock').checked = wakeLockEnabled;
+        updateWakeLock();
+
+        const savedMode = localStorage.getItem('memorizador_mode');
+        if (savedMode) {
+          rehearsalMode = savedMode;
+          $('selectMode').value = savedMode;
+        }
+      } catch (e) {}
+    }
+
+    function saveSettings() {
+      try {
+        localStorage.setItem('memorizador_rate', speechRate.toString());
+        localStorage.setItem('memorizador_voice', partnerVoiceEnabled.toString());
+        localStorage.setItem('memorizador_autoadvance', autoAdvanceEnabled.toString());
+        localStorage.setItem('memorizador_wakelock', wakeLockEnabled.toString());
+        localStorage.setItem('memorizador_mode', rehearsalMode);
+      } catch (e) {}
+    }
+
+    /* ==========================================================================
+       NAVEGAÇÃO E FILTROS DE BEATS
+       ========================================================================== */
+    function getActiveBeatRange() {
+      if (selectedBeat === 'all') return { start: 0, end: speeches.length - 1 };
+      const b = DRAMA_BEATS[parseInt(selectedBeat, 10)];
+      return b ? { start: b.start, end: Math.min(speeches.length - 1, b.end) } : { start: 0, end: speeches.length - 1 };
+    }
+
+    function getFilteredSpeechIndices() {
+      const range = getActiveBeatRange();
+      const list = [];
+      for (let i = range.start; i <= range.end; i++) {
+        if (i < speeches.length) list.push(i);
+      }
+      return list;
+    }
+
+    function getMySpeechIndices() {
+      const filtered = getFilteredSpeechIndices();
+      return filtered.filter(i => speeches[i].who === selectedActor);
+    }
+
+    function pickNextWeakness() {
+      const myIndices = getMySpeechIndices();
+      if (myIndices.length === 0) return 0;
+      if (myIndices.length === 1) return myIndices[0];
+
+      const weights = myIndices.map(i => Math.pow(5 - (masteryLevels[i] || 0), 2));
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+      let random = Math.random() * totalWeight;
+      let chosen = myIndices[0];
+      for (let k = 0; k < myIndices.length; k++) {
+        random -= weights[k];
+        if (random <= 0) {
+          chosen = myIndices[k];
+          break;
+        }
+      }
+
+      if (chosen === currentIndex && myIndices.length > 1) {
+        return pickNextWeakness();
+      }
+      return chosen;
+    }
+
+    function goToSpeech(index, triggerAudio = true) {
+      stopAllAudio();
+      const range = getActiveBeatRange();
+      currentIndex = Math.max(range.start, Math.min(range.end, index));
+      isRevealed = false;
+      hintsUsedThisLine = 0;
+
+      renderView();
+
+      if (!triggerAudio || currentIndex >= speeches.length) return;
+
+      const currentSpeech = speeches[currentIndex];
+      const isPartner = currentSpeech.who !== selectedActor;
+
+      if (rehearsalMode === 'pingpong') {
+        startPingPongFlow();
+        return;
+      }
+
+      if (rehearsalMode === 'ponto') {
+        startPontoFlow();
+        return;
+      }
+
+      if (isPartner && partnerVoiceEnabled) {
+        playSpeechAudio(currentIndex, () => {
+          if (autoAdvanceEnabled && currentSpeech.who !== selectedActor) {
+            showStatus('Avançando para sua vez...');
+            autoAdvanceTimer = setTimeout(() => {
+              showStatus('');
+              advanceNext();
+            }, 600);
+          }
+        });
+      }
+    }
+
+    function advanceNext() {
+      const range = getActiveBeatRange();
+      if (rehearsalMode === 'fraquezas') {
+        goToSpeech(pickNextWeakness());
+      } else if (rehearsalMode === 'minhas' || rehearsalMode === 'pingpong' || rehearsalMode === 'ponto') {
+        const myIndices = getMySpeechIndices();
+        const next = myIndices.find(i => i > currentIndex);
+        if (next !== undefined) {
+          goToSpeech(next);
+        } else {
+          goToSpeech(myIndices[0] || range.start);
+        }
+      } else {
+        if (currentIndex < range.end) {
+          goToSpeech(currentIndex + 1);
+        } else {
+          renderSceneFinished();
+        }
+      }
+    }
+
+    function advancePrev() {
+      const range = getActiveBeatRange();
+      if (rehearsalMode === 'minhas' || rehearsalMode === 'pingpong' || rehearsalMode === 'ponto') {
+        const myIndices = getMySpeechIndices();
+        const prev = [...myIndices].reverse().find(i => i < currentIndex);
+        if (prev !== undefined) goToSpeech(prev);
+      } else {
+        if (currentIndex > range.start) goToSpeech(currentIndex - 1);
+      }
+    }
+
+    /* ==========================================================================
+       MODOS ESPECIAIS: PING-PONG E PONTO AUDITIVO
+       ========================================================================== */
+    function startPingPongFlow() {
+      // No modo ping-pong, toca a deixa do parceiro e inicia contador de reação
+      const prevIdx = currentIndex - 1;
+      const prevSpeech = speeches[prevIdx];
+      pingPongCountdown = 4;
+
+      if (prevSpeech && prevSpeech.who !== selectedActor && partnerVoiceEnabled) {
+        playSpeechAudio(prevIdx, () => {
+          runPingPongTimer();
+        });
+      } else {
+        runPingPongTimer();
+      }
+    }
+
+    function runPingPongTimer() {
+      pingPongCountdown = 4;
+      renderView();
+      if (pingPongInterval) clearInterval(pingPongInterval);
+      pingPongInterval = setInterval(() => {
+        pingPongCountdown--;
+        const box = $('pingPongCountdownNum');
+        if (box) box.textContent = pingPongCountdown;
+        if (pingPongCountdown <= 0) {
+          clearInterval(pingPongInterval);
+          pingPongInterval = null;
+          isRevealed = true;
+          triggerHaptic('tap');
+          renderView();
+        }
+      }, 1000);
+    }
+
+    function startPontoFlow() {
+      // 1. Toca a deixa do parceiro
+      const prevIdx = currentIndex - 1;
+      const prevSpeech = speeches[prevIdx];
+      const currentSpeech = speeches[currentIndex];
+      const wordCount = currentSpeech.spokenText.split(/\s+/).length;
+      const pauseDuration = Math.max(2500, wordCount * 380 + 1000);
+
+      showStatus('🎧 Modo Ponto: Ouvindo a deixa...');
+      const runMyTurn = () => {
+        showStatus('🎙️ Sua vez de falar em voz alta...');
+        autoAdvanceTimer = setTimeout(() => {
+          showStatus('👂 Ponto no ouvido: conferindo fala...');
+          playSpeechAudio(currentIndex, () => {
+            showStatus('Avançando...');
+            autoAdvanceTimer = setTimeout(advanceNext, 1200);
+          });
+        }, pauseDuration);
+      };
+
+      if (prevSpeech && prevSpeech.who !== selectedActor) {
+        playSpeechAudio(prevIdx, runMyTurn);
+      } else {
+        runMyTurn();
+      }
+    }
+
+    /* ==========================================================================
+       RENDERIZADOR DE INTERFACE
+       ========================================================================== */
+    async function updateHeaderStats() {
+      $('characterTabs').innerHTML = characters.map(c => {
+        const isCurrent = c === selectedActor;
+        const total = speeches.filter(s => s.who === c).length;
+        const mastered = speeches.map((s, i) => s.who === c && (masteryLevels[i] || 0) >= 3 ? 1 : 0).reduce((a, b) => a + b, 0);
+        return `<button class="char-tab ${isCurrent ? 'active' : ''}" data-actor="${escapeHtml(c)}">
+          ${escapeHtml(c)} <span class="char-badge">${mastered}/${total}</span>
+        </button>`;
+      }).join('');
+
+      const myIndices = getMySpeechIndices();
+      const masteredCount = myIndices.filter(i => (masteryLevels[i] || 0) >= 3).length;
+      const pct = myIndices.length > 0 ? Math.round((100 * masteredCount) / myIndices.length) : 0;
+
+      $('progressBar').style.width = pct + '%';
+      $('masteryText').textContent = `${masteredCount} de ${myIndices.length} dominadas (${pct}%)`;
+      $('counterText').textContent = `Fala ${currentIndex + 1} de ${speeches.length}`;
+      $('navCounterLabel').textContent = `Fala ${currentIndex + 1} / ${speeches.length}`;
+
+      const range = getActiveBeatRange();
+      $('btnPrev').disabled = currentIndex <= range.start;
+      $('btnNext').disabled = currentIndex >= range.end;
+    }
+
+    async function renderView() {
+      await updateHeaderStats();
+
+      if (currentIndex >= speeches.length) {
+        renderSceneFinished();
+        return;
+      }
+
+      const speech = speeches[currentIndex];
+      const isMyTurn = speech.who === selectedActor;
+      const level = masteryLevels[currentIndex] || 0;
+      let html = '';
+
+      // Verifica se existe áudio real gravado desta fala
+      const hasRealAudio = await getCastAudio(currentIndex);
+
+      // Barra de gravação ativa se estiver gravando agora
+      if (isRecordingNow) {
+        html += `
+          <div class="recording-bar">
+            <span><span class="recording-pulse"></span>Gravando áudio real do elenco...</span>
+            <span id="recSeconds">${recordingSeconds}s</span>
+            <button class="btn btn-record" style="min-height:36px; padding:0 12px; background:#fff;" id="btnStopRecord">⏹️ Parar e Salvar</button>
+          </div>
+        `;
+      }
+
+      // Didascálias de cena antecedentes
+      if (speech.directions && speech.directions.length > 0) {
+        html += speech.directions.map(d => `<div class="scene-direction">🎭 ${escapeHtml(d)}</div>`).join('');
+      }
+
+      if (!isMyTurn) {
+        // VISÃO: FALA DO COLEGA
+        html += `
+          <div class="speech-card">
+            <div class="card-meta-row">
+              <div class="speaker-meta-left">
+                <span class="speaker-name">${escapeHtml(speech.who)}</span>
+                ${hasRealAudio ? `<span class="real-audio-badge">🎙️ Áudio Real</span>` : ''}
+              </div>
+              <span class="mastery-pill">Fala do parceiro</span>
+            </div>
+            <div class="speech-content">
+              ${speech.segments.map(seg => seg.type === 'rubric' ? ` <span class="rubric">(${escapeHtml(seg.text)})</span> `; : escapeHtml(seg.text)).join('')}
+            </div>
+            <div class="action-row">
+              <button class="btn btn-audio" id="btnSpeakPartner">🔊 Ouvir</button>
+              <button class="btn btn-record" id="btnRecordPartner">${hasRealAudio ? '🎙️ Regravar voz real' : '🎙️ Gravar voz real'}</button>
+              ${hasRealAudio ? `<button class="btn" style="min-width:44px; padding:0 10px;" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
+              <button class="btn btn-primary" id="btnContinuePartner">Minha vez ›</button>
+            </div>
+          </div>
+        `;
+      } else {
+        // VISÃO: MINHA FALA
+
+        // 1. Cartão da Deixa (Cue do parceiro anterior)
+        const prevSpeech = speeches[currentIndex - 1];
+        let cueHtml = '';
+        if (prevSpeech) {
+          const hasPrevRealAudio = await getCastAudio(currentIndex - 1);
+          if (prevSpeech.who !== selectedActor) {
+            // Destaque nas últimas palavras para facilitar o gatilho teatral
+            const cueWords = prevSpeech.spokenText.split(' ');
+            const cueStart = cueWords.slice(0, Math.max(0, cueWords.length - 4)).join(' ');
+            const cueEnd = cueWords.slice(-4).join(' ');
+
+            cueHtml = `
+              <div class="cue-card">
+                <div class="cue-header">
+                  <span class="cue-tag">A Deixa (${escapeHtml(prevSpeech.who)}) ${hasPrevRealAudio ? '🎙️' : ''}</span>
+                  <div class="cue-actions">
+                    <button class="btn-cue-audio" id="btnSpeakCue">🔊 Ouvir</button>
+                    <button class="btn-cue-record" id="btnRecordCue">${hasPrevRealAudio ? '🎙️ Regravar' : '🎙️ Gravar colega'}</button>
+                  </div>
+                </div>
+                <p class="cue-text">“${escapeHtml(cueStart)} <span class="cue-highlight-end">${escapeHtml(cueEnd)}</span>”</p>
+              </div>
+            `;
+          } else {
+            cueHtml = `<div class="cue-card"><span class="cue-tag">Continuação</span><p class="cue-text"><i>(continuação da sua fala)</i></p></div>`;
+          }
+        } else {
+          cueHtml = `<div class="cue-card"><span class="cue-tag">Abertura</span><p class="cue-text"><i>(a cena começa com você)</i></p></div>`;
+        }
+        html += cueHtml;
+
+        // Modo Ping-Pong de Deixas
+        if (rehearsalMode === 'pingpong' && !isRevealed) {
+          html += `
+            <div class="pingpong-timer-box">
+              <div class="pingpong-countdown" id="pingPongCountdownNum">${pingPongCountdown}</div>
+              <div class="pingpong-label">⚡ Dispare a fala assim que a deixa terminar!</div>
+            </div>
+          `;
+        }
+
+        // 2. Cartão Principal da Minha Fala
+        const levelNames = [
+          '1 · Leitura Completa',
+          '2 · Poucas Lacunas',
+          '3 · Muitas Lacunas',
+          '4 · Primeiras Letras',
+          '5 · De Memória Total'
+        ];
+
+        html += `
+          <div class="speech-card">
+            <div class="card-meta-row">
+              <div class="speaker-meta-left">
+                <span class="speaker-name">${escapeHtml(speech.who)}</span>
+                ${hasRealAudio ? `<span class="real-audio-badge">🎙️ Minha Gravação</span>` : ''}
+              </div>
+              <span class="mastery-pill lv${level}">${levelNames[level]}</span>
+            </div>
+            <div class="speech-content" id="speechDisplay">
+              ${renderSpeechHtml(speech, currentIndex, level, hintsUsedThisLine)}
+            </div>
+            <div class="action-row">
+        `;
+
+        if (level === 0) {
+          html += `
+            <button class="btn btn-audio" id="btnAudioMy">🔊 Ouvir</button>
+            <button class="btn btn-primary" id="btnHideWords">Já li — Esconder palavras ➔</button>
+          `;
+        } else if (!isRevealed) {
+          html += `
+            <button class="btn btn-hint" id="btnHint" title="Revela a próxima palavra oculta (D)">💡 Dica</button>
+            <button class="btn btn-audio" id="btnAudioMy">🔊 Ouvir</button>
+            <button class="btn btn-primary" id="btnCheck">👁️ Conferir (Espaço)</button>
+          `;
+        } else {
+          html += `
+            <button class="btn btn-danger" id="btnWrong">❌ Errei (1)</button>
+            <button class="btn btn-success" id="btnCorrect">✅ Acertei (2)</button>
+            <button class="btn btn-audio" id="btnAudioMy">🔊</button>
+          `;
+        }
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+
+      $('mainApp').innerHTML = html;
+    }
+
+    function renderSceneFinished() {
+      $('mainApp').innerHTML = `
+        <div class="speech-card" style="text-align:center; padding:36px 20px;">
+          <h2 style="font-size:1.4rem; margin-bottom:12px;">🎭 Fim do Bloco / Cena!</h2>
+          <p style="color:var(--fg-muted); margin-bottom:24px;">Você percorreu todas as falas selecionadas deste ensaio.</p>
+          <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btnRestartScene">Recomeçar bloco</button>
+            <button class="btn" id="btnReviewWeak">Treinar só fraquezas</button>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ==========================================================================
+       AÇÕES DO ENSAIO
+       ========================================================================== */
+    function handleActionClick(id) {
+      triggerHaptic('tap');
+      const currentSpeech = speeches[currentIndex];
+
+      if (id === 'btnSpeakPartner' || id === 'btnAudioMy') {
+        playSpeechAudio(currentIndex);
+      } else if (id === 'btnSpeakCue') {
+        if (currentIndex > 0) playSpeechAudio(currentIndex - 1);
+      } else if (id === 'btnRecordPartner') {
+        startCastRecording(currentIndex);
+      } else if (id === 'btnRecordCue') {
+        if (currentIndex > 0) startCastRecording(currentIndex - 1);
+      } else if (id === 'btnStopRecord') {
+        stopCastRecording();
+      } else if (id === 'btnDeleteCastAudio') {
+        if (confirm('Excluir o áudio gravado desta fala?')) {
+          deleteCastAudio(currentIndex).then(() => renderView());
+        }
+      } else if (id === 'btnContinuePartner') {
+        advanceNext();
+      } else if (id === 'btnHideWords') {
+        masteryLevels[currentIndex] = 1;
+        saveProgress();
+        renderView();
+      } else if (id === 'btnHint') {
+        hintsUsedThisLine++;
+        renderView();
+      } else if (id === 'btnCheck') {
+        isRevealed = true;
+        renderView();
+      } else if (id === 'btnCorrect') {
+        triggerHaptic('success');
+        const cur = masteryLevels[currentIndex] || 0;
+        masteryLevels[currentIndex] = Math.min(4, cur + 1);
+        saveProgress();
+        advanceNext();
+      } else if (id === 'btnWrong') {
+        triggerHaptic('error');
+        const cur = masteryLevels[currentIndex] || 0;
+        masteryLevels[currentIndex] = Math.max(0, cur - 1);
+        saveProgress();
+        advanceNext();
+      } else if (id === 'btnRestartScene') {
+        const range = getActiveBeatRange();
+        goToSpeech(range.start);
+      } else if (id === 'btnReviewWeak') {
+        rehearsalMode = 'fraquezas';
+        $('selectMode').value = 'fraquezas';
+        goToSpeech(pickNextWeakness());
+      }
+    }
+
+    /* ==========================================================================
+       MODAL DE ÍNDICE DE FALAS
+       ========================================================================== */
+    let currentFilter = 'all';
+
+    async function renderIndexModal() {
+      const container = $('indexListContainer');
+      const range = getActiveBeatRange();
+      let items = [];
+
+      for (let idx = range.start; idx <= range.end; idx++) {
+        if (idx < speeches.length) {
+          const s = speeches[idx];
+          const hasRec = await getCastAudio(idx);
+          items.push({ ...s, index: idx, level: masteryLevels[idx] || 0, hasRec });
+        }
+      }
+
+      if (currentFilter === 'mine') {
+        items = items.filter(s => s.who === selectedActor);
+      } else if (currentFilter === 'weak') {
+        items = items.filter(s => s.who === selectedActor && s.level < 3);
+      } else if (currentFilter === 'recorded') {
+        items = items.filter(s => s.hasRec);
+      }
+
+      if (items.length === 0) {
+        container.innerHTML = `<p style="color:var(--fg-muted); text-align:center; padding:20px;">Nenhuma fala encontrada neste filtro.</p>`;
+        return;
+      }
+
+      container.innerHTML = items.map(item => {
+        const isCurrent = item.index === currentIndex;
+        const isMine = item.who === selectedActor;
+        const badge = isMine ? `<span class="mastery-pill lv${item.level}">Nível ${item.level + 1}</span>` : `<span class="mastery-pill">Colega</span>`;
+        return `
+          <div class="index-item ${isCurrent ? 'current' : ''}" data-idx="${item.index}">
+            <div class="index-item-meta">
+              <span class="index-item-who">#${item.index + 1} · ${escapeHtml(item.who)} ${item.hasRec ? '🎙️' : ''}</span>
+              ${badge}
+            </div>
+            <p class="index-item-text">${escapeHtml(item.spokenText || item.segments.map(s => s.text).join(' '))}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ==========================================================================
+       INICIALIZAÇÃO E EVENTOS
+       ========================================================================== */
+    function initializeApp() {
+      const savedScript = localStorage.getItem('memorizador_custom_script');
+      const scriptText = savedScript || $('defaultPlay').textContent;
+      $('scriptEditor').value = scriptText;
+
+      speeches = parseScriptText(scriptText);
+      characters = [...new Set(speeches.map(s => s.who))];
+
+      const savedActor = localStorage.getItem('memorizador_actor');
+      selectedActor = (savedActor && characters.includes(savedActor)) ? savedActor : characters[0] || '';
+
+      loadSettings();
+      loadProgress();
+      populateVoiceSelectors();
+
+      const range = getActiveBeatRange();
+      currentIndex = range.start;
+      goToSpeech(currentIndex, false);
+    }
+
+    // CLIQUES DE INTERFACE
+    document.addEventListener('click', (e) => {
+      const actorBtn = e.target.closest('[data-actor]');
+      if (actorBtn) {
+        const actor = actorBtn.dataset.actor;
+        if (actor && actor !== selectedActor) {
+          selectedActor = actor;
+          localStorage.setItem('memorizador_actor', selectedActor);
+          loadProgress();
+          const first = getMySpeechIndices()[0];
+          goToSpeech(first !== undefined ? first : 0);
+        }
+        return;
+      }
+
+      const indexItem = e.target.closest('[data-idx]');
+      if (indexItem) {
+        const idx = parseInt(indexItem.dataset.idx, 10);
+        if (!isNaN(idx)) {
+          $('modalIndex').hidden = true;
+          goToSpeech(idx);
+        }
+        return;
+      }
+
+      if (e.target.id) {
+        handleActionClick(e.target.id);
+      }
+    });
+
+    // RODAPÉ
+    $('btnPrev').onclick = advancePrev;
+    $('btnNext').onclick = advanceNext;
+    $('btnNavIndex').onclick = () => {
+      renderIndexModal();
+      $('modalIndex').hidden = false;
+    };
+    $('btnOpenIndex').onclick = () => {
+      renderIndexModal();
+      $('modalIndex').hidden = false;
+    };
+    $('btnCloseIndex').onclick = () => $('modalIndex').hidden = true;
+
+    // FILTRO DE BEATS
+    $('selectBeat').onchange = (e) => {
+      selectedBeat = e.target.value;
+      const range = getActiveBeatRange();
+      goToSpeech(range.start);
+    };
+
+    // FILTROS DO ÍNDICE
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderIndexModal();
+      };
+    });
+
+    // MODAL DE CONFIGURAÇÕES
+    $('btnOpenSettings').onclick = () => {
+      populateVoiceSelectors();
+      $('modalSettings').hidden = false;
+    };
+    $('btnCloseSettings').onclick = () => $('modalSettings').hidden = true;
+
+    $('rangeSpeechRate').oninput = (e) => {
+      speechRate = parseFloat(e.target.value);
+      $('rateLabel').textContent = speechRate.toFixed(2) + 'x';
+      saveSettings();
+    };
+
+    $('chkVoice').onchange = (e) => {
+      partnerVoiceEnabled = e.target.checked;
+      saveSettings();
+    };
+
+    $('chkAutoAdvance').onchange = (e) => {
+      autoAdvanceEnabled = e.target.checked;
+      saveSettings();
+    };
+
+    $('chkWakeLock').onchange = (e) => {
+      wakeLockEnabled = e.target.checked;
+      saveSettings();
+      updateWakeLock();
+    };
+
+    $('selectMode').onchange = (e) => {
+      rehearsalMode = e.target.value;
+      saveSettings();
+      if (rehearsalMode === 'fraquezas') {
+        goToSpeech(pickNextWeakness());
+      } else if (rehearsalMode === 'minhas' || rehearsalMode === 'pingpong' || rehearsalMode === 'ponto') {
+        const myIndices = getMySpeechIndices();
+        if (!myIndices.includes(currentIndex)) {
+          goToSpeech(myIndices[0] || 0);
+        } else {
+          goToSpeech(currentIndex);
+        }
+      } else {
+        renderView();
+      }
+    };
+
+    // VOZES ESPECÍFICAS (NÍVEL A)
+    $('voiceSelect_SERGIO').onchange = (e) => {
+      localStorage.setItem('voice_actor_SERGIO', e.target.value);
+    };
+    $('voiceSelect_BARBARA').onchange = (e) => {
+      localStorage.setItem('voice_actor_BARBARA', e.target.value);
+    };
+    $('btnTestVoice_SERGIO').onclick = () => speakSynthesized('Aonde vai com tanta pressa, papai?', 'SÉRGIO');
+    $('btnTestVoice_BARBARA').onclick = () => speakSynthesized('Não corra, Juliano. Não corra mais!', 'BÁRBARA');
+
+    $('btnClearAllRecordings').onclick = () => {
+      if (confirm('Tem certeza que deseja apagar todos os áudios reais gravados?')) {
+        clearAllCastAudios().then(() => {
+          alert('Gravações removidas.');
+          renderView();
+        });
+      }
+    };
+
+    $('btnResetProgress').onclick = () => {
+      if (confirm(`Zerar todo o histórico de memorização para ${selectedActor}?`)) {
+        masteryLevels = speeches.map(() => 0);
+        saveProgress();
+        renderView();
+        $('modalSettings').hidden = true;
+      }
+    };
+
+    $('btnSaveScript').onclick = () => {
+      const text = $('scriptEditor').value.trim();
+      if (!text) return;
+      localStorage.setItem('memorizador_custom_script', text);
+      $('modalSettings').hidden = true;
+      initializeApp();
+    };
+
+    $('btnRestoreOriginal').onclick = () => {
+      if (confirm('Restaurar o texto original de "Os Inventariantes"?')) {
+        localStorage.removeItem('memorizador_custom_script');
+        $('modalSettings').hidden = true;
+        initializeApp();
+      }
+    };
+
+    // ATALHOS DE TECLADO (DESKTOP)
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+      if (e.key === 'Escape') {
+        $('modalIndex').hidden = true;
+        $('modalSettings').hidden = true;
+        return;
+      }
+
+      if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
+        const m = $('modalIndex');
+        m.hidden = !m.hidden;
+        if (!m.hidden) renderIndexModal();
+        return;
+      }
+
+      const currentSpeech = speeches[currentIndex];
+      const isMyTurn = currentSpeech && currentSpeech.who === selectedActor;
+      const level = masteryLevels[currentIndex] || 0;
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        advanceNext();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        advancePrev();
+      } else if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        if (!isMyTurn) advanceNext();
+        else if (level === 0) handleActionClick('btnHideWords');
+        else if (!isRevealed) handleActionClick('btnCheck');
+        else handleActionClick('btnCorrect');
+      } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        if (isMyTurn && !isRevealed && level > 0) handleActionClick('btnHint');
+      } else if (e.key === '1') {
+        e.preventDefault();
+        if (isMyTurn && isRevealed) handleActionClick('btnWrong');
+      } else if (e.key === '2') {
+        e.preventDefault();
+        if (isMyTurn && isRevealed) handleActionClick('btnCorrect');
+      } else if (e.key === 'r' || e.key === 'R' || e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        if (currentSpeech) playSpeechAudio(currentIndex);
+      }
+    });
+
+    initializeApp();
+  </script>
+</body>
+</html>
