@@ -126,17 +126,38 @@ Para evitar que o ator fique com o texto "engessado" ou "viciado" em uma única 
 
 ---
 
-## 📁 Estrutura do Projeto
+## 📚 Documentação Complementar
+
+* 🎭 **[Manual Prático do Ator (MANUAL_DO_ATOR.md)](./MANUAL_DO_ATOR.md)**: Guia completo para atores e atrizes sobre como usar o app da leitura de mesa até a véspera da estreia, como gravar a voz dos colegas e como quebrar vícios de ritmo com a pedagogia de Stanislavski e Noice & Noice.
+* 🏛️ **[Arquitetura do Software (ARQUITETURA.md)](./ARQUITETURA.md)**: Documentação técnica detalhada para desenvolvedores, descrevendo o funcionamento dos módulos (`AppConfig`, `Utils`, `AppState`, `ScriptParser`, `StorageEngine`, `AudioEngine`, `AppUI`), modelo de dados, isolamento por peça (`playId`) e suporte a PWA.
+
+---
+
+## 🧪 Testes Automatizados de Integração
+
+O projeto possui uma suíte rigorosa de **20 testes automatizados** para assegurar que nenhuma regressão ocorra em navegação, parsing, cloze semântico, memória ou persistência:
+
+```bash
+# Executa todos os 20 testes de integração
+node test.cjs
+```
+
+---
+
+## 📁 Estrutura de Arquivos do Projeto
 
 ```
 memorizador-teatro/
-├── index.html                     # Aplicação PWA completa e mobile-first
-├── Ensaio · Os Inventariantes.html # Cópia idêntica sincronizada
+├── index.html                     # Aplicação PWA completa e universal (v3.0)
+├── Ensaio · Os Inventariantes.html # Cópia idêntica sincronizada byte-a-byte
 ├── manifest.json                  # Manifesto PWA para instalação no celular
-├── sw.js                          # Service Worker para suporte 100% offline
+├── sw.js                          # Service Worker para suporte 100% offline (v5)
 ├── icon.svg                       # Ícone vetorial das máscaras teatrais
-├── Ensaio · Os Inventariantes.backup.html # Backup de segurança da versão original
-└── README.md                      # Esta documentação
+├── test.cjs                       # Suíte automatizada com 20 testes de integração
+├── MANUAL_DO_ATOR.md              # Guia prático de ensaio e memorização para o elenco
+├── ARQUITETURA.md                 # Especificação técnica dos módulos e dados
+├── Ensaio · Os Inventariantes.backup.html # Backup de segurança da versão inicial
+└── README.md                      # Visão geral do projeto e guia rápido
 ```
 
 ---
@@ -145,3 +166,4 @@ memorizador-teatro/
 - [ ] Integração com IA (Google Gemini API com chave do usuário):
   - Análise instantânea de **Subtexto e Intenção Dramática** (Stanislavski).
   - Reconhecimento de fala inteligente (avaliar se o ator falou o texto certo via microfone).
+
