@@ -34,10 +34,18 @@ O app resolve a necessidade de ensaiar com vozes diferenciadas através de dois 
 * Permite diferenciar claramente a voz masculina da feminina, com controle de velocidade da fala (de 0.75x a 1.30x).
 
 ### 2. Nível C: Gravação de Voz Real do Elenco (IndexedDB)
-* **O "Santo Graal" do ensaio teatral**: você pode gravar o áudio real da atriz/ator parceiro durante uma leitura de mesa.
-* Em cada deixa ou fala do colega, toque em **`🎙️ Gravar colega`** e fale no microfone.
+* **O "Santo Graal" do ensaio teatral**: você pode gravar o áudio real da atriz/ator parceiro durante uma leitura de mesa, ou a sua própria fala para conferir entonação.
+* Em cada deixa ou fala, toque em **`🎙️ Gravar colega`** ou **`🎙️ Gravar voz`** e fale no microfone (compatível nativamente com iPhone/iOS e Android).
 * O áudio é salvo em alta qualidade no banco de dados interno do seu aparelho (**IndexedDB**).
-* Durante o ensaio, o app prioriza a **voz real do seu colega gravada** com o tempo e entonação humana, usando a voz sintética apenas quando ainda não houver gravação!
+* Durante o ensaio, o app prioriza a **voz real gravada do elenco**, usando o sintetizador apenas quando ainda não houver gravação!
+
+### 3. 💾 Segurança de Dados: Backup & Restauração Completa
+* Em `⚙️ Opções`, você tem os botões **`📤 Exportar Backup`** e **`📥 Restaurar`**.
+* Como o Safari do iPhone pode limpar o cache se o armazenamento ficar cheio, o app solicita persistência de disco (`navigator.storage.persist`) e permite que você baixe um arquivo `.json` contendo:
+  - Todo o roteiro e suas edições.
+  - O nível de domínio de cada fala.
+  - **Todas as gravações de áudio do elenco** (convertidas e preservadas em alta fidelidade).
+* Você pode salvar o arquivo no iCloud, Google Drive ou WhatsApp e restaurar em qualquer celular ou computador instantaneamente!
 
 ---
 
