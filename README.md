@@ -1,5 +1,7 @@
 # 🎭 Memorizador & Ensaio Teatral
 
+> 🌐 **App publicado online:** [https://nexo100.github.io/memorizador-teatro/](https://nexo100.github.io/memorizador-teatro/)
+
 Aplicativo progressivo (PWA) de memorização dramática, desenhado sob medida para ensaios de atores, peças de teatro e dramaturgia no celular e no computador.
 
 Funciona **100% offline**, sem dependências externas e pode ser instalado direto na tela de início do smartphone como um aplicativo nativo.
