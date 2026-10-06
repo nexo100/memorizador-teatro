@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ensaio-teatral-v3';
+const CACHE_NAME = 'ensaio-teatral-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -46,7 +46,8 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       }).catch(() => {
         // Fallback offline se for requisição de página
-        if (event.request.headers.get('accept').includes('text/html')) {
+        const accept = event.request.headers.get('accept');
+        if (accept && accept.includes('text/html')) {
           return caches.match('./index.html');
         }
       });

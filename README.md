@@ -29,9 +29,9 @@ O aplicativo foi construído com suporte completo a **Progressive Web App**:
 
 O app resolve a necessidade de ensaiar com vozes diferenciadas através de dois níveis:
 
-### 1. Nível A: Seletor de Vozes Nativas do Celular
-* Em `⚙️ Opções`, selecione qual voz do sistema fala as falas de **SÉRGIO** e qual fala as de **BÁRBARA**.
-* Permite diferenciar claramente a voz masculina da feminina, com controle de velocidade da fala (de 0.75x a 1.30x).
+### 1. Nível A: Seletor Dinâmico de Vozes Nativas do Celular (Múltiplos Personagens)
+* Em `⚙️ Opções`, selecione e teste (`🔊`) a voz do sistema individualmente para **cada personagem detectado no texto**, seja para 2, 3, 5 ou mais atores.
+* O motor de áudio distribui automaticamente timbres e pitches distintos para cada personagem, com suporte a vozes femininas e masculinas e controle de velocidade da fala (de 0.75x a 1.30x).
 
 ### 2. Nível C: Gravação de Voz Real do Elenco (IndexedDB)
 * **O "Santo Graal" do ensaio teatral**: você pode gravar o áudio real da atriz/ator parceiro durante uma leitura de mesa, ou a sua própria fala para conferir entonação.
@@ -43,7 +43,8 @@ O app resolve a necessidade de ensaiar com vozes diferenciadas através de dois 
 * Em `⚙️ Opções`, você tem os botões **`📤 Exportar Backup`** e **`📥 Restaurar`**.
 * Como o Safari do iPhone pode limpar o cache se o armazenamento ficar cheio, o app solicita persistência de disco (`navigator.storage.persist`) e permite que você baixe um arquivo `.json` contendo:
   - Todo o roteiro e suas edições.
-  - O nível de domínio de cada fala.
+  - O nível de domínio de cada fala para cada personagem.
+  - Todas as vozes atribuídas e intenções dramáticas de Stanislavski.
   - **Todas as gravações de áudio do elenco** (convertidas e preservadas em alta fidelidade).
 * Você pode salvar o arquivo no iCloud, Google Drive ou WhatsApp e restaurar em qualquer celular ou computador instantaneamente!
 
@@ -55,7 +56,7 @@ Diferente de decorar flashcards, memorizar teatro exige resposta psicofísica, r
 
 | Modo | Como Funciona | Para quando é ideal? |
 | :--- | :--- | :--- |
-| **1. Cena Toda** | Passa cronologicamente por todas as 58 falas da cena. | Ensaio geral e passagem completa do texto. |
+| **1. Cena Toda** | Passa cronologicamente por todas as falas da cena selecionada. | Ensaio geral e passagem completa do texto. |
 | **2. Só Minhas Falas + Deixas** | Pula falas do colega e vai direto para as suas falas, mostrando a deixa no topo. | Ganhar tempo e focar apenas no que você fala. |
 | **3. Foco nas Fraquezas** | Repetição espaçada ponderada pelas falas que você mais erra. | Decorar os trechos difíceis ou monólogos travados. |
 | **4. Ping-Pong de Deixas** | Toca apenas o final da deixa e abre um cronômetro de 4 segundos. | Treinar velocidade de reflexo para não deixar a cena "cair". |
@@ -65,7 +66,7 @@ Diferente de decorar flashcards, memorizar teatro exige resposta psicofísica, r
 
 ## 🎭 Beats Dramáticos (Divisão da Cena em Blocos)
 
-A peça *Os Inventariantes* está dividida em 5 blocos dramáticos para evitar a sobrecarga cognitiva:
+A peça padrão *Os Inventariantes* está dividida em 5 blocos dramáticos para evitar a sobrecarga cognitiva:
 
 1. **Beat 1: A Fuga & A Captura** (Falas 1 a 11)
 2. **Beat 2: A Arma & O Desprezo** (Falas 12 a 23)
@@ -73,7 +74,7 @@ A peça *Os Inventariantes* está dividida em 5 blocos dramáticos para evitar a
 4. **Beat 4: O Desabafo dos 10 Anos** (Falas 35 a 44)
 5. **Beat 5: A Loucura do Olimpo & O Clímax** (Falas 45 a 58)
 
-Você pode selecionar um Beat específico no menu superior e ensaiar apenas aquele bloco até a fixação completa.
+Para **qualquer outro texto ou peça colada**, o sistema calcula automaticamente blocos dramáticos proporcionais para estruturar a sessão de estudo. Você pode selecionar um Beat específico no menu superior e ensaiar apenas aquele bloco até a fixação completa.
 
 ---
 
