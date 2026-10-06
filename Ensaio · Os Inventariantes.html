@@ -316,6 +316,53 @@
       line-height: 1.45;
     }
 
+    /* BARRA DE AÇÃO / INTENÇÃO DRAMÁTICA (STANISLAVSKI) */
+    .intent-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--accent-soft);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-bottom: 12px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.82rem;
+    }
+    .intent-label {
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .intent-text {
+      color: var(--fg);
+      font-style: italic;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .btn-intent-edit {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.78rem;
+      padding: 2px 7px;
+      color: var(--fg-muted);
+      transition: all 0.15s;
+    }
+    .btn-intent-edit:hover {
+      color: var(--fg);
+      border-color: var(--fg);
+    }
+
     /* CARTÃO DA DEIXA (CUE) */
     .cue-card {
       background: var(--card-bg);
@@ -868,13 +915,19 @@
 
       <!-- Barra de Modos e Áudio -->
       <div class="toolbar-row">
-        <div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
           <select id="selectMode" class="mode-select" title="Modo de ensaio">
             <option value="cena">Modo: Cena Toda (sequencial)</option>
             <option value="minhas">Modo: Só Minhas Falas + Deixas</option>
             <option value="fraquezas">Modo: Foco nas Fraquezas</option>
             <option value="pingpong">Modo: Ping-Pong de Deixas (Reflexo)</option>
             <option value="ponto">Modo: Ponto Eletrônico (Fone de Ouvido)</option>
+          </select>
+          <select id="selectTempo" class="mode-select" title="Andamento e ritmo da cena" style="color:var(--accent);">
+            <option value="normal">Ritmo: ⚡ Normal (0.95x)</option>
+            <option value="slow">Ritmo: 🐢 Lento (0.80x)</option>
+            <option value="fast">Ritmo: 🔥 Urgente (1.20x)</option>
+            <option value="dynamic">Ritmo: 🎲 Dinâmico / Surpresa</option>
           </select>
         </div>
         <div class="toolbar-toggles">
@@ -1174,6 +1227,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
     let selectedActor = '';
     let currentIndex = 0;
     let rehearsalMode = 'cena'; // 'cena' | 'minhas' | 'fraquezas' | 'pingpong' | 'ponto'
+    let rehearsalTempo = 'normal'; // 'normal' | 'slow' | 'fast' | 'dynamic'
     let selectedBeat = 'all'; // 'all' ou índice do beat
     let masteryLevels = [];
     let isRevealed = false;
@@ -1200,6 +1254,77 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
     let pingPongCountdown = 4;
     let pingPongInterval = null;
     let pontoStep = 0; // 0=deixa, 1=espera ator, 2=sussurro
+    let pontoPaused = false;
+
+    // LINGUÍSTICA COGNITIVA: Palavras funcionais / conectivos em Português
+    const FUNCTION_WORDS = new Set([
+      'a', 'o', 'as', 'os', 'um', 'uma', 'uns', 'umas',
+      'de', 'do', 'da', 'dos', 'das', 'dum', 'duma', 'duns', 'dumas',
+      'em', 'no', 'na', 'nos', 'nas', 'num', 'numa', 'nuns', 'numas',
+      'por', 'pelo', 'pela', 'pelos', 'pelas', 'para', 'pra', 'pro', 'pras', 'pros',
+      'com', 'sem', 'sob', 'sobre', 'até', 'ante', 'após', 'desde', 'entre', 'contra', 'perante',
+      'e', 'mas', 'ou', 'nem', 'que', 'se', 'como', 'quando', 'porque', 'porquê', 'pois', 'contudo', 'todavia', 'portanto',
+      'me', 'te', 'se', 'nos', 'vos', 'lhe', 'lhes',
+      'eu', 'tu', 'ele', 'ela', 'nós', 'vós', 'eles', 'elas',
+      'meu', 'minha', 'meus', 'minhas', 'teu', 'tua', 'teus', 'tuas', 'seu', 'sua', 'seus', 'suas', 'nosso', 'nossa',
+      'este', 'esta', 'estes', 'estas', 'esse', 'essa', 'esses', 'essas', 'aquele', 'aquela', 'aqueles', 'aquelas',
+      'isto', 'isso', 'aquilo', 'muito', 'pouco', 'mais', 'menos', 'tão', 'já', 'não', 'sim', 'ainda', 'só', 'somente'
+    ]);
+
+    function isFunctionWord(word) {
+      const clean = (word || '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+      return FUNCTION_WORDS.has(clean);
+    }
+
+    // PEDAGOGIA TEATRAL (STANISLAVSKI): Intenções dramáticas e verbos de ação
+    const DEFAULT_INTENTIONS = {
+      0: "Provocar e tripudiar sobre a fraqueza física do pai",
+      1: "Conter a fuga e impor controle rígido",
+      2: "Zombar da esperança; intimidar o pai",
+      3: "Simular condescendência maternal fria",
+      4: "Aterrorizar o pai com a proximidade da morte",
+      5: "Constatar a derrota inevitável de Juliano",
+      6: "Imobilizar e humilhar o pai com ataduras sujas",
+      7: "Censurar Sérgio e tentar manter o decoro do ato",
+      8: "Desafiar a mãe com cinismo e impaciência",
+      9: "Reclamar silêncio; desespero contido",
+      10: "Desumanizar Juliano chamando-o de assombração",
+      11: "Implorar pelo fim da violência verbal",
+      12: "Reafirmar a missão 'divina' e arrancar a culpa da mãe",
+      14: "Exigir dureza e frieza de Bárbara",
+      16: "Assumir a decisão prática de matar Juliano",
+      18: "Relembrar a Juliano o asco físico de sua degradação",
+      19: "Agredir e expor a humilhação escatológica do pai",
+      20: "Justificar o ato como cansaço e falta de saída",
+      21: "Apresentar a roleta russa como eutanásia justa",
+      22: "Buscar anestesiar a consciência sem culpa",
+      24: "Criar o ritual e a expectativa do primeiro disparo",
+      25: "Racionalizar o tiro como destino e descanso",
+      26: "Confrontar o pai com o espelho do próprio pavor",
+      28: "Negar o valor da vida do pai e jogar por ele",
+      30: "Cobrar a conta dos 10 anos de sacrifício e abandono",
+      32: "Enfrentar Bárbara com a cumplicidade do silêncio dela",
+      34: "Projetar grandeza ilusória e desafiar a morte no Olimpo",
+      36: "Tentar frear o delírio assassino do filho",
+      42: "Intimar Bárbara a puxar o gatilho sem recuar",
+      45: "Celebrar o disparo seis como vitória mórbida",
+      48: "Desferir o golpe psicológico final na covardia do pai",
+      52: "Pedir perdão íntimo antes do blecaute final"
+    };
+
+    function getSpeechIntent(idx) {
+      const custom = localStorage.getItem('intent_' + idx);
+      if (custom !== null && custom !== undefined) return custom;
+      return DEFAULT_INTENTIONS[idx] || '';
+    }
+
+    function setSpeechIntent(idx, val) {
+      if (val === '__padrao__' || (val && val.toLowerCase() === 'padrao') || (val && val.toLowerCase() === 'padrão')) {
+        localStorage.removeItem('intent_' + idx);
+      } else if (val !== undefined && val !== null) {
+        localStorage.setItem('intent_' + idx, val);
+      }
+    }
 
     /* ==========================================================================
        PWA SERVICE WORKER & WAKE LOCK
@@ -1418,17 +1543,31 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           if (/^\s+$/.test(w) || !w) return w;
           const currentWordIdx = wordCounter++;
 
+          const isFunc = isFunctionWord(w);
           let isHidden = false;
           let mode = 'blank';
 
           if (level === 1) {
-            isHidden = hashCoord(speechIndex, currentWordIdx) < 35;
+            // Nível 1: Apoio Estrutural (Cloze Semântico)
+            // Conectivos e termos funcionais ficam 100% visíveis como andaimes sintáticos
+            // Oculta ~55% das palavras de conteúdo (verbos, substantivos, adjetivos de impacto)
+            if (!isFunc) {
+              isHidden = hashCoord(speechIndex, currentWordIdx) < 55;
+            }
           } else if (level === 2) {
-            isHidden = hashCoord(speechIndex, currentWordIdx) < 68;
+            // Nível 2: Desafio Lexical Completo
+            // Oculta 85% das palavras de conteúdo e 45% dos conectivos
+            if (isFunc) {
+              isHidden = hashCoord(speechIndex, currentWordIdx) < 45;
+            } else {
+              isHidden = hashCoord(speechIndex, currentWordIdx) < 85;
+            }
           } else if (level === 3) {
+            // Nível 3: Mnemônica das Primeiras Letras
             isHidden = true;
             mode = 'initial';
           } else if (level >= 4) {
+            // Nível 4: De Memória Total
             isHidden = true;
             mode = 'blank';
           }
@@ -1500,11 +1639,23 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       activeUtterance = null;
     }
 
+    function getEffectiveTempoRate() {
+      if (rehearsalTempo === 'slow') return 0.80;
+      if (rehearsalTempo === 'fast') return 1.20;
+      if (rehearsalTempo === 'dynamic') {
+        const rnd = Number((0.82 + Math.random() * 0.36).toFixed(2));
+        showStatus(`🎲 Ritmo dinâmico nesta deixa: ${rnd}x`);
+        return rnd;
+      }
+      return speechRate;
+    }
+
     async function playSpeechAudio(speechIndex, onEndCallback) {
       stopAllAudio();
       if (speechIndex < 0 || speechIndex >= speeches.length) return;
 
       const currentSpeech = speeches[speechIndex];
+      const tempo = getEffectiveTempoRate();
 
       // 1. Tenta reproduzir áudio gravado do elenco (Nível C)
       try {
@@ -1512,6 +1663,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         if (castBlob) {
           const audioUrl = URL.createObjectURL(castBlob);
           const audio = new Audio(audioUrl);
+          audio.playbackRate = tempo;
           activeAudioPlayer = audio;
           audio.onended = () => {
             URL.revokeObjectURL(audioUrl);
@@ -1523,7 +1675,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             speakSynthesized(currentSpeech.spokenText, currentSpeech.who, onEndCallback);
           };
           audio.play();
-          showStatus('▶️ Tocando voz real gravada do elenco...');
+          showStatus(`▶️ Tocando voz real do elenco (${tempo}x)...`);
           return;
         }
       } catch (e) {}
@@ -1553,8 +1705,9 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         }
         if (chosenVoice) utterance.voice = chosenVoice;
 
+        const tempo = getEffectiveTempoRate();
         utterance.pitch = characterName.startsWith('B') ? 1.15 : 0.85;
-        utterance.rate = speechRate;
+        utterance.rate = tempo;
 
         utterance.onstart = () => showStatus('');
         utterance.onend = () => {
@@ -1692,6 +1845,12 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           rehearsalMode = savedMode;
           $('selectMode').value = savedMode;
         }
+
+        const savedTempo = localStorage.getItem('memorizador_tempo');
+        if (savedTempo) {
+          rehearsalTempo = savedTempo;
+          $('selectTempo').value = savedTempo;
+        }
       } catch (e) {}
     }
 
@@ -1702,6 +1861,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         localStorage.setItem('memorizador_autoadvance', autoAdvanceEnabled.toString());
         localStorage.setItem('memorizador_wakelock', wakeLockEnabled.toString());
         localStorage.setItem('memorizador_mode', rehearsalMode);
+        localStorage.setItem('memorizador_tempo', rehearsalTempo);
       } catch (e) {}
     }
 
@@ -1927,6 +2087,16 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       // Verifica se existe áudio real gravado desta fala
       const hasRealAudio = await getCastAudio(currentIndex);
 
+      // Ação dramática / intenção de Stanislavski para esta fala
+      const currentIntent = getSpeechIntent(currentIndex);
+      const intentHtml = `
+        <div class="intent-bar" id="intentBarCurrent" title="Ação dramática / intenção da personagem (Toque para editar)">
+          <span class="intent-label">🎯 Ação:</span>
+          <span class="intent-text">${escapeHtml(currentIntent || 'Definir verbo de ação ou subtexto...')}</span>
+          <button class="btn-intent-edit" id="btnEditIntent" type="button">${currentIntent ? '✏️ Editar' : '➕ Definir'}</button>
+        </div>
+      `;
+
       // Barra de gravação ativa se estiver gravando agora
       if (isRecordingNow) {
         html += `
@@ -1954,6 +2124,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
               </div>
               <span class="mastery-pill">Fala do parceiro</span>
             </div>
+            ${intentHtml}
             <div class="speech-content">
               ${speech.segments.map(seg => seg.type === 'rubric' ? ` <span class="rubric">(${escapeHtml(seg.text)})</span> ` : escapeHtml(seg.text)).join('')}
             </div>
@@ -2039,6 +2210,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
               </div>
               <span class="mastery-pill lv${level}">${levelNames[level]}</span>
             </div>
+            ${intentHtml}
             <div class="speech-content" id="speechDisplay">
               ${renderSpeechHtml(speech, currentIndex, level, hintsUsedThisLine)}
             </div>
@@ -2099,7 +2271,15 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       triggerHaptic('tap');
       const currentSpeech = speeches[currentIndex];
 
-      if (id === 'btnSpeakPartner' || id === 'btnAudioMy') {
+      if (id === 'btnEditIntent' || id === 'intentBarCurrent') {
+        const cur = getSpeechIntent(currentIndex);
+        const promptMsg = `Defina a Ação Dramática / Intenção desta fala (${currentSpeech.who}):\nEx: "Tripudiar sobre a fraqueza do pai", "Desarmar a culpa"\n(Digite "padrao" para restaurar a sugestão original):`;
+        const val = prompt(promptMsg, cur);
+        if (val !== null) {
+          setSpeechIntent(currentIndex, val.trim());
+          renderView();
+        }
+      } else if (id === 'btnSpeakPartner' || id === 'btnAudioMy') {
         playSpeechAudio(currentIndex);
       } else if (id === 'btnSpeakCue') {
         if (currentIndex > 0) playSpeechAudio(currentIndex - 1);
@@ -2259,6 +2439,12 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         return;
       }
 
+      const intentBarEl = e.target.closest('#btnEditIntent, .intent-bar');
+      if (intentBarEl) {
+        handleActionClick('btnEditIntent');
+        return;
+      }
+
       if (e.target.id) {
         handleActionClick(e.target.id);
       }
@@ -2340,6 +2526,11 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       }
     };
 
+    $('selectTempo').onchange = (e) => {
+      rehearsalTempo = e.target.value;
+      saveSettings();
+    };
+
     // VOZES ESPECÍFICAS (NÍVEL A)
     $('voiceSelect_SERGIO').onchange = (e) => {
       localStorage.setItem('voice_actor_SERGIO', e.target.value);
@@ -2408,6 +2599,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             memorizador_custom_script: localStorage.getItem('memorizador_custom_script'),
             memorizador_actor: localStorage.getItem('memorizador_actor'),
             memorizador_rate: localStorage.getItem('memorizador_rate'),
+            memorizador_tempo: localStorage.getItem('memorizador_tempo'),
             memorizador_voice: localStorage.getItem('memorizador_voice'),
             memorizador_autoadvance: localStorage.getItem('memorizador_autoadvance'),
             memorizador_wakelock: localStorage.getItem('memorizador_wakelock'),
@@ -2419,6 +2611,14 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           },
           recordings: serializedRecordings
         };
+
+        // Exporta dinamicamente todas as intenções dramáticas salvas (intent_*)
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('intent_')) {
+            backupData.localStorage[k] = localStorage.getItem(k);
+          }
+        }
 
         const jsonStr = JSON.stringify(backupData);
         const blob = new Blob([jsonStr], { type: 'application/json' });

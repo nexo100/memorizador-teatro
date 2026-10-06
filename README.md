@@ -77,15 +77,38 @@ Você pode selecionar um Beat específico no menu superior e ensaiar apenas aque
 
 ---
 
-## 📈 Os 5 Níveis de Domínio da Fala
+## 📈 Os 5 Níveis de Domínio da Fala & Cloze Semântico
 
-1. **1 · Leitura Completa**: Fala visível na íntegra para leitura inicial.
-2. **2 · Poucas Lacunas**: ~35% das palavras ocultadas (`______`).
-3. **3 · Muitas Lacunas**: ~68% das palavras ocultadas.
-4. **4 · Primeiras Letras**: Exibe apenas a primeira letra de cada palavra (`A... v... c... t... p...?`), forçando a recuperação ativa da memória verbal.
-5. **5 · De Memória Total**: Ocultação completa, mostrando apenas a contagem de palavras para falar de cabeça.
+Diferente de um sorteador cego de palavras, o algoritmo utiliza **Linguística Cognitiva e Andaimes Sintáticos**:
+
+1. **1 · Leitura Completa**: Fala visível na íntegra para leitura inicial e compreensão da proposição dramática.
+2. **2 · Poucas Lacunas (Apoio Estrutural)**: Conectivos e termos funcionais (*de, para, com, que, se, mas, porque...*) ficam **100% visíveis** como andaimes sintáticos; oculta progressivamente ~55% das palavras de conteúdo (verbos, substantivos e adjetivos de impacto).
+3. **3 · Muitas Lacunas (Desafio Lexical)**: Oculta 85% das palavras de conteúdo e 45% dos conectivos, exigindo resgate semântico profundo.
+4. **4 · Primeiras Letras (Mnemônica Fonológica)**: Exibe apenas a primeira letra de cada palavra (`A... v... c... t... p...?`), ativando a recuperação ativa do aparelho fonador.
+5. **5 · De Memória Total**: Ocultação completa, mostrando apenas a métrica de palavras para falar de cabeça.
 
 * **Botão `💡 Dica` (ou tecla `D`)**: Revela a próxima palavra oculta sem abrir a fala toda, destravando o ensaio sem frustração.
+
+---
+
+## 🎯 Pedagogia Teatral (Stanislavski): Intenção Dramática & Verbo de Ação
+
+Segundo as pesquisas cognitivas de Helga & Tony Noice com atores profissionais, a mente humana não memoriza textos teatrais por decoreba acústica mecânica, mas por **Elaborative Rehearsal (Investigação Ativa do Significado)**:
+
+* Cada fala agora possui a sua **Barra de Ação Dramática** (ex: `Provocar e tripudiar sobre a fraqueza física do pai`, `Impor controle rígido`).
+* **Edição ao toque**: Toque em `✏️ Editar` em qualquer fala para personalizar o subtexto ou o objetivo do personagem de acordo com as orientações do seu diretor ou estudo de mesa.
+* As intenções são salvas localmente e preservadas integralmente nos arquivos de backup.
+
+---
+
+## ⏱️ Variação de Tempo-Ritmo de Ensaio
+
+Para evitar que o ator fique com o texto "engessado" ou "viciado" em uma única velocidade métrica, a barra superior conta com o **Seletor de Ritmo**:
+
+* ⚡ **Normal (0.95x)**: Andamento equilibrado de ensaio de mesa.
+* 🐢 **Lento (0.80x)**: Andamento mastigado para prestar atenção na articulação, dicção e subtexto.
+* 🔥 **Urgente (1.20x)**: Ritmo acelerado para testar prontidão e reflexo sob pressão cênica.
+* 🎲 **Dinâmico / Surpresa**: Varia aleatoriamente a cada deixa (entre 0.82x e 1.18x), obrigando o ator a reagir ao tempo vivo do parceiro.
 
 ---
 
