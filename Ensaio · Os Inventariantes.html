@@ -1297,6 +1297,12 @@
       align-items: center;
       gap: 12px;
       box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .camarim-banner-script:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
     }
     .camarim-banner-script .banner-info {
       display: flex;
@@ -1827,6 +1833,27 @@
             <button id="btnRestoreOriginal" class="btn" style="flex:1;">Restaurar "Os Inventariantes"</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ROTEIRO COMPLETO (LEITURA DE MESA) -->
+  <div id="modalFullScript" class="modal-backdrop" hidden>
+    <div class="modal-content modal-content-wide">
+      <div class="modal-header">
+        <h2 id="fullScriptModalTitle">📖 Leitura de Mesa · Roteiro Completo</h2>
+        <button id="btnCloseFullScript" class="btn-close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-filter-tabs" style="padding:10px 14px; gap:8px; display:flex; flex-wrap:wrap; align-items:center;">
+        <select id="selectBeatFullScript" class="form-control" style="flex:1; min-width:180px; font-weight:600; padding:6px 10px;">
+          <option value="all">Todas as Cenas</option>
+        </select>
+        <input type="search" id="inputSearchScript" class="form-control" placeholder="Buscar no texto da peça..." style="flex:1; min-width:180px; padding:6px 10px;">
+        <button id="btnStartFromScript" class="btn btn-primary" type="button" style="min-height:36px; padding:0 12px; font-size:0.82rem;">▶️ Ensaio</button>
+      </div>
+      <div id="fullScriptStats" style="font-size:0.75rem; color:var(--fg-muted); padding:4px 16px;"></div>
+      <div class="script-reader-body" id="fullScriptContainer">
+        <!-- Injetado dinamicamente via UIController.renderFullScriptModal() -->
       </div>
     </div>
   </div>
@@ -4407,6 +4434,24 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           AppState.isSceneFinished = false;
           AppState.rehearsalMode = 'fraquezas';
           this.goToSpeech(AppState.pickNextWeakness());
+        } else if (id === 'btnOpenFullScriptLobby' || id === 'btnReadScriptBanner' || id === 'btnOpenFullScriptSettings') {
+          UIController.renderFullScriptModal();
+          if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = false;
+        } else if (id === 'btnCloseFullScript') {
+          if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = true;
+        } else if (id === 'btnStartFromScript') {
+          if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = true;
+          this.enterStage();
+        } else if (id === 'btnOpenIndex' || id === 'btnOpenIndexLobby' || id === 'btnStageIndex' || id === 'btnNavIndex') {
+          UIController.renderIndexModal();
+          if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = false;
+        } else if (id === 'btnCloseIndex') {
+          if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = true;
+        } else if (id === 'btnOpenSettings' || id === 'btnOpenSettingsLobby' || id === 'btnOpenSettingsStage') {
+          UIController.populateVoiceSelectors();
+          if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = false;
+        } else if (id === 'btnCloseSettings') {
+          if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
         }
       },
 
@@ -4545,6 +4590,12 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           const intentBarEl = e.target.closest('#btnEditIntent, .intent-bar');
           if (intentBarEl) {
             this.handleActionClick('btnEditIntent');
+            return;
+          }
+
+          const bannerScriptEl = e.target.closest('#bannerReadFullScript');
+          if (bannerScriptEl) {
+            this.handleActionClick('btnReadScriptBanner');
             return;
           }
 

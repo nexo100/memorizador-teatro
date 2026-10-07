@@ -598,10 +598,27 @@ Que tristeza é essa, sobrinho meu?
   assert(domStore['dockHeroArea'].innerHTML.includes('btnCheck'), 'Hero button deve ser Conferir Fala');
 
   // Modal de Leitura Integral
+  assert(indexHtml.includes('id="modalFullScript"'), 'Markup HTML deve conter o modal modalFullScript');
+  assert(indexHtml.includes('id="fullScriptContainer"'), 'Markup HTML deve conter o container fullScriptContainer');
+  assert(indexHtml.includes('id="btnOpenFullScriptLobby"'), 'Markup HTML deve conter o botão btnOpenFullScriptLobby');
+  assert(indexHtml.includes('id="btnReadScriptBanner"'), 'Markup HTML deve conter o botão btnReadScriptBanner');
+
+  // Testar acionamento dos botões de abertura do roteiro completo
+  domStore['modalFullScript'].hidden = true;
+  AppController.handleActionClick('btnOpenFullScriptLobby');
+  assert.strictEqual(domStore['modalFullScript'].hidden, false, 'Clicar em btnOpenFullScriptLobby deve abrir modalFullScript');
+
+  domStore['modalFullScript'].hidden = true;
+  AppController.handleActionClick('btnReadScriptBanner');
+  assert.strictEqual(domStore['modalFullScript'].hidden, false, 'Clicar em btnReadScriptBanner deve abrir modalFullScript');
+
+  AppController.handleActionClick('btnCloseFullScript');
+  assert.strictEqual(domStore['modalFullScript'].hidden, true, 'Clicar em btnCloseFullScript deve fechar modalFullScript');
+
   await UIController.renderFullScriptModal();
   assert(domStore['fullScriptContainer'].innerHTML.includes('script-read-item'), 'Roteiro completo deve conter itens de leitura');
   assert(domStore['fullScriptContainer'].innerHTML.includes('btn-read-jump'), 'Deve conter botões de ensaiar a partir da fala');
-  console.log('✅ 31. Chegar com a fala oculta por padrão e Leitura Integral do Roteiro validados');
+  console.log('✅ 31. Chegar com a fala oculta por padrão e Leitura Integral do Roteiro validados (com acionamento de botões)');
 
   // Teste 32: Modo Quiz de Alternativas (Banco de Palavras)
   AppState.selectedActor = 'SÉRGIO';
