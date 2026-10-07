@@ -74,6 +74,9 @@ Armazena e gerencia o estado mutável em memória durante a sessão:
 * `selectedBeat`: Filtro de beat selecionado (`all` ou índice numérico).
 * `rehearsalMode`: Modo de ensaio ativo (`cena`, `minhas`, `fraquezas`, `pingpong`, `ponto`).
 * `rehearsalTempo`: Andamento de ritmo ativo (`normal`, `slow`, `fast`, `dynamic`).
+* `studyMethod`: Método pedagógico ativo (`oral` - cênico tradicional, `quiz` - alternativas e banco de palavras, `typing` - digitação interativa).
+* `alwaysStartHidden`: Configuração de Active Recall imediato (a fala chega velada/oculta por padrão mesmo no nível 0, eliminando spoilers).
+* `hideRubrics`: Configuração de filtragem determinística de indicações cênicas/parênteses do corpo do diálogo.
 * `masteryLevels`: Nível de domínio (0 a 4) para cada fala do ator ativo.
 * `isRevealed` e `hintsUsedThisLine`: Estado de revelação e contador de dicas da fala atual.
 * **Algoritmo de Fraquezas Seguro (`pickNextWeakness`)**:
@@ -94,7 +97,7 @@ Motor universal de análise sintática dramatúrgica:
   * Linhas isoladas em maiúsculas: `PERSONAGEM\nFala seguinte...`
 * **Rubricas e Didascálias**:
   * Didascálias de cena completas em parênteses `( ... )` ou colchetes `[ ... ]` são associadas à fala antecedente como `directions`.
-  * Rubricas em meio ao diálogo são convertidas em segmentos `{ type: 'rubric', text: '...' }` para estilização visual diferenciada e exclusão do sintetizador de voz (TTS).
+  * Rubricas em meio ao diálogo são convertidas em segmentos `{ type: 'rubric', text: '...' }` para estilização visual diferenciada e exclusão do sintetizador de voz (TTS). Podem ser completamente ocultadas visualmente sob demanda (`hideRubrics`).
 * **Particionamento de Beats Dinâmicos**: Caso o texto não seja a peça canônica, divide o roteiro automaticamente em 4 a 6 blocos proporcionais (`start` e `end`).
 
 ### 5. `StorageEngine`
@@ -103,7 +106,7 @@ Camada de persistência local:
   * Armazena áudios gravados pelo elenco como `Blob` de alta fidelidade.
   * Suporta índices por `playId` e `speechIdx`, isolando completamente áudios de peças diferentes.
 * **LocalStorage**:
-  * Salva preferências globais (`taxa de fala`, `modo`, `ritmo`, `wake lock`).
+  * Salva preferências globais (`taxa de fala`, `modo`, `ritmo`, `método de estudo`, `sempre ocultar`, `ocultar rubricas`, `wake lock`).
   * Salva o nível de domínio do ator com chave isolada (`memorizador_niveis_<playId>_<actor>`).
   * Salva intenções dramáticas com chave isolada (`intent_<playId>_<speechIdx>`).
 * **Backup & Restauração Completa (`exportFullBackup` / `importFullBackup`)**:
@@ -111,10 +114,10 @@ Camada de persistência local:
   * Permite restaurar o backup em qualquer celular ou navegador sem perda de dados.
 
 ### 6. `AudioEngine`
-Motor de áudio híbrido:
-* **Web Speech API (`SpeechSynthesis`)**:
-  * Sintetiza vozes do sistema operacional para leitura das deixas do colega.
-  * Seletores individuais por personagem no modal de opções.
+Motor de áudio híbrido com controle bidirecional (Play/Stop):
+* **Web Speech API (`SpeechSynthesis`) & Gravação Real**:
+  * Controle de estado reativo `isPlaying`: o botão de áudio alterna dinamicamente entre `🔊 Ouvir` e `⏹️ Parar`, permitindo interrupção imediata de deixas ou falas longas.
+  * Sintetiza vozes do sistema operacional para leitura das deixas do colega com seletores dinâmicos por personagem.
   * Variação de pitch e velocidade controlada pelo seletor de ritmo (`getEffectiveTempoRate`).
 * **MediaRecorder (Áudio Real do Elenco)**:
   * Suporte multiplataforma com seleção dinâmica do melhor codec: `audio/webm` no Android/Chrome/Desktop e fallback automático para `audio/mp4` no iOS Safari.
@@ -123,11 +126,13 @@ Motor de áudio híbrido:
 
 ### 7. `AppUI`
 Camada de renderização reativa e manipulação do DOM:
-* `updateHeaderStats()`: Atualiza a barra de progresso percentual, o contador de falas e os botões de navegação.
-* `renderView()`: Renderiza dinamicamente o card de fala, dependendo de ser a vez do ator ou a fala do colega:
-  * Para o colega: Exibe didascálias, texto com rubricas, botão de ouvir deixa e botão de gravar áudio real.
-  * Para o ator: Exibe o **Cartão da Deixa (Cue Card)** com as últimas palavras destacadas, a **Barra de Intenção Dramática (Stanislavski)**, o texto com **Cloze Semântico**, e os botões de conferência e avaliação.
-* `renderSpeechHtml()`: Gera o HTML da fala aplicando a lógica do nível de fixação correspondente (0 a 4).
+* `updateHeaderStats()`: Atualiza a barra de progresso percentual, o contador de falas, o pill do método de estudo e os botões de navegação.
+* `renderLobby()`: Renderiza os cartões de personagens com percentual de domínio, o grid de métodos de memorização (Oral, Alternativas, Digitação), os modos de ensaio e o banner de leitura integral do roteiro.
+* `renderFullScriptModal()`: Modal de tela cheia contendo o roteiro integral formatado com busca em tempo real, filtro por beat e botão de salto direto para o ensaio.
+* `renderView()`: Renderiza dinamicamente o card de fala:
+  * Para o colega: Exibe didascálias e diálogo (filtrando rubricas se `hideRubrics=true`), botão de ouvir/parar e botão de gravar áudio real.
+  * Para o ator: Exibe o **Cartão da Deixa (Cue Card)**, a **Barra de Intenção Dramática (Stanislavski)**, o texto adaptado ao método de estudo ativo (**Oral / Cloze**, **Quiz de Alternativas** ou **Digitação Interativa**), e o One-Thumb Action Dock adaptativo.
+* `renderSpeechHtml()`: Gera o HTML da fala aplicando o método selecionado (Oral, Quiz com slots e chips de distratores, ou Digitação com inputs inline e auto-focus).
 * `renderVoiceSettings()`: Constrói dinamicamente os seletores de voz para cada personagem detectado no elenco ativo.
 * `renderIndexModal()`: Gera a lista completa de falas da cena com filtros por `Todas`, `Minhas`, `Fraquezas` e `Com Áudio Gravado`.
 
@@ -165,7 +170,7 @@ O botão **`💡 Dica` (ou atalho `D`)** revela incrementalmente a próxima pala
 
 ## 🧪 Suíte de Testes Automatizados (`test.cjs`)
 
-Para garantir que nenhuma regressão ocorra em futuras iterações, o repositório conta com uma suíte abrangente de **20 testes automatizados** em Node.js:
+Para garantir que nenhuma regressão ocorra em futuras iterações, o repositório conta com uma suíte abrangente de **33 testes automatizados** em Node.js:
 
 Para rodar a suíte:
 ```bash
@@ -193,6 +198,19 @@ node test.cjs
 18. Revogação de URLs em `AudioEngine` para prevenir vazamentos de memória.
 19. Persistência íntegra de metadados em backups.
 20. Limites e barreiras de navegação em modos filtrados.
+21. Ergonomia mobile, safe-area insets e redução de poluição visual.
+22. Otimização dramática de deixas: ausência de cards redundantes na abertura.
+23. Descarte de modais bottom sheet por toque no backdrop e drag-bar.
+24. Transição fluida entre Camarim (#lobbyView) e Palco (#rehearsalView).
+25. Fluxo previsível de "Errei" com retenção cênica e ciclo de retry.
+26. One-Thumb Action Dock, ausência de ruído e suporte a modo desafio vs primeira leitura.
+27. Sincronização do One-Thumb Dock no fim de cena e reinício por ator.
+28. Isolamento de teclado no Camarim e acionamento por Enter.
+29. AudioEngine: controle bidirecional de reprodução e parada imediata (Play/Stop toggle).
+30. Ocultação determinística de rubricas entre parênteses (hideRubrics).
+31. Chegar com a fala oculta por padrão (alwaysStartHidden) e Leitura Integral (modalFullScript).
+32. Modo Quiz de Alternativas (banco de palavras, distratores e avanço).
+33. Modo Digitação (inputs inline, validação e avanço).
 
 ---
 

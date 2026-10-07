@@ -37,6 +37,7 @@ function createEl(id) {
       contains() { return false; }
     },
     querySelectorAll: () => [],
+    querySelector: () => null,
     closest: () => null,
     onchange: null,
     onclick: null,
@@ -48,6 +49,7 @@ const docListeners = {};
 const mockDocument = {
   getElementById: (id) => domStore[id] || (domStore[id] = createEl(id)),
   querySelectorAll: () => [],
+  querySelector: () => null,
   addEventListener: (evt, fn) => { docListeners[evt] = fn; },
   createElement: () => ({
     style: {},
@@ -494,8 +496,13 @@ Que tristeza é essa, sobrinho meu?
   AppState.masteryLevels[0] = 0;
   AppState.isRevealed = false;
   AppState.isRetryState = false;
+  AppState.alwaysStartHidden = false; // Modo legado / primeira leitura
   await UIController.renderView();
-  assert(domStore['dockHeroArea'].innerHTML.includes('btnHideWords'), 'Hero button deve ser Já li no nível 0');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnHideWords'), 'Hero button deve ser Já li no nível 0 em modo primeira leitura');
+
+  AppState.alwaysStartHidden = true; // Novo modo desafio (padrão do ator)
+  await UIController.renderView();
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnCheck'), 'Hero button deve ser Conferir Fala no nível 0 em modo desafio');
 
   AppState.masteryLevels[0] = 1;
   await UIController.renderView();
@@ -551,7 +558,93 @@ Que tristeza é essa, sobrinho meu?
   }
   console.log('✅ 28. Isolamento de teclado no Camarim e acionamento por Enter validados');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 28 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 29: AudioEngine Toggle - Play & Stop imediato
+  let audioStatus = '';
+  const currentSp = AppState.speeches[0];
+  AudioEngine.playSpeechAudio(0, currentSp, 'SÉRGIO', 0, 1.0, 'normal', { onStatus: (msg) => { audioStatus = msg; } });
+  assert.strictEqual(AudioEngine.isPlaying, true, 'AudioEngine deve estar em estado isPlaying=true');
+  // Clicar novamente para interromper
+  AudioEngine.playSpeechAudio(0, currentSp, 'SÉRGIO', 0, 1.0, 'normal', { onStatus: (msg) => { audioStatus = msg; } });
+  assert.strictEqual(AudioEngine.isPlaying, false, 'AudioEngine deve ter parado (isPlaying=false)');
+  assert.strictEqual(audioStatus, '⏹️ Áudio interrompido.');
+  console.log('✅ 29. AudioEngine: controle bidirecional de reprodução e parada imediata (Play/Stop toggle) validado');
+
+  // Teste 30: Ocultação de Rubricas entre parênteses
+  const speechWithRubric = {
+    who: 'SÉRGIO',
+    spokenText: 'Você não pode fazer isso comigo.',
+    segments: [
+      { type: 'rubric', text: 'com raiva e desespero' },
+      { type: 'speech', text: 'Você não pode fazer isso comigo.' }
+    ]
+  };
+  AppState.hideRubrics = false;
+  const htmlWithRubric = UIController.renderSpeechHtml(speechWithRubric, 0, 0, 0, true);
+  assert(htmlWithRubric.includes('com raiva e desespero'), 'Rubrica deve aparecer quando hideRubrics=false');
+
+  AppState.hideRubrics = true;
+  const htmlWithoutRubric = UIController.renderSpeechHtml(speechWithRubric, 0, 0, 0, true);
+  assert(!htmlWithoutRubric.includes('com raiva e desespero'), 'Rubrica NÃO deve aparecer quando hideRubrics=true');
+  assert(htmlWithoutRubric.includes('Você não pode fazer isso comigo.'), 'Texto falado deve ser preservado integralmente');
+  AppState.hideRubrics = false; // reset
+  console.log('✅ 30. Ocultação determinística de rubricas entre parênteses (...) validada');
+
+  // Teste 31: Chegar com a fala oculta (alwaysStartHidden) e Leitura Integral (modalFullScript)
+  AppState.alwaysStartHidden = true;
+  AppState.masteryLevels[0] = 0;
+  AppState.isRevealed = false;
+  await UIController.renderView();
+  assert(domStore['mainApp'].innerHTML.includes('speech-veil-card'), 'Deve exibir card de fala oculta por padrão no nível 0');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnCheck'), 'Hero button deve ser Conferir Fala');
+
+  // Modal de Leitura Integral
+  await UIController.renderFullScriptModal();
+  assert(domStore['fullScriptContainer'].innerHTML.includes('script-read-item'), 'Roteiro completo deve conter itens de leitura');
+  assert(domStore['fullScriptContainer'].innerHTML.includes('btn-read-jump'), 'Deve conter botões de ensaiar a partir da fala');
+  console.log('✅ 31. Chegar com a fala oculta por padrão e Leitura Integral do Roteiro validados');
+
+  // Teste 32: Modo Quiz de Alternativas (Banco de Palavras)
+  AppState.selectedActor = 'SÉRGIO';
+  AppState.studyMethod = 'quiz';
+  AppState.currentIndex = 0;
+  AppState.masteryLevels[0] = 1;
+  AppState.isRevealed = false;
+  AppState.quizStep = 0;
+  await UIController.renderView();
+  assert(domStore['mainApp'].innerHTML.includes('quiz-action-area'), 'Deve renderizar área de quiz de alternativas');
+  assert(domStore['mainApp'].innerHTML.includes('quiz-chip'), 'Deve conter chips/opções de palavras');
+  assert(AppState.quizTargets.length > 0, 'Deve ter gerado alvos para o quiz');
+
+  // Simular acerto de todas as etapas do quiz
+  AppState.quizStep = AppState.quizTargets.length;
+  await UIController.renderView();
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnNextQuiz'), 'Dock deve exibir botão de avanço com sucesso após quiz');
+  AppController.handleActionClick('btnNextQuiz');
+  assert.strictEqual(AppState.masteryLevels[0], 2, 'Domínio sobe de nível após completar quiz');
+  console.log('✅ 32. Modo Quiz de Alternativas (banco de palavras, distratores e avanço) validado');
+
+  // Teste 33: Modo Digitação Interativa
+  AppState.studyMethod = 'typing';
+  AppState.currentIndex = 0;
+  AppState.masteryLevels[0] = 1;
+  AppState.isRevealed = false;
+  AppState.typingCompleted = false;
+  await UIController.renderView();
+  assert(domStore['mainApp'].innerHTML.includes('cloze-input'), 'Deve conter inputs de digitação inline');
+  assert(domStore['mainApp'].innerHTML.includes('typing-instruction'), 'Deve conter instruções de digitação');
+
+  // Simular conclusão de digitação
+  AppState.typingCompleted = true;
+  await UIController.renderView();
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnNextTyping'), 'Dock deve exibir botão de avanço após digitação completa');
+  AppController.handleActionClick('btnNextTyping');
+  assert.strictEqual(AppState.masteryLevels[0], 2, 'Domínio sobe de nível após completar digitação');
+
+  // Resetar método para oral
+  AppState.studyMethod = 'oral';
+  console.log('✅ 33. Modo Digitação (inputs inline, validação e avanço) validado');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 33 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();
