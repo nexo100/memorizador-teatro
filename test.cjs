@@ -27,7 +27,7 @@ function createEl(id) {
     textContent: '',
     innerHTML: '',
     style: {},
-    hidden: false,
+    hidden: id.startsWith('modal') || id === 'rehearsalView',
     checked: false,
     disabled: false,
     dataset: {},
@@ -44,10 +44,11 @@ function createEl(id) {
   };
 }
 
+const docListeners = {};
 const mockDocument = {
   getElementById: (id) => domStore[id] || (domStore[id] = createEl(id)),
   querySelectorAll: () => [],
-  addEventListener: () => {},
+  addEventListener: (evt, fn) => { docListeners[evt] = fn; },
   createElement: () => ({
     style: {},
     appendChild: () => {},
@@ -398,7 +399,159 @@ Que tristeza é essa, sobrinho meu?
   assert.strictEqual(domStore['btnNext'].disabled, true, 'btnNext deve estar desabilitado na última fala do ator');
   console.log('✅ 20. Limites de navegação do ator em modos filtrados validados');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 20 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 21: Ergonomia Mobile e Safe-Area Insets (Prevenção de Margem Dupla e Desperdício)
+  assert(!indexHtml.includes('padding-top: env(safe-area-inset-top'), 'Root não deve ter padding-top para evitar margens duplicadas com rodapé fixo');
+  assert(indexHtml.includes('.status-toast:empty {\n      display: none;'), 'Toast vazio deve ter display: none');
+  assert(indexHtml.includes('.cue-mini-badge'), 'Mini badge para deixas de abertura/continuação deve existir');
+  console.log('✅ 21. Ergonomia mobile, safe-area insets e redução de poluição visual validados');
+
+  // Teste 22: Redução de poluição visual na abertura de cena (Mini Badge vs Card Cheio)
+  AppState.currentIndex = 0;
+  AppState.selectedActor = 'SÉRGIO';
+  await UIController.renderView();
+  assert(domStore['mainApp'].innerHTML.includes('cue-mini-badge'), 'Fala inicial deve exibir cue-mini-badge sutil');
+  assert(!domStore['mainApp'].innerHTML.includes('<div class="cue-card"><span class="cue-tag">Abertura</span>'), 'Não deve renderizar card gigante vazio de abertura');
+  console.log('✅ 22. Otimização dramática de deixas: ausência de cards redundantes na abertura');
+
+  // Teste 23: Descarte de Bottom Sheet Modais via clique no Backdrop / Drag-Bar
+  AppController.bindEvents();
+  const mIndex = domStore['modalIndex'];
+  mIndex.hidden = false;
+  mIndex.onclick({ target: mIndex });
+  assert.strictEqual(mIndex.hidden, true, 'Clique no backdrop fecha o modal');
+
+  mIndex.hidden = false;
+  mIndex.onclick({ target: { classList: { contains: (cls) => cls === 'modal-drag-bar' } } });
+  assert.strictEqual(mIndex.hidden, true, 'Toque na barra de arraste fecha o modal');
+  console.log('✅ 23. Descarte de modais bottom sheet por toque no backdrop e drag-bar validado');
+
+  // Teste 24: Transição e sincronia de telas entre Camarim (#lobbyView) e Palco (#rehearsalView)
+  UIController.showScreen('lobby');
+  assert.strictEqual(AppState.currentScreen, 'lobby', 'Tela atual deve ser Camarim');
+  assert.strictEqual(domStore['lobbyView'].hidden, false, 'Camarim deve estar visível');
+  assert.strictEqual(domStore['rehearsalView'].hidden, true, 'Palco deve estar oculto');
+
+  // Entrar em cena no Palco com modo 'minhas'
+  AppController.enterStage('minhas');
+  assert.strictEqual(AppState.currentScreen, 'stage', 'Tela atual deve ser Palco');
+  assert.strictEqual(AppState.rehearsalMode, 'minhas', 'Modo deve ter sido aplicado');
+  assert.strictEqual(domStore['lobbyView'].hidden, true, 'Camarim deve estar oculto no ensaio');
+  assert.strictEqual(domStore['rehearsalView'].hidden, false, 'Palco deve estar visível');
+
+  // Voltar ao Camarim
+  AppController.returnToLobby();
+  assert.strictEqual(AppState.currentScreen, 'lobby', 'Retorno ao Camarim validado');
+  assert.strictEqual(domStore['lobbyView'].hidden, false, 'Camarim visível novamente');
+  assert.strictEqual(domStore['rehearsalView'].hidden, true, 'Palco oculto novamente');
+  console.log('✅ 24. Transição fluida entre Camarim (#lobbyView) e Palco (#rehearsalView) validada');
+
+  // Teste 25: Fluxo do botão "Errei" com retenção de cena e ciclo de retry
+  AppState.selectedActor = 'SÉRGIO';
+  AppController.enterStage('minhas');
+  AppState.currentIndex = 0;
+  AppState.masteryLevels[0] = 2;
+  AppState.isRevealed = true;
+  await UIController.renderView();
+
+  // Ator clica em Errei
+  AppController.handleActionClick('btnWrong');
+  await UIController.renderView();
+  assert.strictEqual(AppState.currentIndex, 0, 'Não deve expulsar o ator para a próxima fala ao errar');
+  assert.strictEqual(AppState.isRetryState, true, 'Estado de retry ativado');
+  assert.strictEqual(AppState.masteryLevels[0], 1, 'Nível de domínio decrementado para 1');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnRetry'), 'Botão Tentar de novo agora deve estar visível');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnNextAfterWrong'), 'Botão Seguir adiante deve estar visível');
+
+  // Ator clica em "Tentar de novo agora"
+  AppController.handleActionClick('btnRetry');
+  assert.strictEqual(AppState.isRetryState, false, 'Sai do estado de retry');
+  assert.strictEqual(AppState.isRevealed, false, 'Fala volta a ficar mascarada para novo teste');
+  assert.strictEqual(AppState.currentIndex, 0, 'Permanece na mesma fala para tentar de novo');
+
+  // Teste de resiliência: retry a partir de erro que reduz domínio para nível 0
+  AppState.masteryLevels[0] = 1;
+  AppState.isRevealed = true;
+  AppController.handleActionClick('btnWrong');
+  assert.strictEqual(AppState.masteryLevels[0], 0, 'Nível decrementado para 0');
+  AppController.handleActionClick('btnRetry');
+  await UIController.renderView();
+  assert.strictEqual(AppState.masteryLevels[0], 1, 'Retry eleva para nível 1 para garantir teste ativo');
+  assert.strictEqual(AppState.isRevealed, false, 'Fala fica mascarada para teste');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnCheck'), 'Hero dock apresenta Conferir Fala no retry');
+  assert(domStore['mainApp'].innerHTML.includes('masked-word'), 'Texto contém palavras mascaradas para o teste');
+
+  // Novo erro seguido de "Seguir adiante"
+  AppState.isRevealed = true;
+  AppController.handleActionClick('btnWrong');
+  assert.strictEqual(AppState.isRetryState, true, 'Estado de retry ativado novamente');
+  AppController.handleActionClick('btnNextAfterWrong');
+  assert.strictEqual(AppState.isRetryState, false, 'Estado de retry desativado');
+  assert.strictEqual(AppState.currentIndex, 2, 'Avançou para a próxima fala do ator');
+  console.log('✅ 25. Fluxo previsível de "Errei" com retenção cênica e ciclo de retry validado');
+
+  // Teste 26: Barra de Um Polegar (One-Thumb Action Dock) e Topo Minimalista Desobstruído
+  AppState.currentIndex = 0;
+  AppState.masteryLevels[0] = 0;
+  AppState.isRevealed = false;
+  AppState.isRetryState = false;
+  await UIController.renderView();
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnHideWords'), 'Hero button deve ser Já li no nível 0');
+
+  AppState.masteryLevels[0] = 1;
+  await UIController.renderView();
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnCheck'), 'Hero button deve ser Conferir Fala no estado oculto com nível > 0');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnHint'), 'Botão Dica deve estar presente');
+
+  AppState.isRevealed = true;
+  await UIController.renderView();
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnWrong'), 'Hero dock deve conter Errei no estado revelado');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnCorrect'), 'Hero dock deve conter Acertei no estado revelado');
+
+  // Ausência de legendas de atalho poluentes e presença dos novos componentes no HTML
+  assert(!indexHtml.includes('<div class="keyboard-guide">'), 'Legendas pesadas de teclado não devem poluir a tela mobile');
+  assert(indexHtml.includes('id="btnBackToLobby"'), 'Botão ‹ Camarim deve estar presente no Palco');
+  assert(indexHtml.includes('id="stageHeader"'), 'Header minimalista do palco deve estar presente');
+  assert(indexHtml.includes('id="oneThumbDock"'), 'One-Thumb Action Dock deve estar presente');
+  assert(indexHtml.includes('id="modeCardsGrid"'), 'Cards grandes de modos de ensaio devem estar presentes no Camarim');
+  assert(indexHtml.includes('.action-secondary-row'), 'CSS de action-secondary-row deve estar presente');
+  assert(indexHtml.includes('.btn-audio'), 'CSS de btn-audio deve estar presente');
+  assert(indexHtml.includes('.btn-icon-only'), 'CSS de btn-icon-only deve estar presente');
+  console.log('✅ 26. One-Thumb Action Dock, ausência de ruído e topo minimalista validados');
+
+  // Teste 27: Sincronização do One-Thumb Action Dock no fim de cena (Fim do Bloco) e reinício por ator
+  AppState.rehearsalMode = 'minhas';
+  AppState.selectedActor = 'BÁRBARA';
+  const barbaraIndices = AppState.getMySpeechIndices();
+  AppState.currentIndex = barbaraIndices[barbaraIndices.length - 1];
+  AppController.advanceNext();
+  assert.strictEqual(AppState.isSceneFinished, true, 'isSceneFinished deve ser true');
+  assert(domStore['mainApp'].innerHTML.includes('Fim do Bloco / Cena'), 'Tela principal deve exibir mensagem de término');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnRestartScene'), 'One-Thumb dock deve sincronizar botão Recomeçar bloco');
+  assert(domStore['dockHeroArea'].innerHTML.includes('btnReturnLobbyFinished'), 'One-Thumb dock deve sincronizar botão Voltar ao Camarim');
+  assert(!domStore['dockHeroArea'].innerHTML.includes('btnCheck'), 'Não deve exibir botão Conferir Fala no fim de cena');
+
+  // Reiniciar cena como Bárbara
+  AppController.handleActionClick('btnRestartScene');
+  assert.strictEqual(AppState.isSceneFinished, false, 'isSceneFinished deve ser resetado');
+  assert.strictEqual(AppState.currentIndex, barbaraIndices[0], 'Reinício de Bárbara em modo minhas deve ir para a primeira fala dela');
+  console.log('✅ 27. Sincronização do One-Thumb Dock no fim de cena e reinício por ator validados');
+
+  // Teste 28: Isolamento do teclado no Camarim (Enter entra em cena; atalhos de palco ignorados)
+  AppController.bindKeyboard();
+  UIController.showScreen('lobby');
+  AppState.currentIndex = 5;
+  if (docListeners['keydown']) {
+    docListeners['keydown']({ key: 'ArrowRight', preventDefault: () => {}, target: { tagName: 'DIV' } });
+    assert.strictEqual(AppState.currentIndex, 5, 'Teclas de ensaio não devem avançar fala no Camarim');
+    docListeners['keydown']({ key: ' ', code: 'Space', preventDefault: () => {}, target: { tagName: 'DIV' } });
+    assert.strictEqual(AppState.currentIndex, 5, 'Barra de espaço não deve avançar fala no Camarim');
+    docListeners['keydown']({ key: 'Enter', preventDefault: () => {}, target: { tagName: 'DIV' } });
+    assert.strictEqual(AppState.currentScreen, 'stage', 'Enter no Camarim deve entrar em cena no Palco');
+    AppController.returnToLobby();
+  }
+  console.log('✅ 28. Isolamento de teclado no Camarim e acionamento por Enter validados');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 28 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

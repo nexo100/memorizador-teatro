@@ -135,10 +135,10 @@ Para evitar que o ator fique com o texto "engessado" ou "viciado" em uma única 
 
 ## 🧪 Testes Automatizados de Integração
 
-O projeto possui uma suíte rigorosa de **20 testes automatizados** para assegurar que nenhuma regressão ocorra em navegação, parsing, cloze semântico, memória ou persistência:
+O projeto possui uma suíte rigorosa de **28 testes automatizados** para assegurar que nenhuma regressão ocorra em navegação, parsing, cloze semântico, memória, persistência, ergonomia de palco, sincronização de fim de cena e transição de telas:
 
 ```bash
-# Executa todos os 20 testes de integração
+# Executa todos os 28 testes de integração
 node test.cjs
 ```
 
@@ -148,17 +148,30 @@ node test.cjs
 
 ```
 memorizador-teatro/
-├── index.html                     # Aplicação PWA completa e universal (v3.0)
+├── index.html                     # Aplicação PWA completa e universal (v3.2)
 ├── Ensaio · Os Inventariantes.html # Cópia idêntica sincronizada byte-a-byte
 ├── manifest.json                  # Manifesto PWA para instalação no celular
-├── sw.js                          # Service Worker para suporte 100% offline (v5)
+├── sw.js                          # Service Worker para suporte 100% offline (v8)
 ├── icon.svg                       # Ícone vetorial das máscaras teatrais
-├── test.cjs                       # Suíte automatizada com 20 testes de integração
+├── test.cjs                       # Suíte automatizada com 28 testes de integração
 ├── MANUAL_DO_ATOR.md              # Guia prático de ensaio e memorização para o elenco
 ├── ARQUITETURA.md                 # Especificação técnica dos módulos e dados
 ├── Ensaio · Os Inventariantes.backup.html # Backup de segurança da versão inicial
 └── README.md                      # Visão geral do projeto e guia rápido
 ```
+
+---
+
+## 📱 Redesign Visual Mobile-First & Separação em Duas Telas (v3.2)
+
+O aplicativo foi totalmente reprojetado em **duas telas distintas e complementares**, atendendo à realidade física do ator segurando o smartphone com uma só mão durante a movimentação cênica:
+
+* **Tela 1: O Camarim (`#lobbyView`) — Preparação & Escolha**: Hub de entrada acolhedor com cartões grandes e táteis de personagem (nome, progresso percentual de falas dominadas e badge ativo), cartões descritivos dos 5 modos teatrais de ensaio (*Só Minhas Falas + Deixas*, *Passada Completa*, *Ping-Pong 4s*, *Ponto Eletrônico* e *Foco nas Fraquezas*), filtro opcional de Bloco Dramático (*Beat*) e o botão herói **`[ 🎭 Entrar em Cena › ]`**.
+* **Tela 2: O Palco (`#rehearsalView`) — Ensaio Limpo e Imersivo**: Topo minimalista desobstruído (*HUD*) com botão de retorno `‹ Camarim`, título da peça, beat ativo, contador `Fala X de Y` e ícone de configurações `⚙️`, eliminando dropdowns ou checkboxes visíveis durante a atuação.
+* **Barra de Um Polegar (*One-Thumb Action Dock*)**: Navegação lateral rápida (`[ ‹ ]` e `[ › ]`) emoldurando uma área central herói com botões táteis de 50px de altura (`Já li`, `Conferir Fala`, `Acertei`, `Errei`, `Minha vez`). Elimina ruídos visuais de desktop (legendas de teclas como Espaço, 1, 2, D).
+* **Fluxo Previsível de "Errei" com Retenção Cênica**: Ao clicar em `❌ Errei`, o app não avança bruscamente para a próxima fala; em vez disso, abre um ciclo claro com **`[ 🔁 Tentar de novo agora ]`** (re-mascarando o texto na mesma fala) e **`[ Seguir adiante › ]`**.
+* **Deixas Inteligentes & Mini-Badges**: Cartão de deixa destacado apenas quando há fala antecedente do parceiro; falas de abertura utilizam mini-badges discretos que economizam espaço vertical.
+* **Modais em Formato *Bottom Sheet***: No celular, as listas de falas e opções abrem como folhas inferiores com barra tátil de arraste, descarte instantâneo ao tocar no fundo/backdrop e respeito rigoroso às *Safe Areas* do iOS e Android (`env(safe-area-inset-bottom)`).
 
 ---
 

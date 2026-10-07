@@ -34,8 +34,6 @@
       --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.04);
       --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.07);
       box-sizing: border-box;
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -109,44 +107,60 @@
       flex-direction: column;
     }
 
-    /* HEADER */
-    .app-header {
-      margin-bottom: 12px;
+    /* TELA 1: O CAMARIM (LOBBY) */
+    .view-camarim {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.25s ease;
+      padding-bottom: 24px;
     }
-
-    .header-top {
+    .view-camarim[hidden] {
+      display: none !important;
+    }
+    .camarim-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
     }
-
-    .play-title {
+    .camarim-brand {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .camarim-brand .play-title {
       font-size: 1.25rem;
-      font-weight: 700;
+      font-weight: 800;
       margin: 0;
       letter-spacing: -0.01em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      color: var(--fg);
     }
-
-    .header-actions {
+    .camarim-subtitle {
+      font-size: 0.78rem;
+      color: var(--fg-muted);
+      font-family: system-ui, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+      margin-top: 1px;
+    }
+    .camarim-header-actions {
       display: flex;
       gap: 6px;
+      flex-shrink: 0;
     }
-
     .btn-header {
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--fg);
       border-radius: 9px;
-      padding: 6px 11px;
-      font-size: 0.85rem;
+      padding: 5px 10px;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -154,148 +168,366 @@
       gap: 4px;
       transition: all 0.15s ease;
       touch-action: manipulation;
+      min-height: 32px;
     }
     .btn-header:hover {
       background: var(--border-subtle);
       border-color: var(--fg-muted);
     }
-
-    /* TABS DE PERSONAGEM */
-    .character-tabs {
+    .camarim-section {
       display: flex;
+      flex-direction: column;
       gap: 8px;
-      margin: 8px 0;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: none;
     }
-    .character-tabs::-webkit-scrollbar { display: none; }
-
-    .char-tab {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
+    .camarim-section-title {
+      font-size: 0.8rem;
+      font-family: system-ui, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
       color: var(--fg-muted);
-      border-radius: 10px;
-      padding: 8px 16px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      transition: all 0.18s ease;
-      touch-action: manipulation;
     }
-    .char-tab.active {
-      background: var(--accent);
+    /* CARDS DE PERSONAGEM (CAMARIM) */
+    .character-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .char-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      text-align: left;
+      width: 100%;
+      user-select: none;
+    }
+    .char-card:hover {
       border-color: var(--accent);
-      color: var(--accent-text);
-      box-shadow: var(--shadow-sm);
+      background: var(--border-subtle);
+    }
+    .char-card.active {
+      border-color: var(--accent);
+      background: var(--card-bg);
+      box-shadow: 0 4px 14px var(--accent-soft);
+      outline: 2px solid var(--accent);
+    }
+    .char-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .char-card-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--fg);
+      letter-spacing: 0.04em;
     }
     .char-badge {
       font-size: 0.72rem;
-      padding: 2px 7px;
+      padding: 3px 8px;
       border-radius: 12px;
-      background: rgba(0,0,0,0.07);
+      background: var(--border-subtle);
+      font-weight: 700;
+      font-family: system-ui, sans-serif;
+      color: var(--fg-muted);
     }
-    .char-tab.active .char-badge {
-      background: rgba(255,255,255,0.22);
+    .char-badge.active {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+    .char-card-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-family: system-ui, sans-serif;
+      color: var(--fg-muted);
+    }
+    .char-card-pct {
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .char-card-progress {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .char-card-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s ease;
     }
 
-    /* PROGRESS BAR */
-    .progress-section {
-      margin: 8px 0 10px;
+    /* CARDS DE MODOS DE ENSAIO (CAMARIM) */
+    .mode-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
     }
-    .progress-bar-bg {
-      height: 6px;
-      background: var(--border);
-      border-radius: 4px;
+    @media (min-width: 520px) {
+      .mode-cards-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .mode-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      user-select: none;
+    }
+    .mode-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .mode-card.active {
+      border-color: var(--accent);
+      background: var(--card-bg);
+      box-shadow: 0 4px 16px var(--accent-soft);
+      outline: 2px solid var(--accent);
+    }
+    .mode-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mode-card-icon {
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+    .mode-card-title-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex: 1;
+      gap: 6px;
+    }
+    .mode-card-title {
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: var(--fg);
+      letter-spacing: -0.01em;
+    }
+    .mode-card-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: system-ui, sans-serif;
+      white-space: nowrap;
+    }
+    .mode-card-desc {
+      font-size: 0.82rem;
+      color: var(--fg-muted);
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    /* SELETOR DE BEAT NO CAMARIM */
+    .camarim-select-wrapper {
+      position: relative;
+    }
+    .camarim-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--card-bg);
+      color: var(--fg);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .camarim-select:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    /* BOTÃO HERÓI: ENTRAR EM CENA */
+    .camarim-hero-action {
+      margin-top: 6px;
+    }
+    .btn-enter-stage {
+      width: 100%;
+      min-height: 52px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 18px var(--accent-soft);
+    }
+
+    /* TELA 2: O PALCO (ENSAIO LIMPO) */
+    .view-palco {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding-bottom: calc(84px + env(safe-area-inset-bottom, 14px));
+      animation: fadeIn 0.2s ease;
+    }
+    .view-palco[hidden] {
+      display: none !important;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* TOPO MINIMALISTA DO PALCO (HUD DESOBSTRUÍDO) */
+    .stage-header {
+      margin-bottom: 10px;
+    }
+    .stage-header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 40px;
+    }
+    .btn-stage-back {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      border-radius: 9px;
+      padding: 5px 11px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      touch-action: manipulation;
+      white-space: nowrap;
+    }
+    .btn-stage-back:hover {
+      background: var(--border-subtle);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .stage-center-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-width: 0;
+      flex: 1;
+      padding: 0 4px;
+    }
+    .stage-play-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--fg);
+      white-space: nowrap;
       overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .stage-beat-pill {
+      font-size: 0.72rem;
+      color: var(--fg-muted);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .stage-right-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .btn-stage-counter {
+      background: var(--border-subtle);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      border-radius: 14px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: all 0.15s;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-stage-counter:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-stage-icon {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      border-radius: 9px;
+      padding: 5px 9px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-stage-icon:hover {
+      background: var(--border-subtle);
+    }
+    .stage-progress-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 6px;
     }
     .progress-bar-fill {
       height: 100%;
       background: var(--accent);
       width: 0%;
-      transition: width 0.3s ease;
-    }
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      color: var(--fg-muted);
-      margin-top: 5px;
-      font-family: system-ui, sans-serif;
-    }
-
-    /* FILTRO DE BEATS DRAMÁTICOS */
-    .beat-selector-bar {
-      margin-bottom: 8px;
-    }
-    .beat-select {
-      width: 100%;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--fg);
-      cursor: pointer;
-    }
-
-    /* TOOLBAR ROW */
-    .toolbar-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 6px 10px;
-      margin-bottom: 10px;
-    }
-    .mode-select {
-      background: transparent;
-      border: none;
-      color: var(--fg);
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 6px;
-    }
-    .mode-select:focus {
-      outline: 2px solid var(--accent);
-    }
-    .toolbar-toggles {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .toggle-chip {
-      font-size: 0.82rem;
-      color: var(--fg-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      user-select: none;
-    }
-    .toggle-chip input {
-      accent-color: var(--accent);
-      cursor: pointer;
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* STATUS DE VOZ E TOAST */
     .status-toast {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--fg-muted);
       font-family: system-ui, sans-serif;
-      margin-bottom: 6px;
-      min-height: 1.2em;
+      text-align: center;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .status-toast:empty {
+      display: none;
+      margin: 0;
+      min-height: 0;
+    }
+    .status-toast:not(:empty) {
+      margin-bottom: 4px;
+      padding: 3px 8px;
+      background: var(--accent-soft);
+      border-radius: 6px;
+      color: var(--accent);
+      display: inline-block;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     /* ÁREA DO ENSAIO */
@@ -361,6 +593,22 @@
     .btn-intent-edit:hover {
       color: var(--fg);
       border-color: var(--fg);
+    }
+
+    /* MINI BADGE DE DEIXA (ABERTURA/CONTINUAÇÃO) */
+    .cue-mini-badge {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--fg-muted);
+      font-style: italic;
+      padding: 3px 10px;
+      margin-bottom: 8px;
+      background: var(--border-subtle);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      align-self: flex-start;
     }
 
     /* CARTÃO DA DEIXA (CUE) */
@@ -505,24 +753,33 @@
       padding: 0 3px;
     }
     .masked-word {
-      letter-spacing: 0.12em;
+      display: inline-block;
+      letter-spacing: 0.16em;
       color: var(--fg-muted);
-      font-weight: 600;
+      opacity: 0.75;
+      font-size: 0.88em;
       background: var(--border-subtle);
-      padding: 0 4px;
-      border-radius: 4px;
+      padding: 1px 7px;
+      margin: 0 1px;
+      border-radius: 12px;
+      vertical-align: baseline;
+      user-select: none;
+      transition: all 0.2s ease;
     }
     .first-letter-word {
+      display: inline-block;
       color: var(--fg);
       font-weight: 700;
       background: var(--border-subtle);
-      padding: 0 3px;
-      border-radius: 3px;
+      padding: 1px 6px;
+      margin: 0 1px;
+      border-radius: 8px;
     }
     .first-letter-word .dots {
       color: var(--fg-muted);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       font-weight: normal;
+      opacity: 0.7;
     }
     .hint-revealed {
       background: var(--hint-bg);
@@ -657,72 +914,135 @@
       border-color: var(--recording);
       color: var(--recording);
     }
+    .action-secondary-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .btn-audio {
+      min-height: 38px;
+      padding: 0 14px;
+      font-size: 0.85rem;
+      border-radius: 20px;
+    }
+    .btn-record {
+      min-height: 38px;
+      padding: 0 14px;
+      font-size: 0.85rem;
+      border-radius: 20px;
+      border-color: var(--recording);
+      color: var(--recording);
+    }
+    .btn-icon-only {
+      min-height: 38px;
+      width: 38px;
+      padding: 0;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-    /* FOOTER FIXO / NAVEGAÇÃO */
-    .app-footer {
+        /* BARRA DE UM POLEGAR (ONE-THUMB ACTION DOCK) */
+    .action-dock {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      background: var(--bg);
+      background: rgba(251, 249, 245, 0.94);
       border-top: 1px solid var(--border);
-      padding: 8px 16px;
-      padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+      padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 10px));
       z-index: 100;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
     }
-    .footer-inner {
-      max-width: 680px;
+    :root[data-theme="dark"] .action-dock,
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .action-dock {
+        background: rgba(18, 17, 16, 0.94);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+      }
+    }
+    .dock-inner {
+      max-width: 640px;
       margin: 0 auto;
-    }
-    .nav-controls {
       display: flex;
-      justify-content: space-between;
       align-items: center;
       gap: 8px;
+      width: 100%;
     }
-    .btn-nav {
+    .dock-btn-nav {
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--fg);
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    .btn-nav:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-    .btn-nav-center {
-      background: transparent;
-      border: none;
-      color: var(--fg);
-      font-size: 0.9rem;
+      border-radius: 12px;
+      width: 48px;
+      height: 50px;
+      min-width: 48px;
+      font-size: 1.4rem;
       font-weight: 700;
       cursor: pointer;
-      padding: 8px;
-      border-radius: 6px;
+      touch-action: manipulation;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
     }
-    .keyboard-guide {
-      font-size: 0.72rem;
-      color: var(--fg-muted);
-      text-align: center;
-      margin-top: 4px;
-      font-family: system-ui, sans-serif;
-    }
-    kbd {
+    .dock-btn-nav:hover:not(:disabled) {
       background: var(--border-subtle);
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 1px 4px;
-      font-family: inherit;
+      border-color: var(--fg-muted);
+    }
+    .dock-btn-nav:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+    .dock-hero-area {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+    }
+    .dock-hero-btn {
+      flex: 1;
+      height: 50px;
+      min-height: 50px;
+      font-size: 1.02rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      border-radius: 12px;
+    }
+    .dock-btn-hint {
+      height: 50px;
+      min-height: 50px;
+      min-width: 76px;
+      padding: 0 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border-radius: 12px;
+    }
+    .btn-retry {
+      background: #d97706;
+      border-color: #b45309;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+    }
+    .btn-retry:hover {
+      background: #b45309;
+    }
+    .btn-secondary {
+      background: var(--card-bg);
+      border-color: var(--border);
+      color: var(--fg);
+    }
+    .btn-secondary:hover {
+      background: var(--border-subtle);
     }
 
-    /* MODAIS */
+/* MODAIS */
     .modal-backdrop {
       position: fixed;
       top: 0;
@@ -877,95 +1197,149 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- HEADER -->
-    <header class="app-header">
-      <div class="header-top">
-        <h1 class="play-title" id="playTitle">🎭 Os Inventariantes</h1>
-        <div class="header-actions">
-          <button id="btnOpenIndex" class="btn-header" title="Índice de Falas (Atalho: I)">📋 Falas</button>
-          <button id="btnOpenSettings" class="btn-header" title="Opções & Vozes">⚙️ Opções</button>
+    <!-- TELA 1: O CAMARIM (LOBBY DE ENTRADA & HUB DE ESCOLHA) -->
+    <div id="lobbyView" class="view-camarim">
+      <header class="camarim-header">
+        <div class="camarim-brand">
+          <h1 class="play-title" id="playTitle">🎭 Os Inventariantes</h1>
+          <span class="camarim-subtitle">O Camarim · Preparação & Escolha</span>
         </div>
+        <div class="camarim-header-actions">
+          <button id="btnOpenIndexLobby" class="btn-header" type="button" title="Índice de Falas">📋 Falas</button>
+          <button id="btnOpenSettingsLobby" class="btn-header" type="button" title="Opções & Vozes">⚙️ Opções</button>
+        </div>
+      </header>
+
+      <!-- SEÇÃO 1: PERSONAGEM ATIVO (CARDS GRANDES E TÁTEIS) -->
+      <section class="camarim-section">
+        <div class="camarim-section-title">👤 Escolha seu Personagem</div>
+        <div class="character-cards-grid" id="characterTabs" role="tablist">
+          <!-- Injetado dinamicamente via UIController.renderLobby() -->
+        </div>
+      </section>
+
+      <!-- SEÇÃO 2: MODOS DE ENSAIO (CARDS GRANDES COM EXPLICAÇÃO) -->
+      <section class="camarim-section">
+        <div class="camarim-section-title">🎭 Modo de Ensaio</div>
+        <div class="mode-cards-grid" id="modeCardsGrid">
+          <div class="mode-card active" data-mode="minhas">
+            <div class="mode-card-header">
+              <span class="mode-card-icon">🎯</span>
+              <div class="mode-card-title-group">
+                <span class="mode-card-title">Só Minhas Falas + Deixas</span>
+                <span class="mode-card-badge">Recomendado</span>
+              </div>
+            </div>
+            <p class="mode-card-desc">Foque apenas nas suas réplicas, com a deixa do colega conectada e destacada no topo.</p>
+          </div>
+
+          <div class="mode-card" data-mode="cena">
+            <div class="mode-card-header">
+              <span class="mode-card-icon">📖</span>
+              <div class="mode-card-title-group">
+                <span class="mode-card-title">Passada de Cena (Completa)</span>
+                <span class="mode-card-badge">Cronológico</span>
+              </div>
+            </div>
+            <p class="mode-card-desc">Passe todas as falas da peça do início ao fim, ouvindo ou lendo cada personagem.</p>
+          </div>
+
+          <div class="mode-card" data-mode="pingpong">
+            <div class="mode-card-header">
+              <span class="mode-card-icon">⚡</span>
+              <div class="mode-card-title-group">
+                <span class="mode-card-title">Ping-Pong de Deixas</span>
+                <span class="mode-card-badge">Reflexo 4s</span>
+              </div>
+            </div>
+            <p class="mode-card-desc">O colega fala e um cronômetro de reflexo de 4s abre para testar seu tempo de resposta.</p>
+          </div>
+
+          <div class="mode-card" data-mode="ponto">
+            <div class="mode-card-header">
+              <span class="mode-card-icon">🎧</span>
+              <div class="mode-card-title-group">
+                <span class="mode-card-title">Ponto Eletrônico</span>
+                <span class="mode-card-badge">Hands-Free</span>
+              </div>
+            </div>
+            <p class="mode-card-desc">Ensaio 100% auditivo para você ensaiar com fone no ouvido, viva-voz ou sem as mãos.</p>
+          </div>
+
+          <div class="mode-card" data-mode="fraquezas">
+            <div class="mode-card-header">
+              <span class="mode-card-icon">🧠</span>
+              <div class="mode-card-title-group">
+                <span class="mode-card-title">Foco nas Fraquezas</span>
+                <span class="mode-card-badge">Memorização</span>
+              </div>
+            </div>
+            <p class="mode-card-desc">Repetição espaçada inteligente priorizando as falas onde você mais errou ou tem dúvida.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEÇÃO 3: BLOCO DRAMÁTICO / BEAT (OPCIONAL) -->
+      <section class="camarim-section">
+        <div class="camarim-section-title">🎬 Bloco Dramático / Beat (Opcional)</div>
+        <div class="camarim-select-wrapper">
+          <select id="selectBeat" class="camarim-select" title="Filtrar por bloco dramático da cena">
+            <option value="all">🎭 Cena Completa</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- BOTÃO HERÓI: ENTRAR EM CENA -->
+      <div class="camarim-hero-action">
+        <button id="btnEnterStage" class="btn btn-primary btn-enter-stage" type="button">
+          🎭 Entrar em Cena ›
+        </button>
       </div>
+    </div>
 
-      <!-- Abas de Personagens -->
-      <div class="character-tabs" id="characterTabs"></div>
-
-      <!-- Barra de Progresso e Métricas -->
-      <div class="progress-section">
-        <div class="progress-bar-bg">
+    <!-- TELA 2: O PALCO (ENSAIO LIMPO E IMERSIVO) -->
+    <div id="rehearsalView" class="view-palco" hidden>
+      <!-- TOPO MINIMALISTA (HUD DESOBSTRUÍDO) -->
+      <header class="stage-header" id="stageHeader">
+        <div class="stage-header-inner">
+          <button id="btnBackToLobby" class="btn-stage-back" type="button" title="Voltar ao Camarim">‹ Camarim</button>
+          <div class="stage-center-info">
+            <span class="stage-play-title" id="stagePlayTitle">Os Inventariantes</span>
+            <span class="stage-beat-pill" id="stageBeatTitle">🎭 Cena Completa</span>
+          </div>
+          <div class="stage-right-actions">
+            <button id="btnStageIndex" class="btn-stage-counter" type="button" title="Índice de Falas">
+              <span id="counterText">Fala 1 de 58</span>
+            </button>
+            <button id="btnOpenSettingsStage" class="btn-stage-icon" type="button" title="Opções & Vozes">⚙️</button>
+          </div>
+        </div>
+        <div class="stage-progress-bar">
           <div class="progress-bar-fill" id="progressBar"></div>
         </div>
-        <div class="progress-info">
-          <span id="masteryText">0 de 0 dominadas</span>
-          <span id="counterText">Fala 1 de 58</span>
-        </div>
-      </div>
+        <div class="status-toast" id="statusMessage"></div>
+      </header>
 
-      <!-- Filtro de Beats Dramáticos -->
-      <div class="beat-selector-bar">
-        <select id="selectBeat" class="beat-select" title="Filtrar por bloco dramático da cena">
-          <option value="all">🎭 Cena Completa</option>
-        </select>
-      </div>
+      <!-- ÁREA CÊNICA (A ESCUTA E A FALA) -->
+      <main id="mainApp" class="rehearsal-card-container">
+        <!-- Injetado dinamicamente via UIController.renderView() -->
+      </main>
 
-      <!-- Barra de Modos e Áudio -->
-      <div class="toolbar-row">
-        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-          <select id="selectMode" class="mode-select" title="Modo de ensaio">
-            <option value="cena">Modo: Cena Toda (sequencial)</option>
-            <option value="minhas">Modo: Só Minhas Falas + Deixas</option>
-            <option value="fraquezas">Modo: Foco nas Fraquezas</option>
-            <option value="pingpong">Modo: Ping-Pong de Deixas (Reflexo)</option>
-            <option value="ponto">Modo: Ponto Eletrônico (Fone de Ouvido)</option>
-          </select>
-          <select id="selectTempo" class="mode-select" title="Andamento e ritmo da cena" style="color:var(--accent);">
-            <option value="normal">Ritmo: ⚡ Normal (0.95x)</option>
-            <option value="slow">Ritmo: 🐢 Lento (0.80x)</option>
-            <option value="fast">Ritmo: 🔥 Urgente (1.20x)</option>
-            <option value="dynamic">Ritmo: 🎲 Dinâmico / Surpresa</option>
-          </select>
+      <!-- BARRA DE UM POLEGAR (ONE-THUMB ACTION DOCK) -->
+      <footer id="oneThumbDock" class="action-dock">
+        <div class="dock-inner">
+          <button id="btnPrev" class="dock-btn-nav" type="button" title="Fala anterior (←)">‹</button>
+          <div id="dockHeroArea" class="dock-hero-area">
+            <!-- Injetado dinamicamente via UIController.renderView() -->
+          </div>
+          <button id="btnNext" class="dock-btn-nav" type="button" title="Próxima fala (→)">›</button>
         </div>
-        <div class="toolbar-toggles">
-          <label class="toggle-chip" title="Ouvir áudio da fala do colega">
-            <input type="checkbox" id="chkVoice" checked>
-            <span>🔊 Voz</span>
-          </label>
-          <label class="toggle-chip" title="Avançar sozinho quando o colega terminar">
-            <input type="checkbox" id="chkAutoAdvance">
-            <span>⚡ Auto</span>
-          </label>
-          <label class="toggle-chip" title="Manter tela do celular ligada no ensaio">
-            <input type="checkbox" id="chkWakeLock" checked>
-            <span>👁️ Tela</span>
-          </label>
-        </div>
-      </div>
-      <div class="status-toast" id="statusMessage"></div>
-    </header>
-
-    <!-- ÁREA PRINCIPAL DO ENSAIO -->
-    <main id="mainApp" class="rehearsal-card-container">
-      <!-- Injetado dinamicamente via JavaScript -->
-    </main>
-
-    <!-- NAVEGAÇÃO FIXA NO RODAPÉ -->
-    <footer class="app-footer">
-      <div class="footer-inner">
-        <div class="nav-controls">
-          <button id="btnPrev" class="btn-nav" title="Fala anterior (←)">‹ Anterior</button>
-          <button id="btnNavIndex" class="btn-nav-center" title="Abrir índice completo">
-            <span id="navCounterLabel">Fala 1 / 58</span>
-          </button>
-          <button id="btnNext" class="btn-nav" title="Próxima fala (→)">Próxima ›</button>
-        </div>
-        <div class="keyboard-guide">
-          Atalhos: <kbd>Espaço</kbd> Ler/Conferir • <kbd>1</kbd> Errei • <kbd>2</kbd> Acertei • <kbd>D</kbd> Dica • <kbd>←</kbd><kbd>→</kbd> Navegar
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </div>
   </div>
 
-  <!-- MODAL: ÍNDICE DE FALAS -->
+
+<!-- MODAL: ÍNDICE DE FALAS -->
   <div id="modalIndex" class="modal-backdrop" hidden>
     <div class="modal-content">
       <div class="modal-header">
@@ -992,6 +1366,42 @@
       <div class="modal-body">
         <!-- Nível A: Seletor de Vozes Nativas do Celular (Dinâmico para todos os personagens) -->
         <div id="characterVoicesContainer"></div>
+
+        <!-- Ritmo e Preferências do Palco -->
+        <div class="form-group" style="background:var(--border-subtle); padding:12px; border-radius:10px; margin-bottom:14px;">
+          <label style="font-weight:700; margin-bottom:8px; display:block;">⚡ Ritmo & Preferências do Palco:</label>
+          <div style="margin-bottom:8px;">
+            <label for="selectTempo" style="font-size:0.8rem; color:var(--fg-muted);">Andamento e Ritmo da Cena:</label>
+            <select id="selectTempo" class="form-control" title="Andamento e ritmo da cena" style="width:100%; padding:6px; font-weight:600;">
+              <option value="normal">⚡ Ritmo: Normal (0.95x)</option>
+              <option value="slow">🐢 Ritmo: Lento (0.80x)</option>
+              <option value="fast">🔥 Ritmo: Urgente (1.20x)</option>
+              <option value="dynamic">🎲 Ritmo: Dinâmico</option>
+            </select>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <label class="toggle-chip" style="font-size:0.82rem; padding:4px 8px;">
+              <input type="checkbox" id="chkVoice" checked>
+              <span>🔊 Ouvir voz sintetizada do colega</span>
+            </label>
+            <label class="toggle-chip" style="font-size:0.82rem; padding:4px 8px;">
+              <input type="checkbox" id="chkAutoAdvance">
+              <span>⚡ Avanço automático após fala do colega</span>
+            </label>
+            <label class="toggle-chip" style="font-size:0.82rem; padding:4px 8px;">
+              <input type="checkbox" id="chkWakeLock" checked>
+              <span>👁️ Manter tela do celular ligada no ensaio</span>
+            </label>
+            <!-- Select oculto para compatibilidade com qualquer listener legado -->
+            <select id="selectMode" style="display:none;">
+              <option value="cena">Modo: Cena Toda</option>
+              <option value="minhas">Modo: Só Minhas + Deixas</option>
+              <option value="fraquezas">Modo: Foco nas Fraquezas</option>
+              <option value="pingpong">Modo: Ping-Pong de Deixas</option>
+              <option value="ponto">Modo: Ponto Eletrônico</option>
+            </select>
+          </div>
+        </div>
 
         <div class="form-group">
           <label for="rangeSpeechRate">Velocidade da Voz: <span id="rateLabel">0.95x</span></label>
@@ -1298,10 +1708,10 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             const escaped = Utils.escapeHtml(part);
             if (mode === 'initial') {
               const first = escaped[0];
-              const restDots = '.'.repeat(Math.max(1, Math.min(3, escaped.length - 1)));
+              const restDots = '·'.repeat(Math.max(1, Math.min(3, escaped.length - 1)));
               return `<span class="first-letter-word">${first}<span class="dots">${restDots}</span></span>`;
             } else {
-              const blank = '_'.repeat(Math.max(2, escaped.length));
+              const blank = '•'.repeat(Math.max(2, Math.min(5, escaped.length)));
               return `<span class="masked-word">${blank}</span>`;
             }
           }
@@ -1362,6 +1772,9 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       speechRate: 0.95,
       activeScriptText: '',
       currentFilter: 'all',
+      currentScreen: 'lobby',
+      isRetryState: false,
+      isSceneFinished: false,
 
       // Timers & controle de fluxo
       pingPongCountdown: 4,
@@ -2102,11 +2515,78 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       }
     };
 
-    // 7. CONTROLADOR DE INTERFACE (UIController)
+        // 7. CONTROLADOR DE INTERFACE (UIController)
     const UIController = {
       showStatus(msg) {
         const el = Utils.$('statusMessage');
         if (el) el.textContent = msg;
+      },
+
+      showScreen(screenName) {
+        AppState.currentScreen = screenName;
+        const lobby = Utils.$('lobbyView');
+        const stage = Utils.$('rehearsalView');
+        if (screenName === 'lobby') {
+          if (lobby) lobby.hidden = false;
+          if (stage) stage.hidden = true;
+          this.renderLobby();
+        } else {
+          if (lobby) lobby.hidden = true;
+          if (stage) stage.hidden = false;
+          this.renderView();
+        }
+      },
+
+      renderLobby() {
+        const titleEl = Utils.$('playTitle');
+        if (titleEl) {
+          titleEl.textContent = '🎭 ' + (document.title.replace('🎭 Ensaio Teatral · ', '') || 'Os Inventariantes');
+        }
+
+        const tabsContainer = Utils.$('characterTabs');
+        if (tabsContainer) {
+          tabsContainer.innerHTML = AppState.characters.map(c => {
+            const isCurrent = c === AppState.selectedActor;
+            const total = AppState.speeches.filter(s => s.who === c).length;
+            let actorLevels = isCurrent ? AppState.masteryLevels : StorageManager.loadProgress(c, AppState.speeches.length);
+            const mastered = AppState.speeches.map((s, i) => s.who === c && (actorLevels[i] || 0) >= 3 ? 1 : 0).reduce((a, b) => a + b, 0);
+            const pct = total > 0 ? Math.round((100 * mastered) / total) : 0;
+            return `
+              <button class="char-tab char-card ${isCurrent ? 'active' : ''}" data-actor="${Utils.escapeHtml(c)}" type="button">
+                <div class="char-card-header">
+                  <div class="char-card-name">🎭 ${Utils.escapeHtml(c)}</div>
+                  <span class="char-badge ${isCurrent ? 'active' : ''}">${isCurrent ? '✓ Em Cena' : `${pct}% dominado`}</span>
+                </div>
+                <div class="char-card-info">
+                  <span class="char-card-stat">${mastered} de ${total} falas dominadas</span>
+                  <span class="char-card-pct">${pct}%</span>
+                </div>
+                <div class="char-card-progress">
+                  <div class="char-card-progress-fill" style="width:${pct}%"></div>
+                </div>
+              </button>
+            `;
+          }).join('');
+        }
+
+        const modeGrid = Utils.$('modeCardsGrid');
+        if (modeGrid) {
+          const cards = modeGrid.querySelectorAll('.mode-card');
+          cards.forEach(card => {
+            if (card.dataset.mode === AppState.rehearsalMode) {
+              card.classList.add('active');
+            } else {
+              card.classList.remove('active');
+            }
+          });
+        }
+
+        const btnEnter = Utils.$('btnEnterStage');
+        if (btnEnter) {
+          btnEnter.textContent = `🎭 Entrar em Cena como ${AppState.selectedActor || 'Ator'} ›`;
+        }
+
+        this.populateBeatSelector();
       },
 
       populateBeatSelector() {
@@ -2178,17 +2658,18 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       },
 
       updateHeaderStats() {
-        const tabsContainer = Utils.$('characterTabs');
-        if (tabsContainer) {
-          tabsContainer.innerHTML = AppState.characters.map(c => {
-            const isCurrent = c === AppState.selectedActor;
-            const total = AppState.speeches.filter(s => s.who === c).length;
-            let actorLevels = isCurrent ? AppState.masteryLevels : StorageManager.loadProgress(c, AppState.speeches.length);
-            const mastered = AppState.speeches.map((s, i) => s.who === c && (actorLevels[i] || 0) >= 3 ? 1 : 0).reduce((a, b) => a + b, 0);
-            return `<button class="char-tab ${isCurrent ? 'active' : ''}" data-actor="${Utils.escapeHtml(c)}">
-              ${Utils.escapeHtml(c)} <span class="char-badge">${mastered}/${total}</span>
-            </button>`;
-          }).join('');
+        const stagePlay = Utils.$('stagePlayTitle');
+        if (stagePlay) {
+          stagePlay.textContent = document.title.replace('🎭 Ensaio Teatral · ', '') || 'Os Inventariantes';
+        }
+        const stageBeat = Utils.$('stageBeatTitle');
+        if (stageBeat) {
+          if (AppState.selectedBeat === 'all') {
+            stageBeat.textContent = '🎭 Cena Completa';
+          } else {
+            const b = AppState.activeBeats[parseInt(AppState.selectedBeat, 10)];
+            stageBeat.textContent = b ? b.name : '🎭 Cena Completa';
+          }
         }
 
         const myIndices = AppState.getMySpeechIndices();
@@ -2214,6 +2695,66 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           if (btnP) btnP.disabled = AppState.currentIndex <= range.start;
           if (btnN) btnN.disabled = AppState.currentIndex >= range.end;
         }
+
+        if (AppState.currentScreen === 'lobby') {
+          this.renderLobby();
+        }
+      },
+
+      renderDockHeroArea() {
+        const dockArea = Utils.$('dockHeroArea');
+        if (!dockArea) return;
+
+        if (AppState.isSceneFinished || AppState.currentIndex >= AppState.speeches.length) {
+          dockArea.innerHTML = `
+            <button class="dock-hero-btn btn btn-primary" id="btnRestartScene" type="button">Recomeçar bloco</button>
+            <button class="dock-hero-btn btn btn-secondary" id="btnReturnLobbyFinished" type="button">‹ Camarim</button>
+          `;
+          return;
+        }
+
+        const speech = AppState.speeches[AppState.currentIndex];
+        const isMyTurn = speech && speech.who === AppState.selectedActor;
+        const level = AppState.masteryLevels[AppState.currentIndex] || 0;
+
+        if (!isMyTurn) {
+          const nextSpeech = AppState.speeches[AppState.currentIndex + 1];
+          const nextIsMine = nextSpeech && nextSpeech.who === AppState.selectedActor;
+          const partnerBtnText = nextIsMine ? 'Minha vez ›' : 'Avançar ›';
+          dockArea.innerHTML = `
+            <button class="dock-hero-btn btn btn-primary" id="btnContinuePartner" type="button">${partnerBtnText}</button>
+          `;
+          return;
+        }
+
+        if (AppState.isRetryState) {
+          dockArea.innerHTML = `
+            <button class="dock-hero-btn btn btn-retry" id="btnRetry" type="button">🔁 Tentar de novo agora</button>
+            <button class="dock-hero-btn btn btn-secondary" id="btnNextAfterWrong" type="button">Seguir adiante ›</button>
+          `;
+          return;
+        }
+
+        if (level === 0) {
+          dockArea.innerHTML = `
+            <button class="dock-hero-btn btn btn-primary" id="btnHideWords" type="button">Já li — Esconder palavras ➔</button>
+          `;
+          return;
+        }
+
+        if (!AppState.isRevealed) {
+          dockArea.innerHTML = `
+            <button class="dock-btn-hint btn btn-hint" id="btnHint" type="button" title="Revela a próxima palavra oculta (D)">💡 Dica</button>
+            <button class="dock-hero-btn btn btn-primary" id="btnCheck" type="button">👁️ Conferir Fala</button>
+          `;
+          return;
+        }
+
+        // isRevealed && !isRetryState
+        dockArea.innerHTML = `
+          <button class="dock-hero-btn btn btn-danger" id="btnWrong" type="button">❌ Errei</button>
+          <button class="dock-hero-btn btn btn-success" id="btnCorrect" type="button">✅ Acertei</button>
+        `;
       },
 
       renderSpeechHtml(speechObj, speechIndex, level, hintsRevealed, isRevealed) {
@@ -2286,11 +2827,13 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
 
       async renderView() {
         this.updateHeaderStats();
+        this.renderDockHeroArea();
         const mainApp = Utils.$('mainApp');
         if (!mainApp) return;
 
         if (AppState.currentIndex >= AppState.speeches.length) {
           this.renderSceneFinished();
+          this.renderDockHeroArea();
           return;
         }
 
@@ -2302,13 +2845,13 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         const hasRealAudio = await StorageManager.getCastAudio(AppState.currentIndex);
         const isDefault = ScriptParser.isDefaultPlay(AppState.activeScriptText);
         const currentIntent = StorageManager.getSpeechIntent(AppState.currentIndex, isDefault);
-        const intentHtml = `
+        const intentHtml = (currentIntent || isMyTurn) ? `
           <div class="intent-bar" id="intentBarCurrent" title="Ação dramática / intenção da personagem (Toque para editar)">
             <span class="intent-label">🎯 Ação:</span>
             <span class="intent-text">${Utils.escapeHtml(currentIntent || 'Definir verbo de ação ou subtexto...')}</span>
             <button class="btn-intent-edit" id="btnEditIntent" type="button">${currentIntent ? '✏️ Editar' : '➕ Definir'}</button>
           </div>
-        `;
+        ` : '';
 
         if (AudioEngine.isRecordingNow) {
           html += `
@@ -2339,10 +2882,11 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
                 ${speech.segments.map(seg => seg.type === 'rubric' ? ` <span class="rubric">(${Utils.escapeHtml(seg.text)})</span> ` : Utils.escapeHtml(seg.text)).join('')}
               </div>
               <div class="action-row">
-                <button class="btn btn-audio" id="btnSpeakPartner">🔊 Ouvir</button>
-                <button class="btn btn-record" id="btnRecordPartner">${hasRealAudio ? '🎙️ Regravar voz real' : '🎙️ Gravar voz real'}</button>
-                ${hasRealAudio ? `<button class="btn" style="min-width:44px; padding:0 10px;" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
-                <button class="btn btn-primary" id="btnContinuePartner">Minha vez ›</button>
+                <div class="action-secondary-row">
+                  <button class="btn btn-audio" id="btnSpeakPartner">🔊 Ouvir</button>
+                  <button class="btn btn-record" id="btnRecordPartner">${hasRealAudio ? '🎙️ Regravar voz real' : '🎙️ Gravar voz real'}</button>
+                  ${hasRealAudio ? `<button class="btn btn-icon-only" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
+                </div>
               </div>
             </div>
           `;
@@ -2352,9 +2896,14 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           if (prevSpeech) {
             const hasPrevRealAudio = await StorageManager.getCastAudio(AppState.currentIndex - 1);
             if (prevSpeech.who !== AppState.selectedActor) {
-              const cueWords = prevSpeech.spokenText.split(' ');
-              const cueStart = cueWords.slice(0, Math.max(0, cueWords.length - 4)).join(' ');
-              const cueEnd = cueWords.slice(-4).join(' ');
+              const cueWords = (prevSpeech.spokenText || '').trim().split(/\s+/).filter(Boolean);
+              const cueStartWords = cueWords.slice(0, Math.max(0, cueWords.length - 4));
+              const cueEndWords = cueWords.slice(Math.max(0, cueWords.length - 4));
+              const cueStart = cueStartWords.join(' ');
+              const cueEnd = cueEndWords.join(' ');
+              const cueBody = cueStart
+                ? `${Utils.escapeHtml(cueStart)} <span class="cue-highlight-end">${Utils.escapeHtml(cueEnd)}</span>`
+                : `<span class="cue-highlight-end">${Utils.escapeHtml(cueEnd)}</span>`;
 
               cueHtml = `
                 <div class="cue-card">
@@ -2365,14 +2914,14 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
                       <button class="btn-cue-record" id="btnRecordCue">${hasPrevRealAudio ? '🎙️ Regravar' : '🎙️ Gravar colega'}</button>
                     </div>
                   </div>
-                  <p class="cue-text">“${Utils.escapeHtml(cueStart)} <span class="cue-highlight-end">${Utils.escapeHtml(cueEnd)}</span>”</p>
+                  <p class="cue-text">“${cueBody}”</p>
                 </div>
               `;
             } else {
-              cueHtml = `<div class="cue-card"><span class="cue-tag">Continuação</span><p class="cue-text"><i>(continuação da sua fala)</i></p></div>`;
+              cueHtml = `<div class="cue-mini-badge">↳ Continuação da sua fala</div>`;
             }
           } else {
-            cueHtml = `<div class="cue-card"><span class="cue-tag">Abertura</span><p class="cue-text"><i>(a cena começa com você)</i></p></div>`;
+            cueHtml = `<div class="cue-mini-badge">🎬 Abertura da cena</div>`;
           }
           html += cueHtml;
 
@@ -2410,43 +2959,23 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
                 ${this.renderSpeechHtml(speech, AppState.currentIndex, level, AppState.hintsUsedThisLine, AppState.isRevealed)}
               </div>
               <div class="action-row">
-          `;
-
-          if (level === 0) {
-            html += `
-              <button class="btn btn-audio" id="btnAudioMy">🔊 Ouvir</button>
-              <button class="btn btn-record" id="btnRecordMy">${hasRealAudio ? '🎙️ Regravar voz' : '🎙️ Gravar voz'}</button>
-              ${hasRealAudio ? `<button class="btn" style="min-width:40px; padding:0 8px;" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
-              <button class="btn btn-primary" id="btnHideWords">Já li — Esconder palavras ➔</button>
-            `;
-          } else if (!AppState.isRevealed) {
-            html += `
-              <button class="btn btn-hint" id="btnHint" title="Revela a próxima palavra oculta (D)">💡 Dica</button>
-              <button class="btn btn-audio" id="btnAudioMy">🔊 Ouvir</button>
-              <button class="btn btn-record" id="btnRecordMy">${hasRealAudio ? '🎙️ Regravar voz' : '🎙️ Gravar voz'}</button>
-              ${hasRealAudio ? `<button class="btn" style="min-width:40px; padding:0 8px;" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
-              <button class="btn btn-primary" id="btnCheck">👁️ Conferir (Espaço)</button>
-            `;
-          } else {
-            html += `
-              <button class="btn btn-danger" id="btnWrong">❌ Errei (1)</button>
-              <button class="btn btn-success" id="btnCorrect">✅ Acertei (2)</button>
-              <button class="btn btn-audio" id="btnAudioMy">🔊</button>
-              <button class="btn btn-record" id="btnRecordMy">${hasRealAudio ? '🎙️ Regravar voz' : '🎙️ Gravar voz'}</button>
-              ${hasRealAudio ? `<button class="btn" style="min-width:40px; padding:0 8px;" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
-            `;
-          }
-
-          html += `
+                <div class="action-secondary-row">
+                  <button class="btn btn-audio" id="btnAudioMy">🔊 Ouvir</button>
+                  <button class="btn btn-record" id="btnRecordMy">${hasRealAudio ? '🎙️ Regravar voz' : '🎙️ Gravar voz'}</button>
+                  ${hasRealAudio ? `<button class="btn btn-icon-only" id="btnDeleteCastAudio" title="Excluir gravação">🗑️</button>` : ''}
+                </div>
               </div>
             </div>
           `;
         }
 
         mainApp.innerHTML = html;
+        this.renderDockHeroArea();
       },
 
       renderSceneFinished() {
+        AppState.isSceneFinished = true;
+        this.updateHeaderStats();
         const mainApp = Utils.$('mainApp');
         if (!mainApp) return;
         mainApp.innerHTML = `
@@ -2456,9 +2985,11 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
               <button class="btn btn-primary" id="btnRestartScene">Recomeçar bloco</button>
               <button class="btn" id="btnReviewWeak">Treinar só fraquezas</button>
+              <button class="btn" id="btnReturnLobbyFinished">‹ Voltar ao Camarim</button>
             </div>
           </div>
         `;
+        this.renderDockHeroArea();
       },
 
       async renderIndexModal() {
@@ -2547,26 +3078,28 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             await AppState.wakeLock.release();
             AppState.wakeLock = null;
           }
-        } catch (err) {}
+        } catch (e) {
+          AppState.wakeLock = null;
+        }
       },
 
       loadActiveScript() {
-        const savedScript = localStorage.getItem('memorizador_custom_script');
-        const defaultPlayEl = Utils.$('defaultPlay');
-        const defaultScript = defaultPlayEl ? defaultPlayEl.textContent : '';
-        const scriptText = savedScript || defaultScript;
-
-        const editor = Utils.$('scriptEditor');
-        if (editor) editor.value = scriptText;
+        let scriptText = localStorage.getItem('memorizador_custom_script');
+        if (!scriptText) {
+          const defEl = Utils.$('defaultPlay');
+          scriptText = defEl ? defEl.textContent.trim() : '';
+        }
 
         AppState.activeScriptText = scriptText;
+        const playTitle = ScriptParser.extractPlayTitle(scriptText);
+        document.title = '🎭 Ensaio Teatral · ' + playTitle;
+        const ptEl = Utils.$('playTitle');
+        if (ptEl) ptEl.textContent = '🎭 ' + playTitle;
+        const stTitle = Utils.$('stagePlayTitle');
+        if (stTitle) stTitle.textContent = playTitle;
+
         AppState.speeches = ScriptParser.parseScript(scriptText);
         AppState.characters = [...new Set(AppState.speeches.map(s => s.who))];
-
-        const title = ScriptParser.extractPlayTitle(scriptText);
-        document.title = '🎭 Ensaio Teatral · ' + title;
-        const playTitleEl = Utils.$('playTitle');
-        if (playTitleEl) playTitleEl.textContent = '🎭 ' + title;
 
         const settings = StorageManager.loadSettings();
         AppState.speechRate = settings.speechRate;
@@ -2602,6 +3135,40 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         const range = AppState.getActiveBeatRange();
         AppState.currentIndex = range.start;
         this.goToSpeech(AppState.currentIndex, false);
+        UIController.renderLobby();
+        UIController.showScreen('lobby');
+      },
+
+      enterStage(mode) {
+        if (mode) {
+          AppState.rehearsalMode = mode;
+          StorageManager.saveSettings(AppState);
+          if (Utils.$('selectMode')) Utils.$('selectMode').value = mode;
+        }
+        UIController.showScreen('stage');
+        if (AppState.rehearsalMode === 'fraquezas') {
+          this.goToSpeech(AppState.pickNextWeakness(), true);
+        } else if (AppState.rehearsalMode === 'minhas' || AppState.rehearsalMode === 'pingpong' || AppState.rehearsalMode === 'ponto') {
+          const myIndices = AppState.getMySpeechIndices();
+          if (!myIndices.includes(AppState.currentIndex)) {
+            this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : 0, true);
+          } else {
+            this.goToSpeech(AppState.currentIndex, true);
+          }
+        } else {
+          this.goToSpeech(AppState.currentIndex, true);
+        }
+      },
+
+      returnToLobby() {
+        AudioEngine.stopAllAudio();
+        if (AppState.pingPongInterval) {
+          clearInterval(AppState.pingPongInterval);
+          AppState.pingPongInterval = null;
+        }
+        AppState.isRetryState = false;
+        AppState.isSceneFinished = false;
+        UIController.showScreen('lobby');
       },
 
       goToSpeech(index, triggerAudio = true) {
@@ -2617,6 +3184,8 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         AppState.currentIndex = Math.max(range.start, Math.min(range.end, index));
         AppState.isRevealed = false;
         AppState.hintsUsedThisLine = 0;
+        AppState.isRetryState = false;
+        AppState.isSceneFinished = false;
 
         UIController.renderView();
 
@@ -2905,6 +3474,8 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         } else if (id === 'btnHideWords') {
           AppState.masteryLevels[AppState.currentIndex] = 1;
           StorageManager.saveProgress(AppState.selectedActor, AppState.masteryLevels);
+          AppState.isRevealed = false;
+          AppState.hintsUsedThisLine = 0;
           UIController.renderView();
         } else if (id === 'btnHint') {
           AppState.hintsUsedThisLine++;
@@ -2917,19 +3488,43 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           const cur = AppState.masteryLevels[AppState.currentIndex] || 0;
           AppState.masteryLevels[AppState.currentIndex] = Math.min(4, cur + 1);
           StorageManager.saveProgress(AppState.selectedActor, AppState.masteryLevels);
+          AppState.isRetryState = false;
           this.advanceNext();
         } else if (id === 'btnWrong') {
           Utils.triggerHaptic('error');
           const cur = AppState.masteryLevels[AppState.currentIndex] || 0;
           AppState.masteryLevels[AppState.currentIndex] = Math.max(0, cur - 1);
           StorageManager.saveProgress(AppState.selectedActor, AppState.masteryLevels);
+          AppState.isRetryState = true;
+          UIController.renderView();
+        } else if (id === 'btnRetry') {
+          AppState.isRetryState = false;
+          AppState.isRevealed = false;
+          AppState.hintsUsedThisLine = 0;
+          if ((AppState.masteryLevels[AppState.currentIndex] || 0) === 0) {
+            AppState.masteryLevels[AppState.currentIndex] = 1;
+            StorageManager.saveProgress(AppState.selectedActor, AppState.masteryLevels);
+          }
+          UIController.renderView();
+        } else if (id === 'btnNextAfterWrong') {
+          AppState.isRetryState = false;
           this.advanceNext();
+        } else if (id === 'btnEnterStage') {
+          this.enterStage();
+        } else if (id === 'btnBackToLobby' || id === 'btnReturnLobbyFinished') {
+          this.returnToLobby();
         } else if (id === 'btnRestartScene') {
+          AppState.isSceneFinished = false;
           const range = AppState.getActiveBeatRange();
-          this.goToSpeech(range.start);
+          if (AppState.rehearsalMode === 'minhas' || AppState.rehearsalMode === 'pingpong' || AppState.rehearsalMode === 'ponto') {
+            const myIndices = AppState.getMySpeechIndices();
+            this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : range.start);
+          } else {
+            this.goToSpeech(range.start);
+          }
         } else if (id === 'btnReviewWeak') {
+          AppState.isSceneFinished = false;
           AppState.rehearsalMode = 'fraquezas';
-          if (Utils.$('selectMode')) Utils.$('selectMode').value = 'fraquezas';
           this.goToSpeech(AppState.pickNextWeakness());
         }
       },
@@ -2937,56 +3532,55 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       async exportFullBackup() {
         try {
           UIController.showStatus('Gerando arquivo de backup...');
-          const recordings = await StorageManager.getAllRecordings();
+          const data = {
+            version: '2.0',
+            exportedAt: new Date().toISOString(),
+            localStorage: {},
+            recordings: []
+          };
 
-          const serializedRecordings = [];
-          for (const rec of recordings) {
-            if (rec.blob) {
-              const base64 = await Utils.blobToBase64(rec.blob);
-              serializedRecordings.push({
-                id: rec.id,
-                speechIdx: rec.speechIdx,
-                playId: rec.playId,
-                base64,
-                mime: rec.blob.type,
-                timestamp: rec.timestamp
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('memorizador_')) {
+              data.localStorage[key] = localStorage.getItem(key);
+            }
+          }
+
+          const db = await StorageManager.getIndexedDB();
+          const tx = db.transaction(StorageManager.STORE_NAME, 'readonly');
+          const store = tx.objectStore(StorageManager.STORE_NAME);
+
+          const getAllAudios = () => new Promise((resolve, reject) => {
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+          });
+
+          const records = await getAllAudios();
+          for (const item of records) {
+            if (item && item.audioBlob) {
+              const b64 = await Utils.blobToBase64(item.audioBlob);
+              data.recordings.push({
+                id: item.id,
+                speechIdx: item.speechIdx,
+                playId: item.playId || 'default',
+                base64: b64
               });
             }
           }
 
-          const storageObj = {};
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (!k) continue;
-            if (
-              k.startsWith('memorizador_') ||
-              k.startsWith('voice_actor_') ||
-              k.startsWith('intent_')
-            ) {
-              storageObj[k] = localStorage.getItem(k);
-            }
-          }
-
-          const backupData = {
-            app: AppConfig.APP_ID,
-            version: AppConfig.VERSION,
-            exportDate: new Date().toISOString(),
-            localStorage: storageObj,
-            recordings: serializedRecordings
-          };
-
-          const jsonStr = JSON.stringify(backupData, null, 2);
-          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `backup-ensaio-teatro-${new Date().toISOString().slice(0, 10)}.json`;
+          a.download = `ensaio_backup_${new Date().toISOString().slice(0, 10)}.json`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
           UIController.showStatus('Backup baixado com sucesso!');
         } catch (err) {
+          console.error(err);
           alert('Erro ao exportar backup: ' + err.message);
         }
       },
@@ -2995,57 +3589,36 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         try {
           const text = await file.text();
           const data = JSON.parse(text);
-          if (!data.localStorage || !Array.isArray(data.recordings)) {
-            throw new Error('Arquivo de backup inválido.');
-          }
 
-          Object.keys(data.localStorage).forEach(key => {
-            const val = data.localStorage[key];
-            if (val !== null && val !== undefined) {
-              localStorage.setItem(key, val);
-            }
-          });
-
-          const db = await StorageManager.getIndexedDB();
-          if (db) {
-            await new Promise((resolve, reject) => {
-              const tx = db.transaction('recordings', 'readwrite');
-              const store = tx.objectStore('recordings');
-              store.clear();
-
-              for (const rec of data.recordings) {
-                if (rec.base64) {
-                  const blob = Utils.base64ToBlob(rec.base64, rec.mime || 'audio/webm');
-                  let speechIdx = rec.speechIdx;
-                  let playId = rec.playId;
-                  if (speechIdx === undefined) {
-                    if (typeof rec.id === 'number') {
-                      speechIdx = rec.id;
-                      playId = playId || 'default';
-                    } else if (typeof rec.id === 'string' && rec.id.includes('_')) {
-                      const lastIdx = rec.id.lastIndexOf('_');
-                      playId = playId || rec.id.substring(0, lastIdx);
-                      speechIdx = parseInt(rec.id.substring(lastIdx + 1), 10);
-                    }
-                  }
-                  store.put({
-                    id: rec.id,
-                    speechIdx,
-                    playId: playId || 'default',
-                    blob,
-                    timestamp: rec.timestamp || Date.now()
-                  });
-                }
-              }
-              tx.oncomplete = resolve;
-              tx.onerror = () => reject(tx.error);
+          if (data.localStorage) {
+            Object.keys(data.localStorage).forEach(k => {
+              localStorage.setItem(k, data.localStorage[k]);
             });
           }
 
-          alert('Backup restaurado com sucesso! Seus dados e áudios foram recuperados.');
-          this.loadActiveScript();
-          if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
+          if (data.recordings && Array.isArray(data.recordings)) {
+            const db = await StorageManager.getIndexedDB();
+            const tx = db.transaction(StorageManager.STORE_NAME, 'readwrite');
+            const store = tx.objectStore(StorageManager.STORE_NAME);
+
+            for (const item of data.recordings) {
+              if (item.base64 && item.id) {
+                const blob = Utils.base64ToBlob(item.base64);
+                let speechIdx = item.speechIdx;
+                let playId = item.playId || 'default';
+                if (speechIdx === undefined) {
+                  const parts = item.id.split('_');
+                  speechIdx = parseInt(parts[parts.length - 1], 10);
+                }
+                store.put({ id: item.id, speechIdx, playId, audioBlob: blob, timestamp: Date.now() });
+              }
+            }
+          }
+
+          alert('Backup restaurado com sucesso! O aplicativo será recarregado.');
+          if (typeof window !== 'undefined' && window.location && window.location.reload) window.location.reload();
         } catch (err) {
+          console.error(err);
           alert('Erro ao restaurar backup: ' + err.message);
         }
       },
@@ -3060,7 +3633,17 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
               StorageManager.saveSettings(AppState);
               AppState.masteryLevels = StorageManager.loadProgress(actor, AppState.speeches.length);
               const myIndices = AppState.getMySpeechIndices();
-              this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : 0);
+              this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : 0, false);
+              UIController.renderLobby();
+            }
+            return;
+          }
+
+          const modeCard = e.target.closest('.mode-card');
+          if (modeCard) {
+            const mode = modeCard.dataset.mode;
+            if (mode) {
+              this.enterStage(mode);
             }
             return;
           }
@@ -3070,6 +3653,9 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             const idx = parseInt(indexItem.dataset.idx, 10);
             if (!isNaN(idx)) {
               if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = true;
+              if (AppState.currentScreen === 'lobby') {
+                this.enterStage();
+              }
               this.goToSpeech(idx);
             }
             return;
@@ -3081,6 +3667,12 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             return;
           }
 
+          const actionBtn = e.target.closest('button[id]');
+          if (actionBtn) {
+            this.handleActionClick(actionBtn.id);
+            return;
+          }
+
           if (e.target.id) {
             this.handleActionClick(e.target.id);
           }
@@ -3088,21 +3680,38 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
 
         if (Utils.$('btnPrev')) Utils.$('btnPrev').onclick = () => this.advancePrev();
         if (Utils.$('btnNext')) Utils.$('btnNext').onclick = () => this.advanceNext();
-        if (Utils.$('btnNavIndex')) {
-          Utils.$('btnNavIndex').onclick = () => {
-            UIController.renderIndexModal();
-            if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = false;
-          };
-        }
-        if (Utils.$('btnOpenIndex')) {
-          Utils.$('btnOpenIndex').onclick = () => {
-            UIController.renderIndexModal();
-            if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = false;
-          };
-        }
+        if (Utils.$('btnEnterStage')) Utils.$('btnEnterStage').onclick = () => this.enterStage();
+        if (Utils.$('btnBackToLobby')) Utils.$('btnBackToLobby').onclick = () => this.returnToLobby();
+
+        ['btnOpenIndex', 'btnOpenIndexLobby', 'btnStageIndex', 'btnNavIndex'].forEach(id => {
+          const btn = Utils.$(id);
+          if (btn) {
+            btn.onclick = () => {
+              UIController.renderIndexModal();
+              if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = false;
+            };
+          }
+        });
+
         if (Utils.$('btnCloseIndex')) {
           Utils.$('btnCloseIndex').onclick = () => {
             if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = true;
+          };
+        }
+
+        ['btnOpenSettings', 'btnOpenSettingsLobby', 'btnOpenSettingsStage'].forEach(id => {
+          const btn = Utils.$(id);
+          if (btn) {
+            btn.onclick = () => {
+              UIController.populateVoiceSelectors();
+              if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = false;
+            };
+          }
+        });
+
+        if (Utils.$('btnCloseSettings')) {
+          Utils.$('btnCloseSettings').onclick = () => {
+            if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
           };
         }
 
@@ -3112,10 +3721,11 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             const range = AppState.getActiveBeatRange();
             if (AppState.rehearsalMode === 'minhas' || AppState.rehearsalMode === 'pingpong' || AppState.rehearsalMode === 'ponto') {
               const myIndices = AppState.getMySpeechIndices();
-              this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : range.start);
+              this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : range.start, false);
             } else {
-              this.goToSpeech(range.start);
+              this.goToSpeech(range.start, false);
             }
+            UIController.renderLobby();
           };
         }
 
@@ -3128,17 +3738,16 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
           };
         });
 
-        if (Utils.$('btnOpenSettings')) {
-          Utils.$('btnOpenSettings').onclick = () => {
-            UIController.populateVoiceSelectors();
-            if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = false;
-          };
-        }
-        if (Utils.$('btnCloseSettings')) {
-          Utils.$('btnCloseSettings').onclick = () => {
-            if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
-          };
-        }
+        ['modalIndex', 'modalSettings'].forEach(modalId => {
+          const modalEl = Utils.$(modalId);
+          if (modalEl) {
+            modalEl.onclick = (e) => {
+              if (e.target === modalEl || (e.target.classList && e.target.classList.contains('modal-drag-bar'))) {
+                modalEl.hidden = true;
+              }
+            };
+          }
+        });
 
         if (Utils.$('rangeSpeechRate')) {
           Utils.$('rangeSpeechRate').oninput = (e) => {
@@ -3215,10 +3824,14 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         if (Utils.$('btnExportBackup')) {
           Utils.$('btnExportBackup').onclick = () => this.exportFullBackup();
         }
+
         if (Utils.$('fileImportBackup')) {
           Utils.$('fileImportBackup').onchange = (e) => {
-            if (e.target.files && e.target.files[0]) {
-              this.importFullBackup(e.target.files[0]);
+            const file = e.target.files && e.target.files[0];
+            if (file) {
+              if (confirm('A restauração substituirá todas as gravações locais e progresso. Continuar?')) {
+                this.importFullBackup(file);
+              }
             }
           };
         }
@@ -3226,24 +3839,20 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
         if (Utils.$('btnResetProgress')) {
           Utils.$('btnResetProgress').onclick = () => {
             if (confirm(`Zerar todo o histórico de memorização para ${AppState.selectedActor}?`)) {
-              AppState.masteryLevels = AppState.speeches.map(() => 0);
+              AppState.masteryLevels = new Array(AppState.speeches.length).fill(0);
               StorageManager.saveProgress(AppState.selectedActor, AppState.masteryLevels);
               UIController.renderView();
-              if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
+              UIController.renderLobby();
+              alert('Progresso zerado.');
             }
           };
         }
 
         if (Utils.$('btnSaveScript')) {
           Utils.$('btnSaveScript').onclick = () => {
-            const text = Utils.$('scriptEditor') ? Utils.$('scriptEditor').value.trim() : '';
-            if (!text) return;
-            const testParsed = ScriptParser.parseScript(text);
-            if (testParsed.length === 0) {
-              alert('Nenhuma fala de personagem detectada no texto!\nCertifique-se de usar o formato dramatúrgico, por exemplo:\n**PERSONAGEM:** Fala da personagem\nou\nPERSONAGEM: Fala da personagem');
-              return;
-            }
-            localStorage.setItem('memorizador_custom_script', text);
+            const txt = Utils.$('scriptEditor').value.trim();
+            if (!txt) return;
+            localStorage.setItem('memorizador_custom_script', txt);
             if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
             this.loadActiveScript();
           };
@@ -3261,30 +3870,28 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       },
 
       bindKeyboard() {
-        window.addEventListener('keydown', (e) => {
-          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+        document.addEventListener('keydown', (e) => {
+          if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
-          const isIndexOpen = Utils.$('modalIndex') && !Utils.$('modalIndex').hidden;
-          const isSettingsOpen = Utils.$('modalSettings') && !Utils.$('modalSettings').hidden;
-          const isModalOpen = isIndexOpen || isSettingsOpen;
-
+          const isModalOpen = !Utils.$('modalIndex')?.hidden || !Utils.$('modalSettings')?.hidden;
           if (e.key === 'Escape') {
-            if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = true;
-            if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
-            return;
-          }
-
-          if (e.key === 'i' || e.key === 'I') {
-            e.preventDefault();
-            const m = Utils.$('modalIndex');
-            if (m) {
-              m.hidden = !m.hidden;
-              if (!m.hidden) UIController.renderIndexModal();
+            if (!Utils.$('modalIndex').hidden) Utils.$('modalIndex').hidden = true;
+            if (!Utils.$('modalSettings').hidden) Utils.$('modalSettings').hidden = true;
+            if (!isModalOpen && AppState.currentScreen === 'stage') {
+              this.returnToLobby();
             }
             return;
           }
 
           if (isModalOpen) return;
+
+          if (AppState.currentScreen === 'lobby') {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              this.enterStage();
+            }
+            return;
+          }
 
           const currentSpeech = AppState.speeches[AppState.currentIndex];
           const isMyTurn = currentSpeech && currentSpeech.who === AppState.selectedActor;
@@ -3298,7 +3905,8 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             this.advancePrev();
           } else if (e.key === ' ' || e.code === 'Space') {
             e.preventDefault();
-            if (!isMyTurn) this.advanceNext();
+            if (AppState.isRetryState) this.handleActionClick('btnRetry');
+            else if (!isMyTurn) this.advanceNext();
             else if (level === 0) this.handleActionClick('btnHideWords');
             else if (!AppState.isRevealed) this.handleActionClick('btnCheck');
             else this.handleActionClick('btnCorrect');
@@ -3307,10 +3915,12 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
             if (isMyTurn && !AppState.isRevealed && level > 0) this.handleActionClick('btnHint');
           } else if (e.key === '1') {
             e.preventDefault();
-            if (isMyTurn && AppState.isRevealed) this.handleActionClick('btnWrong');
+            if (AppState.isRetryState) this.handleActionClick('btnRetry');
+            else if (isMyTurn && AppState.isRevealed) this.handleActionClick('btnWrong');
           } else if (e.key === '2') {
             e.preventDefault();
-            if (isMyTurn && AppState.isRevealed) this.handleActionClick('btnCorrect');
+            if (AppState.isRetryState) this.handleActionClick('btnNextAfterWrong');
+            else if (isMyTurn && AppState.isRevealed) this.handleActionClick('btnCorrect');
           } else if (e.key === 'r' || e.key === 'R' || e.key === 'o' || e.key === 'O') {
             e.preventDefault();
             if (currentSpeech) {
@@ -3341,7 +3951,7 @@ Sala da casa de Sérgio. A linguagem cenográfica da peça deve traduzir uma atm
       } catch (e) {}
     }
 
-    AppController.init();
+AppController.init();
   </script>
 </body>
 </html>
