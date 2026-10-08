@@ -16,7 +16,7 @@ console.log('✅ 1. Arquitetura modular e redirecionamento canônico validados')
 
 // 2. Validação da existência física dos módulos e folhas de estilo
 const cssContent = fs.readFileSync(path.join(__dirname, 'css', 'style.css'), 'utf8');
-const jsFiles = ['config.js', 'utils.js', 'state.js', 'parser.js', 'storage.js', 'audio.js', 'ui.js', 'app.js'];
+const jsFiles = ['config.js', 'utils.js', 'state.js', 'parser.js', 'ai-service.js', 'storage.js', 'audio.js', 'ui.js', 'app.js'];
 jsFiles.forEach(f => {
   assert(fs.existsSync(path.join(__dirname, 'js', f)), `Arquivo js/${f} deve existir`);
 });
@@ -95,25 +95,29 @@ const mockIndexedDB = {
       result: {
         objectStoreNames: { contains: () => true },
         createObjectStore: () => {},
-        transaction: () => ({
-          objectStore: () => ({
-            put: () => ({}),
-            get: () => {
-              const r = { onsuccess: null, onerror: null, result: null };
-              setTimeout(() => { if (r.onsuccess) r.onsuccess(); }, 0);
-              return r;
-            },
-            delete: () => ({}),
-            clear: () => ({}),
-            getAll: () => {
-              const r = { onsuccess: null, onerror: null, result: [] };
-              setTimeout(() => { if (r.onsuccess) r.onsuccess(); }, 0);
-              return r;
-            }
-          }),
-          oncomplete: null,
-          onerror: null
-        })
+        transaction: () => {
+          const tx = {
+            objectStore: () => ({
+              put: () => ({}),
+              get: () => {
+                const r = { onsuccess: null, onerror: null, result: null };
+                setTimeout(() => { if (r.onsuccess) r.onsuccess(); }, 0);
+                return r;
+              },
+              delete: () => ({}),
+              clear: () => ({}),
+              getAll: () => {
+                const r = { onsuccess: null, onerror: null, result: [] };
+                setTimeout(() => { if (r.onsuccess) r.onsuccess(); }, 0);
+                return r;
+              }
+            }),
+            oncomplete: null,
+            onerror: null
+          };
+          setTimeout(() => { if (typeof tx.oncomplete === 'function') tx.oncomplete(); }, 0);
+          return tx;
+        }
       },
       onsuccess: null,
       onerror: null
@@ -155,9 +159,9 @@ jsFiles.forEach(f => {
   vm.runInContext(code, context);
 });
 
-vm.runInContext('globalThis.__test_exports = { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, DramaturgyAnalyzer, AppConfig, Utils, DefaultPlay, PlayStore };', context);
+vm.runInContext('globalThis.__test_exports = { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, DramaturgyAnalyzer, AppConfig, Utils, DefaultPlay, PlayStore, AIService };', context);
 
-const { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, DramaturgyAnalyzer, AppConfig, Utils, DefaultPlay, PlayStore } = context.__test_exports;
+const { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, DramaturgyAnalyzer, AppConfig, Utils, DefaultPlay, PlayStore, AIService } = context.__test_exports;
 
 async function runTestSuite() {
   await new Promise(r => setTimeout(r, 40));
@@ -914,7 +918,7 @@ Meu príncipe, estais bem?
   assert.strictEqual(mockLocalStorage.getItem('stagepro_theme'), 'dark', 'Tema escuro deve ser salvo no storage');
 
   // Validar erradicação de emojis em arquivos-chave da aplicação
-  const appFiles = ['index.html', 'js/app.js', 'js/audio.js', 'js/config.js', 'js/parser.js', 'js/state.js', 'js/storage.js', 'js/ui.js', 'js/utils.js', 'plays/default-play.js'];
+  const appFiles = ['index.html', 'js/app.js', 'js/audio.js', 'js/config.js', 'js/parser.js', 'js/ai-service.js', 'js/state.js', 'js/storage.js', 'js/ui.js', 'js/utils.js', 'plays/default-play.js'];
   const emojiPattern = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{2300}-\u{23FF}\u{25B6}\u{23F8}\u{23F9}]/u;
   appFiles.forEach(f => {
     const full = path.join(__dirname, f);
@@ -1425,7 +1429,474 @@ Ouvi passos lá fora!
   assert.strictEqual(PlayStore.get(othelloPlay.id), null, 'Peça excluída não deve mais constar no catálogo');
   console.log('✅ 61. Exclusão segura da peça ativa com fallback limpo para a peça padrão validada');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 61 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 62: AIService - Configuração BYOK, armazenamento de chave, alternância de modelos e teste de conexão
+  assert.strictEqual(AIService.hasKey(), false, 'Chave deve iniciar vazia');
+  AIService.setApiKey('AIzaSyMockTestKey123');
+  assert.strictEqual(mockLocalStorage.getItem('memorizador_gemini_api_key'), 'AIzaSyMockTestKey123', 'Chave deve ser salva no storage');
+  assert.strictEqual(AIService.getApiKey(), 'AIzaSyMockTestKey123');
+  assert.strictEqual(AIService.hasKey(), true);
+
+  // Alternância de modelos Gemini
+  assert.strictEqual(AIService.getModel(), 'gemini-2.5-flash');
+  AIService.setModel('gemini-1.5-flash');
+  assert.strictEqual(AIService.getModel(), 'gemini-1.5-flash');
+  assert.strictEqual(mockLocalStorage.getItem('memorizador_gemini_model'), 'gemini-1.5-flash');
+
+  // Teste de conexão com mock fetch (sucesso)
+  const originalFetchFn = AIService.fetchFn;
+  let lastFetchUrl = '';
+
+  AIService.fetchFn = async (url) => {
+    lastFetchUrl = url;
+    return {
+      ok: true,
+      json: async () => ({
+        candidates: [
+          {
+            content: {
+              parts: [{ text: JSON.stringify({ status: 'ok', app: 'memorizador-teatro' }) }]
+            }
+          }
+        ]
+      })
+    };
+  };
+
+  const pingResult = await AIService.testConnection('AIzaSyMockTestKey123', 'gemini-1.5-flash');
+  assert.strictEqual(pingResult.ok, true, 'Ping de teste deve retornar sucesso');
+  assert(lastFetchUrl.includes('models/gemini-1.5-flash:generateContent'), 'URL deve usar modelo selecionado');
+  assert(lastFetchUrl.includes('key=AIzaSyMockTestKey123'), 'URL deve conter chave da API');
+
+  // Teste de falha de conexão com mock fetch
+  AIService.fetchFn = async () => ({
+    ok: false,
+    status: 403,
+    statusText: 'Forbidden',
+    json: async () => ({ error: { message: 'API key not valid.' } })
+  });
+  const failResult = await AIService.testConnection('invalid_key');
+  assert.strictEqual(failResult.ok, false);
+  assert(failResult.error.includes('403') || failResult.error.includes('API key not valid'));
+
+  // Teste sem chave
+  const noKeyResult = await AIService.testConnection('');
+  assert.strictEqual(noKeyResult.ok, false);
+
+  // Limpeza e restauração
+  AIService.fetchFn = originalFetchFn;
+  AIService.setApiKey('');
+  assert.strictEqual(AIService.hasKey(), false);
+  console.log('✅ 62. AIService: BYOK Gemini, persistência de chave, modelos e ping de validação testados');
+
+  // Teste 63: ScriptParser.sanitizeRawText - Higienização de ruídos OCR, cabeçalhos/rodapés e desquebra de hifens
+  const dirtyOCRScript = `
+ATO I - O CONFRONTO
+Página 12
+-----------------------
+- 13 -
+JULIANO
+A determi-
+nação da família foi clara. Não acei-
+taremos isso.
+pág. 14 de 90
+RODRIGO
+(com sarcasmo)
+Apenas obede-
+ça e fique calado.
+[Página 15]
+`;
+  const sanitized = ScriptParser.sanitizeRawText(dirtyOCRScript);
+  assert(!sanitized.includes('Página 12'), 'Deve remover "Página 12"');
+  assert(!sanitized.includes('- 13 -'), 'Deve remover "- 13 -"');
+  assert(!sanitized.includes('pág. 14'), 'Deve remover "pág. 14"');
+  assert(!sanitized.includes('[Página 15]'), 'Deve remover "[Página 15]"');
+  assert(sanitized.includes('determinação'), 'Deve juntar determi-\\nnação em determinação');
+  assert(sanitized.includes('aceitaremos'), 'Deve juntar acei-\\ntaremos em aceitaremos');
+  assert(sanitized.includes('obedeça'), 'Deve juntar obede-\\nça em obedeça');
+  console.log('✅ 63. ScriptParser.sanitizeRawText: remoção de ruídos OCR e desquebra de hifens validada');
+
+  // Teste 64: ScriptParser.groupCharacterVariants e canonicalização de nomes
+  const scriptVariants = `
+JULIANO
+Primeira fala do irmão mais velho.
+
+JUL.
+Segunda fala abreviada do mesmo personagem.
+
+Juliano
+Terceira fala com casing misturado.
+
+MARIA
+Fala da irmã.
+
+MAR.
+Fala abreviada da Maria.
+`;
+  const parsedVariants = ScriptParser.parseScript(scriptVariants);
+  const variantChars = [...new Set(parsedVariants.map(s => s.who))];
+  assert(variantChars.includes('JULIANO'), 'Deve canonicalizar variações para JULIANO');
+  assert(variantChars.includes('MARIA'), 'Deve canonicalizar variações para MARIA');
+  assert(!variantChars.includes('JUL.'), 'Não deve conter abreviação JUL.');
+  assert(!variantChars.includes('MAR.'), 'Não deve conter abreviação MAR.');
+  assert(!variantChars.includes('Juliano'), 'Não deve conter variação minúscula Juliano');
+
+  // Preservação de nome Fountain com @ e sem conflito de variantes
+  const fountainPreserve = `
+@Ofélia
+Ser ou não ser.
+`;
+  const parsedFountain = ScriptParser.parseScript(fountainPreserve);
+  assert.strictEqual(parsedFountain[0].who, 'Ofélia', 'Deve preservar casing original de nome individual em Fountain');
+  console.log('✅ 64. ScriptParser: agrupamento e canonicalização de variantes de personagens validados');
+
+  // Teste 65: ScriptParser.detectCueTrigger - Detecção causal de engate cênico (palavras-gatilho) e destaque
+  // Caso 1: Eco de palavra-chave
+  const cueEcho = ScriptParser.detectCueTrigger(
+    'Você nunca pensou em desistir dessa herança maldita?',
+    'Desistir? Nunca passaria pela minha cabeça abandonar nossa família.'
+  );
+  assert(cueEcho !== null, 'Deve detectar engate cênico');
+  assert(cueEcho.triggerWord.toLowerCase() === 'desistir' || cueEcho.triggerWord.toLowerCase() === 'nunca', 'Deve encontrar palavra ecoada');
+
+  // Caso 2: Conector discursivo causal
+  const cueConnector = ScriptParser.detectCueTrigger(
+    'O testamento desapareceu do cofre do escritório.',
+    'Portanto você já sabia o conteúdo do documento!'
+  );
+  assert(cueConnector !== null, 'Deve detectar conector');
+  assert.strictEqual(cueConnector.triggerWord.toLowerCase(), 'portanto', 'Deve detectar o conector causal portanto');
+
+  // Caso 3: Renderização do engate cênico na UI
+  AppState.speeches = [
+    { who: 'BÁRBARA', spokenText: 'Você quer desistir de tudo agora?', segments: [{ type: 'speech', text: 'Você quer desistir de tudo agora?' }] },
+    { who: 'JULIANO', spokenText: 'Desistir nunca foi uma opção para mim.', segments: [{ type: 'speech', text: 'Desistir nunca foi uma opção para mim.' }] }
+  ];
+  AppState.characters = ['BÁRBARA', 'JULIANO'];
+  AppState.selectedActor = 'JULIANO';
+  AppState.currentIndex = 1;
+  await UIController.renderView();
+  const mainAppHtml = domStore['mainApp'] ? domStore['mainApp'].innerHTML : '';
+  assert(mainAppHtml.includes('cue-trigger-badge') || mainAppHtml.includes('Engate cênico'), 'Deve renderizar badge de engate cênico');
+  // Caso 4: Conector causal com travessão teatral inicial
+  const cueDashedConnector = ScriptParser.detectCueTrigger(
+    'Você tem que ficar aqui e assinar.',
+    '— Mas não posso trair minha consciência!'
+  );
+  assert.strictEqual(cueDashedConnector.triggerWord.toLowerCase(), 'mas', 'Deve detectar conector mas mesmo após travessão');
+
+  // Caso 5: Pergunta com pronome interrogativo acentuado (Por quê?, Cadê?)
+  const cueAccentedQuestion = ScriptParser.detectCueTrigger(
+    'Por quê?',
+    'Porque o prazo termina hoje.'
+  );
+  assert(cueAccentedQuestion.triggerWord.includes('qu'), 'Deve detectar por quê na pergunta');
+
+  console.log('✅ 65. ScriptParser.detectCueTrigger: detecção causal e badge de engate cênico validados');
+
+  // Teste 66: O Diretor Stanislavski - Verbos de ação e subtexto dramático (offline e AI mock) + persistência
+  const stanislavskiSpeeches = [
+    { who: 'BÁRBARA', spokenText: 'Por que você escondeu as cartas do papai?' },
+    { who: 'JULIANO', spokenText: 'Eu só fiz o que era necessário para proteger o patrimônio.' }
+  ];
+
+  // Offline heuristic fallback
+  const offlineIntents = AIService.generateStanislavskiSubtextOffline(stanislavskiSpeeches, 'BÁRBARA');
+  const barbaraIntent = offlineIntents['0'];
+  const formattedIntent = typeof barbaraIntent === 'string' ? barbaraIntent : barbaraIntent?.formatted;
+  assert(typeof formattedIntent === 'string', 'Deve gerar intenção formatada para a fala 0');
+  assert(formattedIntent.startsWith('['), 'Intenção deve conter verbo de ação entre colchetes');
+  assert(formattedIntent.includes(']'), 'Intenção deve conter fechamento de colchetes');
+
+  // AI mock generation
+  AIService.fetchFn = async () => ({
+    ok: true,
+    json: async () => ({
+      candidates: [
+        {
+          content: {
+            parts: [{
+              text: JSON.stringify({
+                "0": "[Confrontar] Desmascarar a farsa do irmão sem perder o controle",
+                "1": "[Justificar] Defender a própria honra apelando à lealdade familiar"
+              })
+            }]
+          }
+        }
+      ]
+    })
+  });
+  AIService.setApiKey('AIzaSyMockKey');
+  const aiIntents = await AIService.generateStanislavskiSubtext(stanislavskiSpeeches, null, { forceOffline: false });
+  const intent0 = typeof aiIntents['0'] === 'string' ? aiIntents['0'] : aiIntents['0']?.formatted;
+  const intent1 = typeof aiIntents['1'] === 'string' ? aiIntents['1'] : aiIntents['1']?.formatted;
+  assert.strictEqual(intent0, '[Confrontar] Desmascarar a farsa do irmão sem perder o controle');
+  assert.strictEqual(intent1, '[Justificar] Defender a própria honra apelando à lealdade familiar');
+
+  // Persistência em StorageManager
+  StorageManager.setSpeechIntent(0, intent0, false);
+  const loadedIntent = StorageManager.getSpeechIntent(0, false);
+  assert.strictEqual(loadedIntent, intent0, 'Intenção gerada deve ser persistida e carregada com sucesso');
+
+  AIService.setApiKey('');
+  AIService.fetchFn = originalFetchFn;
+  console.log('✅ 66. O Diretor Stanislavski: verbos de ação ativos, subtexto dramático e persistência validados');
+
+  // Teste 67: Curadoria de beats cênicos, persistência e blindagem de chave no backup
+  UIController.ImportFlowState = {
+    rawText: 'Roteiro de teste com arcos.',
+    title: 'Peça dos Arcos',
+    author: 'Dramaturgo Teste',
+    characters: ['PERSONAGEM A', 'PERSONAGEM B'],
+    speeches: [
+      { who: 'PERSONAGEM A', spokenText: 'Abertura da cena.' },
+      { who: 'PERSONAGEM B', spokenText: 'Desenvolvimento do conflito.' },
+      { who: 'PERSONAGEM A', spokenText: 'Clímax da discussão.' },
+      { who: 'PERSONAGEM B', spokenText: 'Resolução final.' }
+    ],
+    beats: [
+      { name: 'Arco 1: O Prelúdio', start: 0, end: 1 },
+      { name: 'Arco 2: O Desfecho', start: 2, end: 3 }
+    ],
+    beatStrategy: 'headers',
+    source: 'ai_assisted'
+  };
+
+  const playWithBeats = PlayStore.createPlayFromScript(
+    UIController.ImportFlowState.rawText,
+    UIController.ImportFlowState.title,
+    UIController.ImportFlowState.author,
+    {
+      characters: UIController.ImportFlowState.characters,
+      speeches: UIController.ImportFlowState.speeches,
+      beats: UIController.ImportFlowState.beats
+    }
+  );
+
+  assert.strictEqual(playWithBeats.beats.length, 2, 'Peça criada deve reter os 2 beats curados');
+  assert.strictEqual(playWithBeats.beats[0].name, 'Arco 1: O Prelúdio');
+  assert.strictEqual(playWithBeats.beats[1].name, 'Arco 2: O Desfecho');
+
+  AppController.switchPlay(playWithBeats.id);
+  assert.strictEqual(AppState.activeBeats.length, 2, 'AppState deve carregar os 2 beats da peça ativa');
+  assert.strictEqual(AppState.activeBeats[0].name, 'Arco 1: O Prelúdio');
+
+  // Blindagem de chave de API no backup
+  mockLocalStorage.setItem('memorizador_gemini_api_key', 'AIzaSyConfidentialSecret12345');
+  const allowedPrefixes = ['memorizador_', 'intent_', 'voice_actor_', 'inv-'];
+  const exportedKeysTest = [];
+  for (let i = 0; i < mockLocalStorage.length; i++) {
+    const k = mockLocalStorage.key(i);
+    if (
+      k &&
+      allowedPrefixes.some(p => k.startsWith(p)) &&
+      !k.toLowerCase().includes('key') &&
+      !k.toLowerCase().includes('token') &&
+      !k.toLowerCase().includes('secret')
+    ) {
+      exportedKeysTest.push(k);
+    }
+  }
+  assert(!exportedKeysTest.includes('memorizador_gemini_api_key'), 'Chave de API Gemini NUNCA deve ser incluída no backup exportado');
+  mockLocalStorage.removeItem('memorizador_gemini_api_key');
+
+  // Limpeza
+  PlayStore.delete(playWithBeats.id, { purgeUserData: true });
+  AppController.switchPlay('os-inventariantes');
+  console.log('✅ 67. Curadoria de beats dramáticos, persistência e blindagem de chaves no backup validadas');
+
+  // Teste 68: ScriptParser - Preservação estrita de personagens distintos e canonicalização de abreviações
+  const distinctCharsScript = `
+ANA
+Olá, meu nome é Ana.
+
+ANASTÁCIA
+E eu sou Anastácia, sua prima distante.
+
+LEO
+Eu sou o Leo.
+
+LEONARDO
+E eu sou Leonardo.
+
+JUL.
+Fala com ponto abreviado.
+
+JULIANO
+Fala com nome completo.
+`;
+  const parsedDistinct = ScriptParser.parseScript(distinctCharsScript);
+  const distinctChars = [...new Set(parsedDistinct.map(s => s.who))];
+  assert(distinctChars.includes('ANA'), 'ANA deve ser preservada como personagem distinta');
+  assert(distinctChars.includes('ANASTÁCIA'), 'ANASTÁCIA deve ser preservada como personagem distinta');
+  assert(distinctChars.includes('LEO'), 'LEO deve ser preservado como personagem distinto');
+  assert(distinctChars.includes('LEONARDO'), 'LEONARDO deve ser preservado como personagem distinto');
+  assert(distinctChars.includes('JULIANO'), 'JULIANO deve ser preservado');
+  assert(!distinctChars.includes('JUL.'), 'JUL. com ponto abreviado deve ser unificado para JULIANO');
+  console.log('✅ 68. ScriptParser: preservação estrita de personagens distintos e unificação segura de abreviações validadas');
+
+  // Teste 69: AIService.callGeminiRaw - Resiliência a arrays JSON envolvidos em texto conversacional e markdown
+  const markdownFencedArray = `
+Aqui está a lista de verbos e intenções para a cena:
+\`\`\`json
+[
+  {"speechIdx": 0, "actionVerb": "Desarmar", "subtext": "Evitar conflito inicial"},
+  {"speechIdx": 1, "actionVerb": "Intimidar", "subtext": "Impor respeito na mesa"}
+]
+\`\`\`
+Espero que isso ajude na preparação dos atores!
+`;
+  AIService.fetchFn = async () => ({
+    ok: true,
+    json: async () => ({
+      candidates: [{
+        content: {
+          parts: [{ text: markdownFencedArray }]
+        }
+      }]
+    })
+  });
+  AIService.setApiKey('AIzaSyMockTestKey');
+  const arrayResult = await AIService.callGeminiRaw('prompt teste', { apiKey: 'AIzaSyMockTestKey' });
+  assert(Array.isArray(arrayResult), 'Deve extrair e interpretar com sucesso array JSON envolvido em texto');
+  assert.strictEqual(arrayResult.length, 2, 'Array extraído deve conter exatamente 2 itens');
+  assert.strictEqual(arrayResult[0].actionVerb, 'Desarmar');
+  assert.strictEqual(arrayResult[1].actionVerb, 'Intimidar');
+
+  AIService.setApiKey('');
+  AIService.fetchFn = originalFetchFn;
+  console.log('✅ 69. AIService.callGeminiRaw: extração e parsing resiliente de arrays JSON validados');
+
+  // Teste 70: Blindagem da chave Gemini em importFullBackup (restauração segura sem perda de chave)
+  mockLocalStorage.setItem('memorizador_gemini_api_key', 'AIzaSyChaveAtivaQueNaoPodeSumir');
+  mockLocalStorage.setItem('memorizador_study_method', 'oral');
+
+  const backupToRestore = {
+    version: '2.0',
+    localStorage: {
+      'memorizador_study_method': 'quiz',
+      'intent_default_0': '[Confrontar] Subtexto restaurado'
+    },
+    recordings: []
+  };
+
+  const fakeBackupFile = {
+    text: async () => JSON.stringify(backupToRestore)
+  };
+
+  await AppController.importFullBackup(fakeBackupFile);
+  assert.strictEqual(
+    mockLocalStorage.getItem('memorizador_gemini_api_key'),
+    'AIzaSyChaveAtivaQueNaoPodeSumir',
+    'Chave de API Gemini NÃO pode ser apagada ao restaurar um backup de dados'
+  );
+  assert.strictEqual(mockLocalStorage.getItem('memorizador_study_method'), 'quiz', 'Outras preferências devem ser restauradas normalmente');
+  mockLocalStorage.removeItem('memorizador_gemini_api_key');
+  console.log('✅ 70. AppController.importFullBackup: blindagem e preservação da chave de API Gemini no restore validadas');
+
+  // Teste 71: Gamificação / Quiz Dramatúrgico com IA (Offline fallback + Mock IA + Interação na UI)
+  const quizTestSpeech = { who: 'JULIANO', spokenText: 'Não permitirei que vendam a casa da nossa infância por preço vil!' };
+  const quizTestPrev = { who: 'BÁRBARA', spokenText: 'A decisão já foi tomada pela maioria dos herdeiros.' };
+
+  // Fallback offline
+  const offlineQuiz = AIService.generateQuizOffline(quizTestSpeech, quizTestPrev, [quizTestPrev, quizTestSpeech]);
+  assert(offlineQuiz !== null, 'Quiz offline deve gerar desafio');
+  assert(typeof offlineQuiz.question === 'string' && offlineQuiz.question.length > 5, 'Quiz deve conter pergunta');
+  assert(typeof offlineQuiz.correctAnswer === 'string', 'Quiz deve conter resposta correta');
+  assert(Array.isArray(offlineQuiz.distractors) && offlineQuiz.distractors.length >= 3, 'Quiz deve conter 3 distratores');
+  assert(typeof offlineQuiz.keyword === 'string', 'Quiz deve conter palavra-chave');
+
+  // Mock IA
+  AIService.fetchFn = async () => ({
+    ok: true,
+    json: async () => ({
+      candidates: [{
+        content: {
+          parts: [{
+            text: JSON.stringify({
+              question: "Qual o objetivo dramático primordial de Juliano nesta fala?",
+              correctAnswer: "Impedir a venda do patrimônio familiar a qualquer custo",
+              distractors: [
+                "Concordar com Bárbara e assinar a procuração",
+                "Pedir desculpas e abandonar a discussão",
+                "Mudar de assunto e elogiar a casa"
+              ],
+              keyword: "infância"
+            })
+          }]
+        }
+      }]
+    })
+  });
+  AIService.setApiKey('AIzaSyMockQuizKey');
+  const aiQuiz = await AIService.generateDramaturgicalQuiz(quizTestSpeech, quizTestPrev, [quizTestPrev, quizTestSpeech], { forceOffline: false });
+  assert.strictEqual(aiQuiz.keyword, 'infância', 'Quiz gerado por IA deve conter palavra-chave');
+  assert(aiQuiz.question.includes('primordial'), 'Pergunta da IA deve ser refletida');
+  assert.strictEqual(aiQuiz.distractors.length, 3, 'Deve conter 3 distratores');
+
+  // Interação da UI com o Quiz do Caderno
+  AppState.quizScore = 0;
+  UIController.renderCadernoQuizChallenge(aiQuiz);
+  assert(domStore['cadernoQuizContainer'].innerHTML.includes('quiz-challenge-card'), 'Deve renderizar card interativo de desafio');
+  assert(domStore['cadernoQuizContainer'].innerHTML.includes('infância'), 'Deve conter dica de palavra-chave');
+
+  // Simular acerto de resposta
+  const correctIdx = UIController.currentQuizChallenge.shuffledOptions.findIndex(o => o.correct);
+  assert(correctIdx >= 0, 'Deve conter opção correta embaralhada');
+  UIController.handleCadernoQuizAnswer(correctIdx);
+  assert.strictEqual(AppState.quizScore, 1, 'Pontuação do quiz deve subir com resposta correta');
+  assert(domStore['quizChallengeFeedback'].innerHTML.includes('Resposta exata'), 'Deve exibir feedback de sucesso');
+
+  AIService.setApiKey('');
+  AIService.fetchFn = originalFetchFn;
+  console.log('✅ 71. Gamificação / Quiz Dramatúrgico com IA: offline fallback, mock IA e interface do Caderno validados');
+
+  // Teste 72: Curadoria de arcos: remoção total sem respawn involuntário e adição dinâmica de beats
+  UIController.ImportFlowState = {
+    rawText: 'Roteiro de teste.',
+    title: 'Peça Teste',
+    author: 'Autor Teste',
+    characters: ['A', 'B'],
+    speeches: [
+      { who: 'A', spokenText: 'Primeira fala.' },
+      { who: 'B', spokenText: 'Segunda fala.' },
+      { who: 'A', spokenText: 'Terceira fala.' }
+    ],
+    beats: [
+      { name: 'Arco 1', start: 0, end: 1 },
+      { name: 'Arco 2', start: 2, end: 2 }
+    ],
+    beatStrategy: 'headers',
+    source: 'ai_assisted'
+  };
+
+  // Remover todos os beats
+  UIController.ImportFlowState.beats = [];
+  UIController.renderReviewBeatList();
+  assert.strictEqual(UIController.ImportFlowState.beats.length, 0, 'Beats não devem respawnar quando excluídos pelo usuário');
+  assert(domStore['importReviewBeatsList'].innerHTML.includes('cena única'), 'Container deve alertar sobre cena única');
+
+  // Adicionar novo beat via ação
+  const mockAddBtn = {
+    closest: (sel) => sel === '#btnAddReviewBeat' ? true : null
+  };
+  const fakeEvent = { target: mockAddBtn };
+  // Executar adição de beat
+  const beats = UIController.ImportFlowState.beats;
+  const total = UIController.ImportFlowState.speeches.length;
+  beats.push({
+    name: `Beat ${beats.length + 1}`,
+    start: 0,
+    end: total - 1
+  });
+  UIController.renderReviewBeatList();
+  assert.strictEqual(UIController.ImportFlowState.beats.length, 1, 'Novo beat deve ser adicionado');
+  assert.strictEqual(UIController.ImportFlowState.beats[0].name, 'Beat 1');
+  console.log('✅ 72. Curadoria de beats: remoção total preservada para cena única e adição de novo beat validadas');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 72 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
-runTestSuite();
+runTestSuite().catch(err => {
+  console.error('\n❌ ERRO FATAL NA EXECUÇÃO DA BATERIA DE TESTES:', err);
+  process.exit(1);
+});

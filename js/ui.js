@@ -8,6 +8,9 @@ const UIController = {
     if (!modal) return;
     this.lastFocusedElement = openerEl || (typeof document !== 'undefined' ? document.activeElement : null);
     modal.hidden = false;
+    if (modalId === 'modalSettings') {
+      this.populateAISettings();
+    }
     const focusables = modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
     if (focusables.length > 0 && typeof focusables[0].focus === 'function') {
       focusables[0].focus();
@@ -338,6 +341,30 @@ const UIController = {
         };
       }
     });
+  },
+
+  populateAISettings() {
+    if (typeof AIService === 'undefined') return;
+    const inputKey = Utils.$('inputGeminiApiKey');
+    const selectModel = Utils.$('selectGeminiModel');
+    const feedback = Utils.$('geminiConnectionFeedback');
+
+    if (inputKey) {
+      inputKey.value = AIService.getApiKey();
+    }
+    if (selectModel) {
+      selectModel.value = AIService.getModel();
+    }
+    if (feedback) {
+      if (AIService.hasKey()) {
+        feedback.style.display = 'block';
+        feedback.className = 'file-feedback ai-connection-feedback ai-feedback-success';
+        feedback.textContent = `Chave configurada para ${AIService.getModel()}`;
+      } else {
+        feedback.style.display = 'none';
+        feedback.textContent = '';
+      }
+    }
   },
 
   updateHeaderStats() {
@@ -840,13 +867,18 @@ const UIController = {
     if (renderId !== this.currentRenderId) return;
     const isDefault = ScriptParser.isDefaultPlay(AppState.activeScriptText);
     const currentIntent = StorageManager.getSpeechIntent(AppState.currentIndex, isDefault);
+    const intentMatch = (currentIntent || '').match(/^\[(.*?)\]\s*(.*)$/);
+    const intentContentHtml = intentMatch
+      ? `<span class="intent-action-badge">${Utils.escapeHtml(intentMatch[1])}</span><span class="intent-subtext-body">${Utils.escapeHtml(intentMatch[2])}</span>`
+      : `<span class="intent-text">${Utils.escapeHtml(currentIntent || 'Definir verbo de ação ou subtexto...')}</span>`;
+
     const intentHtml = (currentIntent || isMyTurn) ? `
       <div class="intent-bar" id="intentBarCurrent" title="Ação dramática / intenção da personagem (Toque para editar)">
         <span class="intent-label">
           ${Icons.get('target', { size: 15 })}
           <span>Ação:</span>
         </span>
-        <span class="intent-text">${Utils.escapeHtml(currentIntent || 'Definir verbo de ação ou subtexto...')}</span>
+        ${intentContentHtml}
         <button class="btn-intent-edit" id="btnEditIntent" type="button">
           ${currentIntent ? `${Icons.get('edit', { size: 13 })} Editar` : `${Icons.get('plus', { size: 13 })} Definir`}
         </button>
@@ -926,9 +958,30 @@ const UIController = {
           const cueEndWords = cueWords.slice(Math.max(0, cueWords.length - 4));
           const cueStart = cueStartWords.join(' ');
           const cueEnd = cueEndWords.join(' ');
-          const cueBody = cueStart
-            ? `${Utils.escapeHtml(cueStart)} <span class="cue-highlight-end">${Utils.escapeHtml(cueEnd)}</span>`
-            : `<span class="cue-highlight-end">${Utils.escapeHtml(cueEnd)}</span>`;
+
+          const hook = (typeof ScriptParser !== 'undefined' && typeof ScriptParser.detectCueTrigger === 'function')
+            ? ScriptParser.detectCueTrigger(prevSpeech.spokenText, speech.spokenText)
+            : null;
+
+          const highlightTrigger = (txt) => {
+            if (!txt) return '';
+            const escapedTxt = Utils.escapeHtml(txt);
+            if (!hook || !hook.triggerWord || hook.triggerWord.length < 3) return escapedTxt;
+            const tw = Utils.escapeHtml(hook.triggerWord);
+            const regex = new RegExp(`(^|[^a-zA-ZÀ-ÖØ-öø-ÿ0-9])(${tw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?=[^a-zA-ZÀ-ÖØ-öø-ÿ0-9]|$)`, 'i');
+            return escapedTxt.replace(regex, (match, p1, p2) => `${p1}<span class="cue-trigger-word" title="Palavra-gatilho">${p2}</span>`);
+          };
+
+          const cueStartHtml = cueStart ? highlightTrigger(cueStart) : '';
+          const cueEndHtml = highlightTrigger(cueEnd);
+
+          const cueBody = cueStartHtml
+            ? `${cueStartHtml} <span class="cue-highlight-end">${cueEndHtml}</span>`
+            : `<span class="cue-highlight-end">${cueEndHtml}</span>`;
+
+          const triggerBadgeHtml = (hook && hook.triggerWord)
+            ? `<div class="cue-trigger-badge">${Icons.get('lightning', { size: 12 })} <span>Engate cênico: <strong>"${Utils.escapeHtml(hook.triggerWord)}"</strong></span></div>`
+            : '';
 
           cueHtml = `
             <div class="cue-card">
@@ -949,6 +1002,7 @@ const UIController = {
                 </div>
               </div>
               <p class="cue-text">“${cueBody}”</p>
+              ${triggerBadgeHtml}
             </div>
           `;
         } else {
@@ -1808,6 +1862,7 @@ const UIController = {
       author: analysis.author || 'Autor não informado',
       characters: Array.isArray(analysis.characters) ? [...analysis.characters] : [],
       speeches: Array.isArray(analysis.speeches) ? analysis.speeches : [],
+      beats: Array.isArray(analysis.beats) ? [...analysis.beats] : [],
       beatStrategy: 'headers',
       source: analysis.source || 'heuristic_offline'
     };
@@ -1836,6 +1891,7 @@ const UIController = {
     if (Utils.$('importStepReview')) Utils.$('importStepReview').hidden = false;
 
     this.renderReviewCharacterChips();
+    this.renderReviewBeatList();
     this.updateReviewStats();
   },
 
@@ -1902,6 +1958,62 @@ const UIController = {
     }
   },
 
+  renderReviewBeatList() {
+    const container = Utils.$('importReviewBeatsList');
+    if (!container || !this.ImportFlowState) return;
+
+    if (!Array.isArray(this.ImportFlowState.beats)) {
+      const chars = this.ImportFlowState.characters || [];
+      const allSpeeches = this.ImportFlowState.speeches || [];
+      const filteredSpeeches = (typeof ScriptParser !== 'undefined' && typeof ScriptParser.filterSpeechesByCharacters === 'function')
+        ? ScriptParser.filterSpeechesByCharacters(allSpeeches, chars)
+        : allSpeeches;
+      const strat = Utils.$('importReviewBeatStrategy') ? Utils.$('importReviewBeatStrategy').value : (this.ImportFlowState.beatStrategy || 'headers');
+      this.ImportFlowState.beats = (typeof DramaBeats !== 'undefined')
+        ? DramaBeats.generateBeats(filteredSpeeches, this.ImportFlowState.rawText, null, strat)
+        : [];
+    }
+
+    const beats = this.ImportFlowState.beats || [];
+    if (beats.length === 0) {
+      container.innerHTML = '<span style="font-size:0.78rem; color:var(--fg-muted); padding:4px;">Nenhum beat cênico definido. O texto será tratado como cena única.</span>';
+      return;
+    }
+
+    container.innerHTML = beats.map((b, idx) => `
+      <div class="review-beat-item" data-idx="${idx}">
+        <span class="review-beat-badge">Beat ${idx + 1}</span>
+        <input type="text" class="review-beat-name-input" data-idx="${idx}" value="${Utils.escapeHtml(b.name)}" title="Editar nome do arco dramático">
+        <span class="review-beat-range">Falas ${b.start + 1}-${b.end + 1}</span>
+        <button type="button" class="btn-remove-beat" data-idx="${idx}" title="Remover beat">
+          ${Icons.get('x', { size: 13 })}
+        </button>
+      </div>
+    `).join('');
+
+    const inputs = container.querySelectorAll('.review-beat-name-input');
+    inputs.forEach(inp => {
+      inp.oninput = (e) => {
+        const i = parseInt(inp.dataset.idx, 10);
+        if (this.ImportFlowState && this.ImportFlowState.beats && this.ImportFlowState.beats[i]) {
+          this.ImportFlowState.beats[i].name = e.target.value.trim() || `Beat ${i + 1}`;
+        }
+      };
+    });
+
+    const removeBtns = container.querySelectorAll('.btn-remove-beat');
+    removeBtns.forEach(btn => {
+      btn.onclick = () => {
+        const i = parseInt(btn.dataset.idx, 10);
+        if (this.ImportFlowState && this.ImportFlowState.beats) {
+          this.ImportFlowState.beats.splice(i, 1);
+          this.renderReviewBeatList();
+          this.updateReviewStats();
+        }
+      };
+    });
+  },
+
   updateReviewStats() {
     const statsBox = Utils.$('importReviewStatsBox');
     if (!statsBox || !this.ImportFlowState) return;
@@ -1912,15 +2024,155 @@ const UIController = {
       : allSpeeches.filter(s => chars.includes(s.who));
 
     const strat = Utils.$('importReviewBeatStrategy') ? Utils.$('importReviewBeatStrategy').value : (this.ImportFlowState.beatStrategy || 'headers');
-    const beats = (typeof DramaBeats !== 'undefined')
-      ? DramaBeats.generateBeats(filteredSpeeches, this.ImportFlowState.rawText, null, strat)
-      : [];
+    const beatsCount = (this.ImportFlowState.beats && this.ImportFlowState.beats.length > 0)
+      ? this.ImportFlowState.beats.length
+      : ((typeof DramaBeats !== 'undefined') ? DramaBeats.generateBeats(filteredSpeeches, this.ImportFlowState.rawText, null, strat).length : 0);
 
     statsBox.innerHTML = `
       <div><strong>Total de Falas Válidas:</strong> ${filteredSpeeches.length} (de ${allSpeeches.length} detectadas originalmente)</div>
       <div><strong>Personagens Confirmados:</strong> ${chars.length}</div>
-      <div><strong>Divisão Dramatúrgica:</strong> ${beats.length} beats / blocos cênicos</div>
+      <div><strong>Divisão Dramatúrgica:</strong> ${beatsCount} beats / blocos cênicos</div>
     `;
+  },
+
+  populateAISettings() {
+    if (typeof AIService === 'undefined') return;
+    const keyInput = Utils.$('inputGeminiApiKey');
+    if (keyInput) {
+      keyInput.value = AIService.getApiKey();
+    }
+    const modelSelect = Utils.$('selectGeminiModel');
+    if (modelSelect) {
+      modelSelect.value = AIService.getModel();
+    }
+    const feedback = Utils.$('geminiConnectionFeedback');
+    if (feedback) {
+      feedback.style.display = 'none';
+      feedback.textContent = '';
+      feedback.className = 'file-feedback';
+    }
+  },
+
+  renderCadernoQuizSpeeches() {
+    const select = Utils.$('cadernoQuizSpeechSelect');
+    if (!select || !Array.isArray(AppState.speeches)) return;
+
+    const speeches = AppState.speeches;
+    const actor = AppState.selectedActor;
+    let opts = '';
+
+    speeches.forEach((s, idx) => {
+      const isMine = !actor || s.who === actor;
+      const preview = (s.spokenText || '').slice(0, 50);
+      const label = `Fala #${idx + 1} (${s.who}): "${preview}..."`;
+      const selected = idx === AppState.currentIndex ? 'selected' : '';
+      opts += `<option value="${idx}" ${selected}>${isMine ? '[Meu Papel] ' : ''}${Utils.escapeHtml(label)}</option>`;
+    });
+
+    select.innerHTML = opts;
+
+    const scoreEl = Utils.$('cadernoQuizScoreBadge');
+    if (scoreEl) {
+      const score = AppState.quizScore || 0;
+      scoreEl.textContent = `${score} ${score === 1 ? 'acerto' : 'acertos'}`;
+    }
+  },
+
+  renderCadernoQuizChallenge(challenge) {
+    const container = Utils.$('cadernoQuizContainer');
+    if (!container) return;
+
+    if (!challenge) {
+      container.innerHTML = `
+        <div class="caderno-quiz-empty">
+          <p>Selecione uma fala e toque em <strong>"Gerar Desafio"</strong> para iniciar o quiz dramatúrgico.</p>
+        </div>
+      `;
+      return;
+    }
+
+    this.currentQuizChallenge = { ...challenge };
+
+    const allOptions = [
+      { text: challenge.correctAnswer, correct: true },
+      ...(challenge.distractors || []).map(d => ({ text: d, correct: false }))
+    ];
+    for (let i = allOptions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+    }
+    this.currentQuizChallenge.shuffledOptions = allOptions;
+
+    container.innerHTML = `
+      <div class="quiz-challenge-card">
+        <div class="quiz-challenge-question">
+          ${Icons.get('sparkles', { size: 16 })}
+          <span>${Utils.escapeHtml(challenge.question)}</span>
+        </div>
+        ${challenge.keyword ? `
+          <div class="quiz-challenge-keyword-hint">
+            ${Icons.get('target', { size: 13 })}
+            <span>Palavra-chave dramatúrgica da réplica: <strong>"${Utils.escapeHtml(challenge.keyword)}"</strong></span>
+          </div>
+        ` : ''}
+        <div class="quiz-challenge-options-grid">
+          ${allOptions.map((opt, idx) => `
+            <button type="button" class="btn-quiz-challenge-option" data-idx="${idx}">
+              <span class="quiz-opt-letter">${String.fromCharCode(65 + idx)}</span>
+              <span class="quiz-opt-text">${Utils.escapeHtml(opt.text)}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div id="quizChallengeFeedback" class="quiz-challenge-feedback" style="display:none;"></div>
+      </div>
+    `;
+
+    const btns = container.querySelectorAll('.btn-quiz-challenge-option');
+    btns.forEach(b => {
+      b.onclick = () => {
+        const idx = parseInt(b.dataset.idx, 10);
+        this.handleCadernoQuizAnswer(idx);
+      };
+    });
+  },
+
+  handleCadernoQuizAnswer(selectedIdx) {
+    if (!this.currentQuizChallenge || this.currentQuizChallenge.answered) return;
+    this.currentQuizChallenge.answered = true;
+
+    const opt = this.currentQuizChallenge.shuffledOptions[selectedIdx];
+    const isCorrect = opt && opt.correct;
+    const container = Utils.$('cadernoQuizContainer');
+    const fb = Utils.$('quizChallengeFeedback');
+
+    if (container) {
+      const btns = container.querySelectorAll('.btn-quiz-challenge-option');
+      btns.forEach((b, idx) => {
+        const optionData = this.currentQuizChallenge.shuffledOptions[idx];
+        if (optionData && optionData.correct) {
+          b.classList.add('correct');
+        } else if (idx === selectedIdx) {
+          b.classList.add('incorrect');
+        }
+        b.disabled = true;
+      });
+    }
+
+    if (isCorrect) {
+      AppState.quizScore = (AppState.quizScore || 0) + 1;
+      const scoreEl = Utils.$('cadernoQuizScoreBadge');
+      if (scoreEl) {
+        scoreEl.textContent = `${AppState.quizScore} ${AppState.quizScore === 1 ? 'acerto' : 'acertos'}`;
+      }
+    }
+
+    if (fb) {
+      fb.style.display = 'flex';
+      fb.className = `quiz-challenge-feedback ${isCorrect ? 'success' : 'error'}`;
+      fb.innerHTML = isCorrect
+        ? `${Icons.get('check', { size: 16 })} <span><strong>Resposta exata!</strong> Excelente compreensão dramatúrgica da réplica cênica.</span>`
+        : `${Icons.get('x', { size: 16 })} <span><strong>Não exatamente.</strong> A resposta correta era: <em>"${Utils.escapeHtml(this.currentQuizChallenge.correctAnswer)}"</em>.</span>`;
+    }
   }
 };
 

@@ -3386,3 +3386,297 @@ textarea.form-control {
   align-items: center;
   margin-top: 6px;
 }
+
+/* ETAPA 4: INTELIGÊNCIA ARTIFICIAL, GATILHOS DE DEIXA & ARCOS DRAMÁTICOS */
+.ai-settings-card {
+  border-left: 3px solid var(--accent);
+}
+
+.ai-connection-feedback {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.ai-feedback-success {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.ai-feedback-error {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+/* GATILHOS CAUSAIS DE DEIXA (ENGATE CÊNICO) */
+.cue-trigger-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border-focus);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.cue-trigger-word {
+  color: var(--accent);
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+  background: var(--accent-soft);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+/* VERBO DE AÇÃO STANISLAVSKI & SUBTEXTO */
+.intent-action-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+
+.intent-subtext-body {
+  font-style: italic;
+  color: var(--fg);
+}
+
+/* CURADORIA DE ARCOS E BEATS NO IMPORTADOR */
+.beats-curation-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.review-beat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: border-color 0.15s ease;
+}
+
+.review-beat-item:hover {
+  border-color: var(--accent);
+}
+
+.review-beat-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.review-beat-name-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.review-beat-name-input:focus {
+  background: var(--surface-elevated);
+  border-color: var(--accent);
+  outline: none;
+}
+
+.review-beat-range {
+  font-size: 0.72rem;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.btn-remove-beat {
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-remove-beat:hover {
+  color: var(--danger);
+}
+
+.caderno-stanislavski-card {
+  border-left: 3px solid var(--accent);
+}
+
+/* QUIZ DRAMATÚRGICO NO CADERNO DE ENSAIO */
+.caderno-quiz-card {
+  border-left: 3px solid var(--accent);
+}
+
+.quiz-score-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-focus);
+}
+
+.caderno-quiz-interactive-area {
+  margin-top: 10px;
+}
+
+.caderno-quiz-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.quiz-challenge-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-challenge-question {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1.45;
+}
+
+.quiz-challenge-keyword-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-focus);
+}
+
+.quiz-challenge-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-quiz-challenge-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg);
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-quiz-challenge-option:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+.btn-quiz-challenge-option.correct {
+  background: var(--success-soft);
+  border-color: var(--success);
+  color: var(--success);
+  font-weight: 700;
+}
+
+.btn-quiz-challenge-option.incorrect {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.quiz-opt-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-elevated);
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.quiz-challenge-feedback {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.quiz-challenge-feedback.success {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid var(--success);
+}
+
+.quiz-challenge-feedback.error {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.btn-add-beat {
+  align-self: flex-start;
+  margin-top: 4px;
+}

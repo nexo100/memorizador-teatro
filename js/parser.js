@@ -127,8 +127,227 @@
         return (speeches || []).map(s => s.who === oldName ? { ...s, who: newName } : s);
       },
 
+      sanitizeRawText(rawText) {
+        if (!rawText) return '';
+        let text = rawText;
+
+        // Unir quebras artificiais de linha com hifenizacao (ex: "ca-\nvalo" ou "ca- \n  valo" -> "cavalo")
+        text = text.replace(/([a-zA-ZÀ-ÖØ-öø-ÿ])-\s*[\r\n]+\s*([a-zA-ZÀ-ÖØ-öø-ÿ])/g, '$1$2');
+
+        const lines = text.split(/\r?\n/);
+        const cleanedLines = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) {
+            cleanedLines.push('');
+            continue;
+          }
+
+          // Remocao de rodapes, paginacoes e ruidos de digitalizacao / OCR
+          // 1. Numeros de pagina explicitos: "Pagina 12", "[Pagina 15]", "Pag. 5", "Pag 1 de 20", "page 3"
+          const isPageNumber = /^[\(\[]?\s*(?:p[aá]g(?:ina)?\.?\s*\d+(?:\s*(?:de|\/)\s*\d+)?|\d+\s*(?:de|\/)\s*\d+|page\s*\d+)\s*[\)\]]?\s*$/i.test(line);
+          if (isPageNumber) continue;
+
+          // 2. Numeros isolados entre tracos ou barras: "- 12 -", "-- 4 --", "12"
+          const isDashedNumber = /^[-—–_~*#\s]*\d+[-—–_~*#\s]*$/.test(line);
+          if (isDashedNumber && line.replace(/[^0-9]/g, '').length <= 4) continue;
+
+          // 3. Avisos legais, rodapes repetitivos de digitalizacao ou carimbos de versao
+          const isRecurrentFooter = /^(?:todos os direitos reservados|copyright\s*©?|all rights reserved|roteiro final|vers[aã]o preliminar|draft\s*\d*)\b/i.test(line);
+          if (isRecurrentFooter) continue;
+
+          cleanedLines.push(lines[i]);
+        }
+
+        return cleanedLines.join('\n');
+      },
+
+      canonicalizeCharacterName(rawWho, existingCharacters = []) {
+        if (!rawWho) return '';
+        let clean = (rawWho || '').replace(/\*+/g, '').trim();
+
+        const parenMatch = clean.match(/^([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]+?)\s*[\(\[](.*?)[\)\]]$/);
+        if (parenMatch) {
+          clean = parenMatch[1].trim();
+        }
+
+        const hasAbbrDot = /\./.test(clean);
+        clean = clean.replace(/[:.\-—–]+$/, '').trim();
+        const upper = clean.toUpperCase();
+
+        if (Array.isArray(existingCharacters) && existingCharacters.length > 0) {
+          const exact = existingCharacters.find(c => (c || '').trim().toUpperCase() === upper);
+          if (exact) return exact.trim().toUpperCase();
+
+          const isAllConsonants = /^[BCDFGHJKLMNPQRSTVWXYZÇ]+$/.test(upper);
+          if (hasAbbrDot || isAllConsonants) {
+            if (upper.length >= 2 && upper.length <= 5) {
+              const prefixMatch = existingCharacters.find(c => {
+                const cu = (c || '').trim().toUpperCase();
+                return cu.startsWith(upper) && cu.length > upper.length;
+              });
+              if (prefixMatch) return prefixMatch.trim().toUpperCase();
+            }
+          }
+        }
+
+        return upper;
+      },
+
+      groupCharacterVariants(speeches) {
+        if (!Array.isArray(speeches) || speeches.length === 0) {
+          return { speeches: [], characters: [], variantMap: {} };
+        }
+
+        const rawNames = [...new Set(speeches.map(s => (s.who || '').trim()))].filter(Boolean);
+        const variantMap = {};
+
+        const upperGroups = {};
+        rawNames.forEach(raw => {
+          const cleanUpper = raw.replace(/[:.\-—–]+$/, '').trim().toUpperCase();
+          if (!upperGroups[cleanUpper]) upperGroups[cleanUpper] = [];
+          upperGroups[cleanUpper].push(raw);
+        });
+
+        const allCleanUppers = Object.keys(upperGroups).sort((a, b) => b.length - a.length);
+
+        allCleanUppers.forEach(canonicalUpper => {
+          const list = upperGroups[canonicalUpper];
+          if (list.length > 1) {
+            const hasUpper = list.find(n => n === canonicalUpper);
+            const chosen = hasUpper || canonicalUpper;
+            list.forEach(raw => {
+              variantMap[raw] = chosen;
+            });
+          } else {
+            const single = list[0];
+            if (/[.:\-—–]+$/.test(single)) {
+              variantMap[single] = canonicalUpper;
+            }
+          }
+
+          const hasAbbrDot = list.some(r => /\./.test(r));
+          const isAllConsonants = /^[BCDFGHJKLMNPQRSTVWXYZÇ]+$/.test(canonicalUpper);
+
+          if ((hasAbbrDot || isAllConsonants) && canonicalUpper.length >= 2 && canonicalUpper.length <= 5) {
+            const fuller = allCleanUppers.find(cand => cand.length > canonicalUpper.length && cand.startsWith(canonicalUpper));
+            if (fuller) {
+              list.forEach(raw => {
+                variantMap[raw] = fuller;
+              });
+            }
+          }
+        });
+
+        const updatedSpeeches = speeches.map(s => {
+          const mapped = variantMap[s.who];
+          return mapped ? { ...s, who: mapped } : s;
+        });
+
+        const characters = [...new Set(updatedSpeeches.map(s => s.who))];
+        return { speeches: updatedSpeeches, characters, variantMap };
+      },
+
+      detectCueTrigger(cueText, speechText) {
+        if (!cueText || !speechText) {
+          return { triggerWord: '', hookType: 'abertura', reason: 'Abertura de cena ou primeira réplica' };
+        }
+
+        const cleanC = (cueText || '').replace(/[\(\[][\s\S]*?[\)\]]/g, '').trim();
+        const cleanS = (speechText || '').replace(/[\(\[][\s\S]*?[\)\]]/g, '').trim();
+
+        const tokenize = (txt) => {
+          return (txt || '')
+            .toLowerCase()
+            .split(/\s+/)
+            .map(w => w.replace(/[.,!?;:()""«»—–“”‘’`]/g, '').trim())
+            .filter(w => w.length >= 3 && (typeof AppConfig !== 'undefined' && AppConfig.FUNCTION_WORDS ? !AppConfig.FUNCTION_WORDS.has(w) : true));
+        };
+
+        const cueWords = tokenize(cleanC);
+        const speechWords = tokenize(cleanS);
+
+        // 1. Eco direto / reuso de palavra chave do final da deixa
+        const cueEndWords = cueWords.slice(Math.max(0, cueWords.length - 8));
+        for (const sw of speechWords.slice(0, 10)) {
+          if (cueEndWords.includes(sw)) {
+            return {
+              triggerWord: sw,
+              hookType: 'eco',
+              reason: `Reuso direto da palavra-chave "${sw}" presente na deixa`
+            };
+          }
+        }
+
+        for (const cw of cueWords) {
+          if (speechWords.includes(cw)) {
+            return {
+              triggerWord: cw,
+              hookType: 'eco',
+              reason: `Conexao dramatica pela palavra "${cw}"`
+            };
+          }
+        }
+
+        // 2. Conector pergunta-resposta
+        if (cleanC.includes('?')) {
+          const qMatches = cleanC.match(/(?:^|[^a-zA-ZÀ-ÖØ-öø-ÿ0-9])(por\s*qu[eê]|cad[eê]|qu[eê]|onde|quem|quando|como|qual|quanto)(?=[^a-zA-ZÀ-ÖØ-öø-ÿ0-9]|$)/i);
+          if (qMatches) {
+            const qWord = qMatches[1].toLowerCase();
+            return {
+              triggerWord: qWord,
+              hookType: 'pergunta_resposta',
+              reason: `Resposta à pergunta cênica ("${qWord}") formulada pelo colega`
+            };
+          }
+          const lastCueWord = cueWords[cueWords.length - 1];
+          if (lastCueWord) {
+            return {
+              triggerWord: lastCueWord,
+              hookType: 'pergunta_resposta',
+              reason: `Resposta à pergunta cênica do colega ("${lastCueWord}?")`
+            };
+          }
+          return {
+            triggerWord: 'pergunta',
+            hookType: 'pergunta_resposta',
+            reason: 'Resposta à pergunta cênica formulada pelo colega'
+          };
+        }
+
+        // 3. Conectores causais / opositivos no inicio da fala do ator (mesmo com travessão ou aspas)
+        const strippedS = cleanS.replace(/^[\s—–\-"'«»“”‘’.]+/g, '');
+        const causalMatch = strippedS.match(/^(?:mas|porém|contudo|todavia|porque|pois|então|portanto|logo|já que|ainda que)\b/i);
+        if (causalMatch) {
+          const connector = causalMatch[0].toLowerCase();
+          return {
+            triggerWord: connector,
+            hookType: 'conector_causal',
+            reason: `Engate lógico com conector "${connector}" rebatendo a deixa`
+          };
+        }
+
+        // 4. Fallback para a palavra de conteudo mais forte no fim da deixa
+        const lastCueWord = cueWords[cueWords.length - 1];
+        if (lastCueWord) {
+          return {
+            triggerWord: lastCueWord,
+            hookType: 'gancho_final',
+            reason: `Gancho cênico sobre a última palavra marcante da deixa ("${lastCueWord}")`
+          };
+        }
+
+        return {
+          triggerWord: '',
+          hookType: 'ritmo',
+          reason: 'Transição rítmica contínua'
+        };
+      },
+
       parseScript(rawText) {
-        const lines = (rawText || '').split(/\r?\n/);
+        const sanitized = this.sanitizeRawText(rawText);
+        const lines = (sanitized || '').split(/\r?\n/);
         const parsed = [];
         let pendingDirections = [];
         let pendingBeat = null;
@@ -271,9 +490,9 @@
             const clean = (rawWho || '').replace(/\*+/g, '').trim();
             const parenMatch = clean.match(/^([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]+?)\s*[\(\[](.*?)[\)\]]$/);
             if (parenMatch) {
-              return { who: parenMatch[1].trim(), rubric: parenMatch[2].trim() };
+              return { who: parenMatch[1].replace(/[:.\-—–]+$/, '').trim(), rubric: parenMatch[2].trim() };
             }
-            return { who: clean, rubric: null };
+            return { who: clean.replace(/[:.\-—–]+$/, '').trim(), rubric: null };
           };
 
           let m = null;
@@ -379,7 +598,8 @@
         }
 
         pushCurrent();
-        return parsed;
+        const grouped = this.groupCharacterVariants(parsed);
+        return grouped.speeches;
       }
     };
 
@@ -502,7 +722,7 @@
                 speeches,
                 beats,
                 source: 'ai_assisted',
-                providerName: this.aiProvider.name || 'AI'
+                providerName: aiResult.providerName || this.aiProvider.name || 'AI'
               };
             }
           } catch (err) {

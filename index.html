@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' blob: data:; font-src 'self'; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' blob: data: https://generativelanguage.googleapis.com; font-src 'self'; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b0d11">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -448,6 +448,10 @@
           <span>Gravações de Voz</span>
           <span class="caderno-rec-count-badge" id="cadernoRecordingsCountBadge">0</span>
         </button>
+        <button type="button" class="caderno-tab-btn" id="cadernoTabBtnQuiz" data-subtab="quiz">
+          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19.4 7.8c0-1.6.8-2.2 1.6-2.8-1.3-1.3-3.1-2-5-2-1.6 0-2.2.8-2.8 1.6a2 2 0 0 1-2.3 0C10.2 3.8 9.6 3 8 3 6.2 3 4.3 3.7 3 5c.8.7 1.6 1.3 1.6 2.8a2 2 0 0 1-1.1 1.8C2.8 10.2 2 10.8 2 12.4c0 1.6.8 2.2 1.6 2.8a2 2 0 0 1 1.1 1.8c-.8.8-1.6 1.4-2.4 2.1 1.3 1.3 3.1 2 5 2 1.6 0 2.2-.8 2.8-1.6a2 2 0 0 1 2.3 0c.7.8 1.3 1.6 2.8 1.6 1.8 0 3.7-.7 5-2-.8-.7-1.6-1.3-1.6-2.8a2 2 0 0 1 1.1-1.8c.6-.5 1.4-1.1 1.4-2.7 0-1.6-.8-2.2-1.6-2.8a2 2 0 0 1-1.1-1.8Z"/></svg>
+          <span>Quiz Dramatúrgico</span>
+        </button>
       </div>
 
       <div class="modal-body caderno-modal-body">
@@ -499,6 +503,26 @@
             <div id="cadernoSpeechDetailContainer" class="caderno-speech-detail" hidden>
               <!-- Preenchido via UIController.renderCadernoSpeechDetail() -->
             </div>
+          </div>
+
+          <!-- CARD C: O DIRETOR STANISLAVSKI (AÇÕES & SUBTEXTO) -->
+          <div class="caderno-card caderno-stanislavski-card">
+            <div class="caderno-card-header">
+              <div class="caderno-card-title">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+                <span>O Diretor Stanislavski · Ações & Subtexto</span>
+              </div>
+            </div>
+            <p class="caderno-card-desc">
+              Preencha dinamicamente verbos de ação ativos (ex: "Desarmar", "Intimidar", "Suplicar") e intenções ocultas para todas as falas da sua personagem nesta peça.
+            </p>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary" id="btnGenerateStanislavskiCaderno" style="flex:1; min-height:42px;">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+                <span>Gerar Verbos de Ação & Subtexto</span>
+              </button>
+            </div>
+            <div id="cadernoStanislavskiFeedback" class="file-feedback" style="display:none; margin-top:8px;"></div>
           </div>
         </div>
 
@@ -552,6 +576,48 @@
             </div>
             <div id="cadernoRecordingsList" class="caderno-recordings-list">
               <!-- Preenchido via UIController.renderCadernoRecordings() -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBABA 3: QUIZ & DESAFIOS DRAMATÚRGICOS -->
+        <div id="cadernoSubtabQuiz" class="caderno-subtab-pane" hidden>
+          <div class="caderno-card caderno-quiz-card">
+            <div class="caderno-card-header">
+              <div class="caderno-card-title">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Quiz Dramatúrgico · Compreensão & Réplica</span>
+              </div>
+              <span class="quiz-score-badge" id="cadernoQuizScoreBadge">0 acertos</span>
+            </div>
+            <p class="caderno-card-desc">
+              Desafie sua compreensão da cena com perguntas de fixação baseadas na intenção de réplica, gatilhos de deixa e palavras-chave da peça ativa.
+            </p>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label for="cadernoQuizSpeechSelect">Escolha a fala para o desafio:</label>
+              <div class="custom-select-box">
+                <select id="cadernoQuizSpeechSelect" class="form-control" title="Selecione uma fala para o desafio">
+                  <!-- Preenchido via UIController.renderCadernoQuizSpeeches() -->
+                </select>
+                <div class="select-chevron">
+                  <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <button type="button" class="btn btn-primary" id="btnGenerateCadernoQuiz" style="flex:1;">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+                <span>Gerar Desafio</span>
+              </button>
+              <button type="button" class="btn btn-secondary" id="btnRandomCadernoQuiz" title="Escolher fala aleatória da personagem">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                <span>Aleatório</span>
+              </button>
+            </div>
+            <div id="cadernoQuizContainer" class="caderno-quiz-interactive-area">
+              <div class="caderno-quiz-empty">
+                <p>Selecione uma fala e toque em <strong>"Gerar Desafio"</strong> para iniciar o quiz dramatúrgico.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -741,6 +807,53 @@
           </button>
         </div>
 
+        <!-- Inteligência Artificial (Google Gemini · BYOK) -->
+        <div class="form-group settings-card ai-settings-card">
+          <div class="settings-card-header">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+            <span>Inteligência Artificial (Google Gemini · BYOK)</span>
+          </div>
+          <p style="font-size:0.8rem; color:var(--fg-muted); margin:0 0 12px; line-height:1.45;">
+            Conecte sua chave gratuita do Google AI Studio para higienização inteligente, arcos dramáticos e subtexto de Stanislavski. A chave fica guardada apenas no seu dispositivo.
+          </p>
+          <div class="form-group" style="margin-bottom:8px;">
+            <label for="inputGeminiApiKey">Chave de API (Google AI Studio):</label>
+            <div style="display:flex; gap:6px;">
+              <input type="password" id="inputGeminiApiKey" class="form-control" placeholder="Cole sua chave AIzaSy..." autocomplete="off" spellcheck="false" style="flex:1;">
+              <button type="button" id="btnToggleApiKeyVisibility" class="btn btn-secondary btn-icon-only" title="Mostrar/Ocultar Chave">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label for="selectGeminiModel">Modelo Gemini:</label>
+            <div class="custom-select-box">
+              <select id="selectGeminiModel" class="form-control" title="Modelo Gemini">
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recomendado - Rápido e Preciso)</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Rápido e Estável)</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Econômico)</option>
+              </select>
+              <div class="select-chevron">
+                <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; margin-bottom:10px;">
+            <button type="button" id="btnTestGeminiConnection" class="btn btn-secondary" style="flex:1;">
+              <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h2l3-7 4 14 4-14 3 7h4"/></svg>
+              <span>Testar Conexão</span>
+            </button>
+            <button type="button" id="btnSaveGeminiKey" class="btn btn-primary" style="flex:1;">
+              <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Salvar Chave</span>
+            </button>
+            <button type="button" id="btnClearGeminiKey" class="btn btn-danger-outline btn-icon-only" title="Remover Chave">
+              <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+          <div id="geminiConnectionFeedback" class="file-feedback" style="display:none;"></div>
+        </div>
+
         <!-- Backup & Restauração -->
         <div class="form-group settings-card">
           <div class="settings-card-header">
@@ -903,10 +1016,14 @@
             <textarea id="importRawScriptText" class="form-control" placeholder="Cole aqui o texto da peça teatral (ex: **PERSONAGEM:** fala...)" rows="8"></textarea>
           </div>
 
-          <div class="import-actions-row">
-            <button type="button" id="btnAnalyzeImport" class="btn btn-primary" style="width:100%;">
+          <div class="import-actions-row" style="display:flex; gap:8px;">
+            <button type="button" id="btnAnalyzeImport" class="btn btn-secondary" style="flex:1;">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+              <span>Análise Offline</span>
+            </button>
+            <button type="button" id="btnAnalyzeImportAI" class="btn btn-primary" style="flex:1;">
               <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
-              <span>Analisar e Personalizar Roteiro</span>
+              <span>Higienizar com IA</span>
             </button>
           </div>
         </div>
@@ -953,6 +1070,19 @@
             </select>
           </div>
 
+          <!-- ARCOS DRAMÁTICOS / BEATS SUGERIDOS PELA IA OU HEURÍSTICA -->
+          <div class="form-group">
+            <label>Arcos Dramáticos & Beats Cênicos:</label>
+            <p class="form-help-text">Revise e ajuste os arcos e beats da peça antes de salvar:</p>
+            <div id="importReviewBeatsList" class="beats-curation-container">
+              <!-- Injetado via UIController.renderReviewBeatList() -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-add-beat" id="btnAddReviewBeat" style="font-size:0.8rem; padding:4px 10px; margin-top:4px;">
+              <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Adicionar Beat</span>
+            </button>
+          </div>
+
           <div class="review-stats-card" id="importReviewStatsBox">
             <!-- Estatísticas dinâmicas injetadas via UIController.updateReviewStats() -->
           </div>
@@ -978,6 +1108,7 @@
   <script src="js/utils.js"></script>
   <script src="js/state.js"></script>
   <script src="js/parser.js"></script>
+  <script src="js/ai-service.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/audio.js"></script>
   <script src="js/ui.js"></script>

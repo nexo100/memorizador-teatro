@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ensaio-teatral-v15';
+const CACHE_NAME = 'ensaio-teatral-v16';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS_TO_CACHE = [
   './js/utils.js',
   './js/state.js',
   './js/parser.js',
+  './js/ai-service.js',
   './js/storage.js',
   './js/audio.js',
   './js/ui.js',

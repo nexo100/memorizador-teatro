@@ -7,6 +7,9 @@
         this.bindEvents();
         this.bindKeyboard();
         this.loadActiveScript();
+        if (typeof AIService !== 'undefined' && typeof DramaturgyAnalyzer !== 'undefined' && typeof DramaturgyAnalyzer.setAIProvider === 'function') {
+          DramaturgyAnalyzer.setAIProvider(AIService);
+        }
       },
 
       setupTheme() {
@@ -669,6 +672,7 @@
         } else if (id === 'btnOpenSettings' || id === 'btnOpenSettingsLobby' || id === 'btnOpenSettingsStage' || id === 'tabBtnSettings') {
           UIController.closeModal('modalCaderno');
           UIController.populateVoiceSelectors();
+          UIController.populateAISettings();
           UIController.openModal('modalSettings');
           UIController.updateTabBarActive('settings');
         } else if (id === 'btnCloseSettings') {
@@ -814,7 +818,13 @@
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
               const k = localStorage.key(i);
-              if (k && allowedPrefixes.some(p => k.startsWith(p))) {
+              if (
+                k &&
+                allowedPrefixes.some(p => k.startsWith(p)) &&
+                !k.toLowerCase().includes('key') &&
+                !k.toLowerCase().includes('token') &&
+                !k.toLowerCase().includes('secret')
+              ) {
                 keysToRemove.push(k);
               }
             }
@@ -853,11 +863,13 @@
             }
           }
 
-          alert('Backup restaurado com sucesso! O aplicativo será recarregado.');
-          if (typeof window !== 'undefined' && window.location && window.location.reload) window.location.reload();
+          const notify = typeof alert === 'function' ? alert : (msg) => console.log(msg);
+          notify('Backup restaurado com sucesso! O aplicativo será recarregado.');
+          if (typeof window !== 'undefined' && window.location && typeof window.location.reload === 'function') window.location.reload();
         } catch (err) {
           console.error(err);
-          alert('Erro ao restaurar backup: ' + err.message);
+          const notify = typeof alert === 'function' ? alert : (msg) => console.log(msg);
+          notify('Erro ao restaurar backup: ' + err.message);
         }
       },
 
@@ -917,9 +929,14 @@
           if (cadernoTabBtn) {
             const subtab = cadernoTabBtn.dataset.subtab;
             document.querySelectorAll('.caderno-tab-btn').forEach(b => b.classList.toggle('active', b === cadernoTabBtn));
-            const isNotes = subtab === 'notes';
-            if (Utils.$('cadernoSubtabNotes')) Utils.$('cadernoSubtabNotes').hidden = !isNotes;
-            if (Utils.$('cadernoSubtabRecordings')) Utils.$('cadernoSubtabRecordings').hidden = isNotes;
+            if (Utils.$('cadernoSubtabNotes')) Utils.$('cadernoSubtabNotes').hidden = subtab !== 'notes';
+            if (Utils.$('cadernoSubtabRecordings')) Utils.$('cadernoSubtabRecordings').hidden = subtab !== 'recordings';
+            if (Utils.$('cadernoSubtabQuiz')) {
+              Utils.$('cadernoSubtabQuiz').hidden = subtab !== 'quiz';
+              if (subtab === 'quiz') {
+                UIController.renderCadernoQuizSpeeches();
+              }
+            }
             return;
           }
 
@@ -968,6 +985,111 @@
               AudioEngine.playSpeechAudio(idx, sp, sp.who, actorIdx >= 0 ? actorIdx : 0, AppState.speechRate, AppState.rehearsalTempo, {
                 onStatus: msg => UIController.showStatus(msg)
               });
+            }
+            return;
+          }
+
+          const btnGenStanislavski = e.target.closest('#btnGenerateStanislavskiCaderno');
+          if (btnGenStanislavski) {
+            if (typeof AIService === 'undefined') return;
+            const fb = Utils.$('cadernoStanislavskiFeedback');
+            const origHtml = btnGenStanislavski.innerHTML;
+            btnGenStanislavski.disabled = true;
+            btnGenStanislavski.innerHTML = `${Icons.get('sparkles', { size: 16 })} <span>Analisando Ações & Subtexto...</span>`;
+            if (fb) {
+              fb.style.display = 'flex';
+              fb.className = 'file-feedback';
+              fb.innerHTML = `${Icons.get('sparkles', { size: 14 })} <span>Construindo intenções e verbos de ação para ${Utils.escapeHtml(AppState.selectedActor)}...</span>`;
+            }
+            try {
+              const intentsMap = await AIService.generateStanislavskiSubtext(AppState.speeches, AppState.selectedActor, { forceOffline: false });
+              const isDefault = ScriptParser.isDefaultPlay(AppState.activeScriptText);
+              let count = 0;
+              Object.keys(intentsMap).forEach(idxStr => {
+                const idx = parseInt(idxStr, 10);
+                if (!isNaN(idx)) {
+                  const entry = intentsMap[idxStr];
+                  const formatted = typeof entry === 'string' ? entry : (entry?.formatted || `[${entry?.actionVerb}] ${entry?.subtext}`);
+                  StorageManager.setSpeechIntent(idx, formatted, isDefault);
+                  count++;
+                }
+              });
+              UIController.renderView();
+              const speechSelect = Utils.$('cadernoSpeechSelect');
+              if (speechSelect && speechSelect.value !== '') {
+                UIController.renderCadernoSpeechDetail(parseInt(speechSelect.value, 10));
+              }
+              if (fb) {
+                fb.className = 'file-feedback';
+                fb.innerHTML = `${Icons.get('check', { size: 14 })} <span>${count} ações dramáticas geradas com sucesso para ${Utils.escapeHtml(AppState.selectedActor)}!</span>`;
+              }
+            } catch (err) {
+              if (fb) {
+                fb.className = 'file-feedback error';
+                fb.innerHTML = `${Icons.get('x', { size: 14 })} <span>Erro: ${Utils.escapeHtml(err.message)}</span>`;
+              }
+            } finally {
+              btnGenStanislavski.disabled = false;
+              btnGenStanislavski.innerHTML = origHtml;
+            }
+            return;
+          }
+
+          const btnGenQuiz = e.target.closest('#btnGenerateCadernoQuiz');
+          if (btnGenQuiz) {
+            const select = Utils.$('cadernoQuizSpeechSelect');
+            const speechIdx = select && select.value !== '' ? parseInt(select.value, 10) : AppState.currentIndex;
+            const speech = (Array.isArray(AppState.speeches) && AppState.speeches[speechIdx]) ? AppState.speeches[speechIdx] : (AppState.speeches ? AppState.speeches[0] : null);
+            const prevSpeech = speechIdx > 0 && Array.isArray(AppState.speeches) ? AppState.speeches[speechIdx - 1] : null;
+            if (!speech) return;
+
+            const origHtml = btnGenQuiz.innerHTML;
+            btnGenQuiz.disabled = true;
+            btnGenQuiz.innerHTML = `${Icons.get('sparkles', { size: 14 })} <span>Gerando desafio...</span>`;
+
+            try {
+              const challenge = await AIService.generateDramaturgicalQuiz(speech, prevSpeech, AppState.speeches, { forceOffline: !AIService.hasKey() });
+              UIController.renderCadernoQuizChallenge(challenge);
+            } catch (err) {
+              const fallback = AIService.generateQuizOffline(speech, prevSpeech, AppState.speeches);
+              UIController.renderCadernoQuizChallenge(fallback);
+            } finally {
+              btnGenQuiz.disabled = false;
+              btnGenQuiz.innerHTML = origHtml;
+            }
+            return;
+          }
+
+          const btnRandQuiz = e.target.closest('#btnRandomCadernoQuiz');
+          if (btnRandQuiz) {
+            if (!Array.isArray(AppState.speeches) || AppState.speeches.length === 0) return;
+            const actor = AppState.selectedActor;
+            const candidateIndices = [];
+            AppState.speeches.forEach((s, i) => {
+              if (!actor || s.who === actor) candidateIndices.push(i);
+            });
+            const pool = candidateIndices.length > 0 ? candidateIndices : AppState.speeches.map((_, i) => i);
+            const randIdx = pool[Math.floor(Math.random() * pool.length)];
+
+            const select = Utils.$('cadernoQuizSpeechSelect');
+            if (select) select.value = String(randIdx);
+
+            const speech = AppState.speeches[randIdx];
+            const prevSpeech = randIdx > 0 ? AppState.speeches[randIdx - 1] : null;
+
+            const origHtml = btnRandQuiz.innerHTML;
+            btnRandQuiz.disabled = true;
+            btnRandQuiz.innerHTML = `${Icons.get('waveform', { size: 14 })} <span>...</span>`;
+
+            try {
+              const challenge = await AIService.generateDramaturgicalQuiz(speech, prevSpeech, AppState.speeches, { forceOffline: !AIService.hasKey() });
+              UIController.renderCadernoQuizChallenge(challenge);
+            } catch (err) {
+              const fallback = AIService.generateQuizOffline(speech, prevSpeech, AppState.speeches);
+              UIController.renderCadernoQuizChallenge(fallback);
+            } finally {
+              btnRandQuiz.disabled = false;
+              btnRandQuiz.innerHTML = origHtml;
             }
             return;
           }
@@ -1117,6 +1239,98 @@
             return;
           }
 
+          const btnToggleKey = e.target.closest('#btnToggleApiKeyVisibility');
+          if (btnToggleKey) {
+            const inp = Utils.$('inputGeminiApiKey');
+            if (inp) {
+              const isPassword = inp.type === 'password';
+              inp.type = isPassword ? 'text' : 'password';
+              btnToggleKey.innerHTML = isPassword
+                ? Icons.get('eyeOff', { size: 16 })
+                : Icons.get('eye', { size: 16 });
+            }
+            return;
+          }
+
+          const btnTestConn = e.target.closest('#btnTestGeminiConnection');
+          if (btnTestConn) {
+            if (typeof AIService === 'undefined') return;
+            const inp = Utils.$('inputGeminiApiKey');
+            const sel = Utils.$('selectGeminiModel');
+            const key = inp ? inp.value.trim() : '';
+            const model = sel ? sel.value : AIService.getModel();
+            const fb = Utils.$('geminiConnectionFeedback');
+            if (!key) {
+              if (fb) {
+                fb.style.display = 'flex';
+                fb.className = 'file-feedback error';
+                fb.innerHTML = `${Icons.get('x', { size: 14 })} <span>Informe uma chave da API Gemini para testar</span>`;
+              }
+              return;
+            }
+            const origHtml = btnTestConn.innerHTML;
+            btnTestConn.disabled = true;
+            btnTestConn.innerHTML = `${Icons.get('waveform', { size: 14 })} <span>Testando...</span>`;
+            if (fb) {
+              fb.style.display = 'flex';
+              fb.className = 'file-feedback';
+              fb.innerHTML = `${Icons.get('waveform', { size: 14 })} <span>Enviando ping de teste para Google AI Studio (${model})...</span>`;
+            }
+            const res = await AIService.testConnection(key, model);
+            btnTestConn.disabled = false;
+            btnTestConn.innerHTML = origHtml;
+            if (fb) {
+              if (res.ok) {
+                fb.className = 'file-feedback';
+                fb.innerHTML = `${Icons.get('check', { size: 14 })} <span>${Utils.escapeHtml(res.message || 'Conexão validada com sucesso!')}</span>`;
+              } else {
+                fb.className = 'file-feedback error';
+                fb.innerHTML = `${Icons.get('x', { size: 14 })} <span>${Utils.escapeHtml(res.error || 'Falha na conexão com a API')}</span>`;
+              }
+            }
+            return;
+          }
+
+          const btnSaveKey = e.target.closest('#btnSaveGeminiKey');
+          if (btnSaveKey) {
+            if (typeof AIService === 'undefined') return;
+            const inp = Utils.$('inputGeminiApiKey');
+            const sel = Utils.$('selectGeminiModel');
+            const key = inp ? inp.value.trim() : '';
+            const model = sel ? sel.value : AIService.DEFAULT_MODEL;
+            AIService.setApiKey(key);
+            AIService.setModel(model);
+            if (typeof DramaturgyAnalyzer !== 'undefined' && typeof DramaturgyAnalyzer.setAIProvider === 'function') {
+              DramaturgyAnalyzer.setAIProvider(AIService);
+            }
+            const fb = Utils.$('geminiConnectionFeedback');
+            if (fb) {
+              fb.style.display = 'flex';
+              fb.className = 'file-feedback';
+              fb.innerHTML = key
+                ? `${Icons.get('check', { size: 14 })} <span>Chave Gemini (${model}) salva com sucesso!</span>`
+                : `${Icons.get('check', { size: 14 })} <span>Chave removida. Modo heurístico offline ativo.</span>`;
+            }
+            UIController.showStatus(key ? 'Chave Gemini salva com sucesso!' : 'Modo offline ativado.');
+            return;
+          }
+
+          const btnClearKey = e.target.closest('#btnClearGeminiKey');
+          if (btnClearKey) {
+            if (typeof AIService === 'undefined') return;
+            AIService.setApiKey('');
+            const inp = Utils.$('inputGeminiApiKey');
+            if (inp) inp.value = '';
+            const fb = Utils.$('geminiConnectionFeedback');
+            if (fb) {
+              fb.style.display = 'flex';
+              fb.className = 'file-feedback';
+              fb.innerHTML = `${Icons.get('check', { size: 14 })} <span>Chave Gemini removida. O app funcionará offline.</span>`;
+            }
+            UIController.showStatus('Chave Gemini removida.');
+            return;
+          }
+
           const btnAnalyzeImport = e.target.closest('#btnAnalyzeImport');
           if (btnAnalyzeImport) {
             const rawText = Utils.$('importRawScriptText') ? Utils.$('importRawScriptText').value.trim() : '';
@@ -1126,9 +1340,35 @@
             }
             if (typeof DramaturgyAnalyzer !== 'undefined') {
               const strat = Utils.$('importReviewBeatStrategy') ? Utils.$('importReviewBeatStrategy').value : 'headers';
-              const analysis = await DramaturgyAnalyzer.analyze(rawText, { beatStrategy: strat });
+              const analysis = await DramaturgyAnalyzer.analyze(rawText, { beatStrategy: strat, forceOffline: true });
               analysis.rawText = rawText;
               UIController.renderImportReview(analysis);
+            }
+            return;
+          }
+
+          const btnAnalyzeImportAI = e.target.closest('#btnAnalyzeImportAI');
+          if (btnAnalyzeImportAI) {
+            const rawText = Utils.$('importRawScriptText') ? Utils.$('importRawScriptText').value.trim() : '';
+            if (!rawText) {
+              alert('Por favor, cole o texto do roteiro ou selecione um arquivo.');
+              return;
+            }
+            const origHtml = btnAnalyzeImportAI.innerHTML;
+            btnAnalyzeImportAI.disabled = true;
+            btnAnalyzeImportAI.innerHTML = `${Icons.get('sparkles', { size: 16 })} <span>Higienizando com IA...</span>`;
+            try {
+              if (typeof DramaturgyAnalyzer !== 'undefined') {
+                const strat = Utils.$('importReviewBeatStrategy') ? Utils.$('importReviewBeatStrategy').value : 'headers';
+                const analysis = await DramaturgyAnalyzer.analyze(rawText, { beatStrategy: strat, forceOffline: false });
+                analysis.rawText = rawText;
+                UIController.renderImportReview(analysis);
+              }
+            } catch (err) {
+              alert('Falha na higienização por IA: ' + err.message);
+            } finally {
+              btnAnalyzeImportAI.disabled = false;
+              btnAnalyzeImportAI.innerHTML = origHtml;
             }
             return;
           }
@@ -1166,6 +1406,26 @@
             return;
           }
 
+          const btnAddBeat = e.target.closest('#btnAddReviewBeat');
+          if (btnAddBeat) {
+            if (!UIController.ImportFlowState) return;
+            if (!Array.isArray(UIController.ImportFlowState.beats)) {
+              UIController.ImportFlowState.beats = [];
+            }
+            const beats = UIController.ImportFlowState.beats;
+            const total = (UIController.ImportFlowState.speeches || []).length;
+            const lastEnd = beats.length > 0 ? beats[beats.length - 1].end : -1;
+            const nextStart = Math.min(Math.max(0, total - 1), lastEnd + 1);
+            beats.push({
+              name: `Beat ${beats.length + 1}`,
+              start: nextStart,
+              end: Math.max(nextStart, total - 1)
+            });
+            UIController.renderReviewBeatList();
+            UIController.updateReviewStats();
+            return;
+          }
+
           const btnConfirmImport = e.target.closest('#btnConfirmImportSave');
           if (btnConfirmImport) {
             const state = UIController.ImportFlowState;
@@ -1178,9 +1438,11 @@
               const filteredSpeeches = (typeof ScriptParser !== 'undefined' && typeof ScriptParser.filterSpeechesByCharacters === 'function')
                 ? ScriptParser.filterSpeechesByCharacters(state.speeches, finalChars)
                 : state.speeches;
-              const finalBeats = (typeof DramaBeats !== 'undefined')
-                ? DramaBeats.generateBeats(filteredSpeeches, state.rawText, null, state.beatStrategy)
-                : [];
+              const finalBeats = (state.beats && Array.isArray(state.beats) && state.beats.length > 0)
+                ? state.beats
+                : ((typeof DramaBeats !== 'undefined')
+                  ? DramaBeats.generateBeats(filteredSpeeches, state.rawText, null, state.beatStrategy)
+                  : []);
 
               const newPlay = PlayStore.createPlayFromScript(state.rawText, finalTitle, finalAuthor, {
                 speeches: filteredSpeeches,
@@ -1236,7 +1498,24 @@
           Utils.$('importReviewBeatStrategy').onchange = (e) => {
             if (UIController.ImportFlowState) {
               UIController.ImportFlowState.beatStrategy = e.target.value;
+              const chars = UIController.ImportFlowState.characters || [];
+              const allSpeeches = UIController.ImportFlowState.speeches || [];
+              const filteredSpeeches = (typeof ScriptParser !== 'undefined' && typeof ScriptParser.filterSpeechesByCharacters === 'function')
+                ? ScriptParser.filterSpeechesByCharacters(allSpeeches, chars)
+                : allSpeeches;
+              if (typeof DramaBeats !== 'undefined') {
+                UIController.ImportFlowState.beats = DramaBeats.generateBeats(filteredSpeeches, UIController.ImportFlowState.rawText, null, e.target.value);
+              }
+              UIController.renderReviewBeatList();
               UIController.updateReviewStats();
+            }
+          };
+        }
+
+        if (Utils.$('selectGeminiModel')) {
+          Utils.$('selectGeminiModel').onchange = (e) => {
+            if (typeof AIService !== 'undefined') {
+              AIService.setModel(e.target.value);
             }
           };
         }
