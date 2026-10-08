@@ -1772,80 +1772,289 @@ textarea.form-control {
 }
 
 /* ==========================================================================
-   MODAL DE ROTEIRO COMPLETO (LEITURA DE MESA)
+   MODAL DE ROTEIRO COMPLETO (LEITURA DRAMATÚRGICA DE MESA)
    ========================================================================== */
 .modal-content-wide {
-  max-width: 720px;
-  width: 95%;
-  height: 90vh;
+  max-width: 840px;
+  width: 96%;
+  height: 92vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
+}
+.script-reader-toolbar {
+  padding: 10px 16px;
+  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--surface-elevated);
+  border-bottom: 1px solid var(--border);
+}
+.script-reader-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.script-reader-stats {
+  font-size: 0.74rem;
+  color: var(--fg-muted);
+  padding: 6px 18px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .script-reader-body {
   flex: 1;
   overflow-y: auto;
-  padding: 14px 18px;
+  padding: 24px 28px;
+  font-size: 1.05rem;
+  line-height: 1.68;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
-.script-read-item {
-  padding: 14px 16px;
-  border-radius: 12px;
-  margin-bottom: 10px;
-  border: 1px solid var(--border-subtle);
+@media (max-width: 600px) {
+  .script-reader-body {
+    padding: 16px 14px;
+    font-size: 0.98rem;
+  }
+}
+
+/* FOLHA DE ROSTO DRAMATÚRGICA */
+.dramaturgy-book-cover {
+  text-align: center;
+  padding: 20px 10px 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px dashed var(--border);
+}
+.dramaturgy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+.dramaturgy-title {
+  font-size: 1.85rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  margin: 0 0 16px;
+  font-family: inherit;
+}
+.dramaturgy-cast-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.dramaturgy-cast-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.dramaturgy-cast-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.dramaturgy-character-pill {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
   background: var(--card-bg);
-  transition: background 0.15s;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
-.script-read-item.is-mine {
+.dramaturgy-character-pill.active-role {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* QUEBRAS DE CENA E BEATS */
+.theatrical-scene-break {
+  margin: 32px 0 18px;
+  padding: 12px 14px;
+  background: var(--surface-elevated);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+}
+.theatrical-scene-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.theatrical-scene-heading {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--fg);
+  margin: 3px 0 0;
+  letter-spacing: -0.01em;
+}
+
+/* RUBRICAS GERAIS DE CENA (CENOGRAFIA, AÇÕES) */
+.theatrical-stage-direction {
+  margin: 14px 20px 18px 24px;
+  padding: 10px 14px;
+  background: rgba(212, 163, 89, 0.05);
+  border-left: 2px dashed var(--accent);
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .theatrical-stage-direction {
+    margin: 10px 6px 14px 10px;
+    padding: 8px 10px;
+  }
+}
+.theatrical-stage-direction .direction-marker {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.theatrical-stage-direction .direction-text {
+  font-size: 0.92rem;
+  color: var(--fg-muted);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+
+/* FALAS DRAMATÚRGICAS (SCRIPT-READ-ITEM) */
+.theatrical-dialogue {
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.18s ease;
+}
+.theatrical-dialogue:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.theatrical-dialogue.is-mine {
   border-left: 4px solid var(--accent);
   background: var(--accent-soft);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
-.script-read-header {
+.theatrical-speaker-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
 }
-.script-read-speaker {
-  font-weight: 800;
-  font-size: 0.88rem;
-  letter-spacing: 0.06em;
+.theatrical-speaker-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.theatrical-speaker-name {
+  font-size: 0.92rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg);
 }
-.script-read-speaker.highlight {
+.theatrical-speaker-name.highlight {
   color: var(--accent);
 }
-.script-read-num {
-  font-size: 0.72rem;
+.theatrical-role-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--card-bg);
+  border: 1px solid var(--accent);
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.theatrical-speech-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.theatrical-speech-num {
+  font-size: 0.7rem;
+  font-weight: 600;
   color: var(--fg-muted);
 }
-.script-read-text {
-  font-size: 1.08rem;
-  line-height: 1.55;
+.theatrical-speech-text {
+  font-size: 1.05rem;
+  line-height: 1.65;
   color: var(--fg);
-  margin-bottom: 10px;
+  word-break: break-word;
 }
-.script-read-actions {
+.theatrical-parenthetical {
+  font-style: italic;
+  color: var(--fg-muted);
+  font-size: 0.94em;
+  margin-right: 4px;
+  font-weight: 500;
+}
+.theatrical-spoken-words {
+  color: var(--fg);
+}
+.theatrical-empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--fg-muted);
   display: flex;
-  justify-content: flex-end;
-  margin-top: 8px;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
+
 .btn-read-jump {
-  background: transparent;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 5px 12px;
-  font-size: 0.78rem;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--accent);
   cursor: pointer;
   transition: all 0.15s;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  touch-action: manipulation;
 }
 .btn-read-jump:hover {
   background: var(--accent);
   color: var(--accent-text);
+  border-color: var(--accent);
+}
+.btn-read-jump:active {
+  transform: scale(0.95);
 }
 
 /* ==========================================================================

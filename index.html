@@ -627,7 +627,7 @@
     </div>
   </div>
 
-  <!-- MODAL: ROTEIRO COMPLETO (LEITURA DE MESA) -->
+  <!-- MODAL: ROTEIRO COMPLETO (LEITURA DRAMATÚRGICA DE MESA) -->
   <div id="modalFullScript" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fullScriptModalTitle" hidden>
     <div class="modal-content modal-content-wide">
       <div class="modal-drag-bar" aria-hidden="true"></div>
@@ -638,22 +638,30 @@
         </h2>
         <button id="btnCloseFullScript" class="btn-close" type="button" aria-label="Fechar">&times;</button>
       </div>
-      <div class="modal-filter-tabs" style="padding:10px 14px; gap:8px; display:flex; flex-wrap:wrap; align-items:center;">
+      <div class="modal-filter-tabs script-reader-toolbar">
         <div class="custom-select-box" style="flex:1; min-width:180px;">
-          <select id="selectBeatFullScript" class="form-control" style="width:100%;">
-            <option value="all">Todas as Cenas</option>
+          <select id="selectBeatFullScript" class="form-control" style="width:100%;" title="Filtrar por cena ou beat">
+            <option value="all">Todas as Cenas (Peça Completa)</option>
           </select>
           <div class="select-chevron">
             <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
         </div>
         <input type="search" id="inputSearchScript" class="form-control" placeholder="Buscar no texto da peça..." style="flex:1; min-width:180px;">
-        <button id="btnStartFromScript" class="btn btn-primary" type="button" style="min-height:38px; padding:0 14px; font-size:0.84rem;">
-          <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <span>Ensaio</span>
-        </button>
+        <div class="script-reader-actions-group">
+          <button id="btnScriptFontSmaller" class="btn btn-secondary btn-icon-only" type="button" title="Diminuir tamanho da fonte">
+            <span style="font-size:0.75rem; font-weight:800;">A-</span>
+          </button>
+          <button id="btnScriptFontLarger" class="btn btn-secondary btn-icon-only" type="button" title="Aumentar tamanho da fonte">
+            <span style="font-size:0.95rem; font-weight:800;">A+</span>
+          </button>
+          <button id="btnStartFromScript" class="btn btn-primary" type="button" style="min-height:38px; padding:0 14px; font-size:0.84rem;">
+            <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>Ir ao Palco</span>
+          </button>
+        </div>
       </div>
-      <div id="fullScriptStats" style="font-size:0.75rem; color:var(--fg-muted); padding:4px 18px;"></div>
+      <div id="fullScriptStats" class="script-reader-stats"></div>
       <div class="script-reader-body" id="fullScriptContainer">
         <!-- Injetado dinamicamente via UIController.renderFullScriptModal() -->
       </div>

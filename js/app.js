@@ -889,6 +889,18 @@
           };
         }
 
+        if (Utils.$('btnScriptFontSmaller')) {
+          Utils.$('btnScriptFontSmaller').onclick = () => {
+            UIController.adjustScriptFontSize(-1);
+          };
+        }
+
+        if (Utils.$('btnScriptFontLarger')) {
+          Utils.$('btnScriptFontLarger').onclick = () => {
+            UIController.adjustScriptFontSize(1);
+          };
+        }
+
         // Seletor de método de memorização no Camarim
         const studyCards = Utils.$('studyMethodsGrid')?.querySelectorAll('.study-method-card');
         studyCards?.forEach(card => {

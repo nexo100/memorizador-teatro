@@ -1063,6 +1063,17 @@ const UIController = {
     }
   },
 
+  scriptFontSizeLevel: 0,
+  adjustScriptFontSize(delta) {
+    this.scriptFontSizeLevel = Math.max(-2, Math.min(3, this.scriptFontSizeLevel + delta));
+    const container = Utils.$('fullScriptContainer');
+    if (container) {
+      const sizes = ['0.88rem', '0.96rem', '1.05rem', '1.18rem', '1.32rem', '1.45rem'];
+      const currentIdx = 2 + this.scriptFontSizeLevel;
+      container.style.fontSize = sizes[currentIdx] || '1.05rem';
+    }
+  },
+
   renderFullScriptModal(filterBeat = 'all', searchQuery = '') {
     const container = Utils.$('fullScriptContainer');
     const statsEl = Utils.$('fullScriptStats');
@@ -1077,13 +1088,16 @@ const UIController = {
     }
 
     const beatSelect = Utils.$('selectBeatFullScript');
-    if (beatSelect && (!beatSelect.children || beatSelect.children.length <= 1)) {
-      let bHtml = `<option value="all">Todas as Cenas</option>`;
-      AppState.activeBeats.forEach((b, idx) => {
-        bHtml += `<option value="${idx}">${Utils.escapeHtml(b.name)}</option>`;
-      });
-      beatSelect.innerHTML = bHtml;
-      beatSelect.value = filterBeat;
+    if (beatSelect) {
+      const currentVal = beatSelect.value || filterBeat;
+      if (!beatSelect.children || beatSelect.children.length <= 1) {
+        let bHtml = `<option value="all">Todas as Cenas (Peça Completa)</option>`;
+        AppState.activeBeats.forEach((b, idx) => {
+          bHtml += `<option value="${idx}">${Utils.escapeHtml(b.name)}</option>`;
+        });
+        beatSelect.innerHTML = bHtml;
+        beatSelect.value = currentVal;
+      }
     }
 
     let start = 0;
@@ -1100,6 +1114,39 @@ const UIController = {
     let matchedCount = 0;
     let html = '';
 
+    // Folha de Rosto Dramatúrgica (quando lendo do início sem filtro de busca)
+    if (filterBeat === 'all' && !query) {
+      html += `
+        <header class="dramaturgy-book-cover">
+          <div class="dramaturgy-badge">
+            ${Icons.get('theater', { size: 14 })}
+            <span>TEXTO DRAMATÚRGICO INTEGRAL</span>
+          </div>
+          <h1 class="dramaturgy-title">${Utils.escapeHtml(playTitle)}</h1>
+          <div class="dramaturgy-cast-summary">
+            <span class="dramaturgy-cast-label">Personagens em Cena</span>
+            <div class="dramaturgy-cast-pills">
+              ${AppState.characters.map(c => {
+                const isMine = c === AppState.selectedActor;
+                return `
+                  <span class="dramaturgy-character-pill ${isMine ? 'active-role' : ''}">
+                    ${isMine ? Icons.get('check', { size: 12, strokeWidth: 2.5 }) : Icons.get('user', { size: 12 })}
+                    <span>${Utils.escapeHtml(c)}${isMine ? ' (Seu Papel)' : ''}</span>
+                  </span>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </header>
+      `;
+    }
+
+    // Mapa de quebras de cena e beats
+    const beatStartMap = {};
+    AppState.activeBeats.forEach((b, idx) => {
+      beatStartMap[b.start] = { ...b, index: idx };
+    });
+
     for (let i = start; i <= end; i++) {
       const sp = AppState.speeches[i];
       if (!sp) continue;
@@ -1110,40 +1157,67 @@ const UIController = {
 
       matchedCount++;
       const isMine = sp.who === AppState.selectedActor;
-      const formattedContent = sp.segments.map(s => {
+
+      // Cabeçalho de Cena / Beat dramático
+      if (!query && beatStartMap[i]) {
+        const beatInfo = beatStartMap[i];
+        html += `
+          <div class="theatrical-scene-break" id="sceneBeat_${beatInfo.index}">
+            <div class="theatrical-scene-tag">CENA · BEAT ${beatInfo.index + 1}</div>
+            <h3 class="theatrical-scene-heading">${Utils.escapeHtml(beatInfo.name)}</h3>
+          </div>
+        `;
+      }
+
+      // Rubricas gerais de cena / cenografia antes da fala
+      if (sp.directions && sp.directions.length > 0) {
+        sp.directions.forEach(d => {
+          html += `
+            <div class="theatrical-stage-direction">
+              <span class="direction-marker">${Icons.get('clapper', { size: 13 })}</span>
+              <p class="direction-text"><em>${Utils.escapeHtml(d)}</em></p>
+            </div>
+          `;
+        });
+      }
+
+      // Formatar fala com rubricas parentéticas destacadas
+      const formattedSegments = sp.segments.map(s => {
         if (s.type === 'rubric') {
-          return `<span class="rubric">(${Utils.escapeHtml(s.text)})</span>`;
+          return `<span class="theatrical-parenthetical">(${Utils.escapeHtml(s.text)})</span>`;
         }
-        return Utils.escapeHtml(s.text);
+        return `<span class="theatrical-spoken-words">${Utils.escapeHtml(s.text)}</span>`;
       }).join(' ');
 
       html += `
-        <div class="script-read-item ${isMine ? 'is-mine' : ''}" data-idx="${i}">
-          <div class="script-read-header">
-            <span class="script-read-speaker ${isMine ? 'highlight' : ''}">${Utils.escapeHtml(sp.who)}</span>
-            <span class="script-read-num">Fala #${i + 1}</span>
+        <article class="script-read-item theatrical-dialogue ${isMine ? 'is-mine' : ''}" data-idx="${i}">
+          <div class="theatrical-speaker-row">
+            <div class="theatrical-speaker-info">
+              <span class="theatrical-speaker-name ${isMine ? 'highlight' : ''}">${Utils.escapeHtml(sp.who)}</span>
+              ${isMine ? `<span class="theatrical-role-badge">${Icons.get('user', { size: 11 })} Seu Papel</span>` : ''}
+            </div>
+            <div class="theatrical-speech-actions">
+              <span class="theatrical-speech-num">#${i + 1}</span>
+              <button class="btn-read-jump" type="button" data-jump="${i}" title="Iniciar ensaio a partir da fala #${i + 1}">
+                ${Icons.get('play', { size: 12 })}
+                <span>Ensaiar</span>
+              </button>
+            </div>
           </div>
-          ${sp.directions && sp.directions.length > 0
-            ? sp.directions.map(d => `
-                <div class="scene-direction" style="margin-bottom:6px;">
-                  ${Icons.get('clapper', { size: 14 })}
-                  <span>${Utils.escapeHtml(d)}</span>
-                </div>
-              `).join('')
-            : ''}
-          <div class="script-read-text">${formattedContent}</div>
-          <div class="script-read-actions">
-            <button class="btn-read-jump" type="button" data-jump="${i}">
-              ${Icons.get('play', { size: 14 })}
-              <span>Ensaiar desta fala ›</span>
-            </button>
+          <div class="theatrical-speech-text">
+            ${formattedSegments}
           </div>
-        </div>
+        </article>
       `;
     }
 
     if (matchedCount === 0) {
-      html = `<div style="text-align:center; padding:30px; color:var(--fg-muted);">Nenhuma fala encontrada com o filtro atual.</div>`;
+      html = `
+        <div class="theatrical-empty-state">
+          ${Icons.get('book', { size: 32 })}
+          <p>Nenhuma fala encontrada com o termo buscado.</p>
+        </div>
+      `;
     }
 
     container.innerHTML = html;
