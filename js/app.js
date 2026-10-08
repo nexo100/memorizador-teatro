@@ -536,22 +536,22 @@
           this.goToSpeech(AppState.pickNextWeakness());
         } else if (id === 'btnOpenFullScriptLobby' || id === 'btnReadScriptBanner' || id === 'btnOpenFullScriptSettings') {
           UIController.renderFullScriptModal();
-          if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = false;
+          UIController.openModal('modalFullScript');
         } else if (id === 'btnCloseFullScript') {
-          if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = true;
+          UIController.closeModal('modalFullScript');
         } else if (id === 'btnStartFromScript') {
-          if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = true;
+          UIController.closeModal('modalFullScript');
           this.enterStage();
         } else if (id === 'btnOpenIndex' || id === 'btnOpenIndexLobby' || id === 'btnStageIndex' || id === 'btnNavIndex') {
           UIController.renderIndexModal();
-          if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = false;
+          UIController.openModal('modalIndex');
         } else if (id === 'btnCloseIndex') {
-          if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = true;
+          UIController.closeModal('modalIndex');
         } else if (id === 'btnOpenSettings' || id === 'btnOpenSettingsLobby' || id === 'btnOpenSettingsStage') {
           UIController.populateVoiceSelectors();
-          if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = false;
+          UIController.openModal('modalSettings');
         } else if (id === 'btnCloseSettings') {
-          if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
+          UIController.closeModal('modalSettings');
         }
       },
 
@@ -766,7 +766,7 @@
           if (modalEl) {
             modalEl.onclick = (e) => {
               if (e.target === modalEl || (e.target.classList && e.target.classList.contains('modal-drag-bar'))) {
-                modalEl.hidden = true;
+                UIController.closeModal(modalId);
               }
             };
           }
@@ -926,7 +926,7 @@
             const txt = Utils.$('scriptEditor').value.trim();
             if (!txt) return;
             localStorage.setItem('memorizador_custom_script', txt);
-            if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
+            UIController.closeModal('modalSettings');
             this.loadActiveScript();
           };
         }
@@ -935,7 +935,7 @@
           Utils.$('btnRestoreOriginal').onclick = () => {
             if (confirm('Restaurar o texto original de "Os Inventariantes"?')) {
               localStorage.removeItem('memorizador_custom_script');
-              if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
+              UIController.closeModal('modalSettings');
               this.loadActiveScript();
             }
           };
@@ -944,14 +944,38 @@
 
       bindKeyboard() {
         document.addEventListener('keydown', (e) => {
-          if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+          if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) return;
 
-          const isModalOpen = !Utils.$('modalIndex')?.hidden || !Utils.$('modalSettings')?.hidden || !Utils.$('modalFullScript')?.hidden;
+          const openModalId = ['modalIndex', 'modalSettings', 'modalFullScript'].find(id => Utils.$(id) && !Utils.$(id).hidden);
+
+          if (e.key === 'Tab' && openModalId) {
+            const modal = Utils.$(openModalId);
+            const focusables = Array.from(modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+            if (focusables.length > 0) {
+              const first = focusables[0];
+              const last = focusables[focusables.length - 1];
+              const active = typeof document !== 'undefined' ? document.activeElement : null;
+              if (e.shiftKey) {
+                if (active === first || !modal.contains(active)) {
+                  e.preventDefault();
+                  if (typeof last.focus === 'function') last.focus();
+                }
+              } else {
+                if (active === last || !modal.contains(active)) {
+                  e.preventDefault();
+                  if (typeof first.focus === 'function') first.focus();
+                }
+              }
+            }
+            return;
+          }
+
           if (e.key === 'Escape') {
-            if (Utils.$('modalIndex') && !Utils.$('modalIndex').hidden) Utils.$('modalIndex').hidden = true;
-            if (Utils.$('modalSettings') && !Utils.$('modalSettings').hidden) Utils.$('modalSettings').hidden = true;
-            if (Utils.$('modalFullScript') && !Utils.$('modalFullScript').hidden) Utils.$('modalFullScript').hidden = true;
-            if (!isModalOpen && AppState.currentScreen === 'stage') {
+            if (openModalId) {
+              UIController.closeModal(openModalId);
+              return;
+            }
+            if (AppState.currentScreen === 'stage') {
               this.returnToLobby();
             }
             return;
@@ -963,15 +987,15 @@
             if (modalIndex) {
               if (modalIndex.hidden) {
                 UIController.renderIndexModal();
-                modalIndex.hidden = false;
+                UIController.openModal('modalIndex');
               } else {
-                modalIndex.hidden = true;
+                UIController.closeModal('modalIndex');
               }
             }
             return;
           }
 
-          if (isModalOpen) return;
+          if (openModalId) return;
 
           if (AppState.currentScreen === 'lobby') {
             if (e.key === 'Enter') {

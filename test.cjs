@@ -869,7 +869,36 @@ Meu príncipe, estais bem?
   StorageManager.clearAllCastAudios = origClearAll;
   console.log('✅ 43. Segurança CSP e higienização limpa de dados na restauração de backup validadas');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 43 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 44: Acessibilidade de modais (type="button" nos fechar, focus trap e retorno de foco)
+  assert(indexHtml.includes('id="btnCloseIndex" class="btn-close" type="button"'), 'Botão fechar do índice deve ter type="button"');
+  assert(indexHtml.includes('id="btnCloseSettings" class="btn-close" type="button"'), 'Botão fechar de opções deve ter type="button"');
+  assert(indexHtml.includes('id="btnCloseFullScript" class="btn-close" type="button"'), 'Botão fechar de roteiro deve ter type="button"');
+
+  let focusedEl = null;
+  const openerBtn = { focus: () => { focusedEl = openerBtn; } };
+  const firstFocusable = { focus: () => { focusedEl = firstFocusable; } };
+  const lastFocusable = { focus: () => { focusedEl = lastFocusable; } };
+
+  const modalIndex = domStore['modalIndex'];
+  modalIndex.querySelectorAll = () => [firstFocusable, lastFocusable];
+  modalIndex.contains = (el) => el === firstFocusable || el === lastFocusable;
+
+  UIController.openModal('modalIndex', openerBtn);
+  assert.strictEqual(modalIndex.hidden, false, 'openModal deve exibir o modal');
+  assert.strictEqual(focusedEl, firstFocusable, 'openModal deve focar no primeiro elemento interativo');
+
+  mockDocument.activeElement = lastFocusable;
+  let tabPrevented = false;
+  docListeners['keydown']({ key: 'Tab', shiftKey: false, preventDefault: () => { tabPrevented = true; } });
+  assert.strictEqual(tabPrevented, true, 'Tab no último elemento deve ser interceptado pelo focus trap');
+  assert.strictEqual(focusedEl, firstFocusable, 'Foco deve ciclar de volta para o primeiro elemento');
+
+  UIController.closeModal('modalIndex');
+  assert.strictEqual(modalIndex.hidden, true, 'closeModal deve esconder o modal');
+  assert.strictEqual(focusedEl, openerBtn, 'closeModal deve retornar o foco ao botão de abertura');
+  console.log('✅ 44. Acessibilidade de modais: type="button", focus trap e retorno de foco validados');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 44 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

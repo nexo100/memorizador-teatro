@@ -1,6 +1,28 @@
 // 7. CONTROLADOR DE INTERFACE (UIController)
     const UIController = {
       currentRenderId: 0,
+      lastFocusedElement: null,
+
+      openModal(modalId, openerEl = null) {
+        const modal = Utils.$(modalId);
+        if (!modal) return;
+        this.lastFocusedElement = openerEl || (typeof document !== 'undefined' ? document.activeElement : null);
+        modal.hidden = false;
+        const focusables = modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (focusables.length > 0 && typeof focusables[0].focus === 'function') {
+          focusables[0].focus();
+        }
+      },
+
+      closeModal(modalId) {
+        const modal = Utils.$(modalId);
+        if (!modal || modal.hidden) return;
+        modal.hidden = true;
+        if (this.lastFocusedElement && typeof this.lastFocusedElement.focus === 'function') {
+          this.lastFocusedElement.focus();
+          this.lastFocusedElement = null;
+        }
+      },
 
       showStatus(msg) {
         const el = Utils.$('statusMessage');
