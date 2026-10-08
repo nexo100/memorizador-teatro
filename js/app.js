@@ -70,6 +70,9 @@
         AppState.wakeLockEnabled = settings.wakeLockEnabled;
         AppState.rehearsalMode = settings.rehearsalMode;
         AppState.rehearsalTempo = settings.rehearsalTempo;
+        AppState.studyMethod = settings.studyMethod || 'oral';
+        AppState.hideRubrics = !!settings.hideRubrics;
+        AppState.alwaysStartHidden = settings.alwaysStartHidden !== false;
 
         if (Utils.$('rangeSpeechRate')) Utils.$('rangeSpeechRate').value = AppState.speechRate;
         if (Utils.$('rateLabel')) Utils.$('rateLabel').textContent = AppState.speechRate.toFixed(2) + 'x';
@@ -78,6 +81,9 @@
         if (Utils.$('chkWakeLock')) Utils.$('chkWakeLock').checked = AppState.wakeLockEnabled;
         if (Utils.$('selectMode')) Utils.$('selectMode').value = AppState.rehearsalMode;
         if (Utils.$('selectTempo')) Utils.$('selectTempo').value = AppState.rehearsalTempo;
+        if (Utils.$('selectStudyMethod')) Utils.$('selectStudyMethod').value = AppState.studyMethod;
+        if (Utils.$('chkHideRubrics')) Utils.$('chkHideRubrics').checked = AppState.hideRubrics;
+        if (Utils.$('chkStartHidden')) Utils.$('chkStartHidden').checked = AppState.alwaysStartHidden;
 
         const savedActor = settings.selectedActor;
         AppState.selectedActor = (savedActor && AppState.characters.includes(savedActor))

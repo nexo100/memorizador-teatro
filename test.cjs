@@ -793,9 +793,18 @@ Meu príncipe, estais bem?
   assert.strictEqual(restoredAudio.type, 'audio/webm', 'Tipo do áudio restaurado deve ser preservado');
 
   StorageManager.getIndexedDB = prevGetIndexedDB;
-  console.log('✅ 38. Coerência de backup e restauração de áudio (STORE_NAME, gravação e recuperação) validada');
+  // Teste 39: Restauração de configurações salvas no AppState e controles de UI
+  mockLocalStorage.setItem('memorizador_study_method', 'quiz');
+  mockLocalStorage.setItem('memorizador_hide_rubrics', 'true');
+  mockLocalStorage.setItem('memorizador_start_hidden', 'false');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 38 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  AppController.loadActiveScript();
+  assert.strictEqual(AppState.studyMethod, 'quiz', 'studyMethod salvo deve ser restaurado no AppState');
+  assert.strictEqual(AppState.hideRubrics, true, 'hideRubrics salvo deve ser restaurado no AppState');
+  assert.strictEqual(AppState.alwaysStartHidden, false, 'alwaysStartHidden salvo deve ser restaurado no AppState');
+  console.log('✅ 39. Restauração de configurações salvas (studyMethod, hideRubrics, alwaysStartHidden) validada');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 39 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();
