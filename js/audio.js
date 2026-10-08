@@ -18,10 +18,12 @@
         if (btns && btns.forEach) {
           btns.forEach(b => {
             if (isPlaying) {
-              b.innerHTML = '⏹️ Parar';
+              const stopIcon = (typeof Icons !== 'undefined') ? Icons.get('stop', { size: 15 }) : '';
+              b.innerHTML = `${stopIcon} <span class="audio-waveform-bars" aria-hidden="true"><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span></span> <span>Parar</span>`;
               b.classList.add('is-playing');
             } else {
-              b.innerHTML = '🔊 Ouvir';
+              const playIcon = (typeof Icons !== 'undefined') ? Icons.get('volume', { size: 15 }) : '';
+              b.innerHTML = `${playIcon} <span>Ouvir</span>`;
               b.classList.remove('is-playing');
             }
           });
@@ -114,7 +116,7 @@
       async playSpeechAudio(speechIndex, speech, characterName, actorIndex, baseRate, tempo, callbacks = {}) {
         if (this.isPlaying) {
           this.stopAllAudio();
-          if (callbacks.onStatus) callbacks.onStatus('⏹️ Áudio interrompido.');
+          if (callbacks.onStatus) callbacks.onStatus('Áudio interrompido.');
           return;
         }
         this.stopAllAudio();
@@ -122,7 +124,7 @@
         this.updateAudioButtonsUI(true);
         const effectiveTempo = this.getEffectiveTempoRate(baseRate, tempo);
         if (tempo === 'dynamic' && callbacks.onStatus) {
-          callbacks.onStatus(`🎲 Ritmo dinâmico nesta deixa: ${effectiveTempo}x`);
+          callbacks.onStatus(`Ritmo dinâmico nesta deixa: ${effectiveTempo}x`);
         }
 
         try {
@@ -163,7 +165,7 @@
                 if (callbacks.onStatus) callbacks.onStatus('Toque no botão para ouvir o áudio.');
               });
             }
-            if (callbacks.onStatus) callbacks.onStatus(`▶️ Tocando voz real do elenco (${effectiveTempo}x)...`);
+            if (callbacks.onStatus) callbacks.onStatus(`Tocando voz real do elenco (${effectiveTempo}x)...`);
             return;
           }
         } catch (e) {}

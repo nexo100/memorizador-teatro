@@ -4,16 +4,16 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' blob: data:; font-src 'self'; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#8e2a2a">
+  <meta name="theme-color" content="#0b0d11">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Ensaio">
+  <meta name="apple-mobile-web-app-title" content="StagePro">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <title>🎭 Ensaio Teatral · Os Inventariantes</title>
+  <title>Ensaio Teatral · Os Inventariantes</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -22,28 +22,56 @@
     <div id="lobbyView" class="view-camarim">
       <header class="camarim-header">
         <div class="camarim-brand">
-          <h1 class="play-title" id="playTitle">🎭 Os Inventariantes</h1>
-          <span class="camarim-subtitle">O Camarim · Preparação & Escolha</span>
+          <div class="brand-badge">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
+            <span>STAGEPRO STUDIO</span>
+          </div>
+          <h1 class="play-title" id="playTitle">Os Inventariantes</h1>
+          <span class="camarim-subtitle">O Camarim · Preparação & Elenco</span>
         </div>
         <div class="camarim-header-actions">
-          <button id="btnOpenFullScriptLobby" class="btn-header" type="button" title="Ler Roteiro Completo">📖 Roteiro</button>
-          <button id="btnOpenIndexLobby" class="btn-header" type="button" title="Índice de Falas">📋 Falas</button>
-          <button id="btnOpenSettingsLobby" class="btn-header" type="button" title="Opções & Vozes">⚙️ Opções</button>
+          <button id="btnToggleTheme" class="btn-header" type="button" title="Alternar Modo Claro / Escuro">
+            <span id="themeHeaderIcon" style="display:inline-flex; align-items:center;">
+              <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            </span>
+            <span id="themeHeaderLabel">Tema</span>
+          </button>
+          <button id="btnOpenFullScriptLobby" class="btn-header" type="button" title="Ler Roteiro Completo">
+            <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+            <span>Roteiro</span>
+          </button>
+          <button id="btnOpenIndexLobby" class="btn-header" type="button" title="Índice de Falas">
+            <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>Falas</span>
+          </button>
+          <button id="btnOpenSettingsLobby" class="btn-header" type="button" title="Opções & Vozes">
+            <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Opções</span>
+          </button>
         </div>
       </header>
 
       <!-- BANNER DE ROTEIRO COMPLETO -->
       <div class="camarim-banner-script" id="bannerReadFullScript">
-        <div class="banner-info">
-          <span class="banner-title">📖 Leitura de Mesa · Roteiro Completo</span>
-          <span class="banner-desc">Leia a peça inteira do início ao fim sem interrupções ou máscaras</span>
+        <div class="banner-icon-badge">
+          <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
         </div>
-        <button id="btnReadScriptBanner" class="btn btn-secondary" type="button" style="min-height:36px; padding:0 12px; font-size:0.82rem;">Abrir Texto ›</button>
+        <div class="banner-info">
+          <span class="banner-title">Leitura de Mesa · Roteiro Completo</span>
+          <span class="banner-desc">Leia a peça do início ao fim sem interrupções ou máscaras</span>
+        </div>
+        <button id="btnReadScriptBanner" class="btn btn-secondary btn-banner-action" type="button">
+          <span>Abrir Texto</span>
+          <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
 
-      <!-- SEÇÃO 1: PERSONAGEM ATIVO (CARDS GRANDES E TÁTEIS) -->
+      <!-- SEÇÃO 1: PERSONAGEM ATIVO (CARDS MODERNOS & TÁTEIS) -->
       <section class="camarim-section">
-        <div class="camarim-section-title">👤 Escolha seu Personagem</div>
+        <div class="camarim-section-title">
+          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Escolha seu Personagem</span>
+        </div>
         <div class="character-cards-grid" id="characterTabs" role="tablist">
           <!-- Injetado dinamicamente via UIController.renderLobby() -->
         </div>
@@ -51,10 +79,15 @@
 
       <!-- SEÇÃO 1.5: MÉTODO DE MEMORIZAÇÃO -->
       <section class="camarim-section">
-        <div class="camarim-section-title">🧠 Método de Memorização</div>
+        <div class="camarim-section-title">
+          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
+          <span>Método de Memorização</span>
+        </div>
         <div class="study-methods-grid" id="studyMethodsGrid">
           <button type="button" class="study-method-card active" data-method="oral">
-            <span class="method-card-icon">🗣️</span>
+            <span class="method-card-icon">
+              <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg>
+            </span>
             <div class="method-card-info">
               <span class="method-card-title">Oral / Cênico</span>
               <span class="method-card-badge">Padrão</span>
@@ -62,7 +95,9 @@
             <p class="method-card-desc">Fale alto de cabeça e toque para conferir.</p>
           </button>
           <button type="button" class="study-method-card" data-method="quiz">
-            <span class="method-card-icon">🧩</span>
+            <span class="method-card-icon">
+              <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19.4 7.8c0-1.6.8-2.2 1.6-2.8-1.3-1.3-3.1-2-5-2-1.6 0-2.2.8-2.8 1.6a2 2 0 0 1-2.3 0C10.2 3.8 9.6 3 8 3 6.2 3 4.3 3.7 3 5c.8.7 1.6 1.3 1.6 2.8a2 2 0 0 1-1.1 1.8C2.8 10.2 2 10.8 2 12.4c0 1.6.8 2.2 1.6 2.8a2 2 0 0 1 1.1 1.8c-.8.8-1.6 1.4-2.4 2.1 1.3 1.3 3.1 2 5 2 1.6 0 2.2-.8 2.8-1.6a2 2 0 0 1 2.3 0c.7.8 1.3 1.6 2.8 1.6 1.8 0 3.7-.7 5-2-.8-.7-1.6-1.3-1.6-2.8a2 2 0 0 1 1.1-1.8c.6-.5 1.4-1.1 1.4-2.7 0-1.6-.8-2.2-1.6-2.8a2 2 0 0 1-1.1-1.8Z"/></svg>
+            </span>
             <div class="method-card-info">
               <span class="method-card-title">Alternativas</span>
               <span class="method-card-badge">Interativo</span>
@@ -70,7 +105,9 @@
             <p class="method-card-desc">Complete lacunas escolhendo opções.</p>
           </button>
           <button type="button" class="study-method-card" data-method="typing">
-            <span class="method-card-icon">⌨️</span>
+            <span class="method-card-icon">
+              <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+            </span>
             <div class="method-card-info">
               <span class="method-card-title">Digitação</span>
               <span class="method-card-badge">Teclado</span>
@@ -80,13 +117,18 @@
         </div>
       </section>
 
-      <!-- SEÇÃO 2: MODOS DE ENSAIO (CARDS GRANDES COM EXPLICAÇÃO) -->
+      <!-- SEÇÃO 2: MODOS DE ENSAIO (CARDS MODERNOS COM FOCO DRAMÁTICO) -->
       <section class="camarim-section">
-        <div class="camarim-section-title">🎭 Modo de Ensaio</div>
+        <div class="camarim-section-title">
+          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
+          <span>Modo de Ensaio</span>
+        </div>
         <div class="mode-cards-grid" id="modeCardsGrid">
           <div class="mode-card active" data-mode="minhas">
             <div class="mode-card-header">
-              <span class="mode-card-icon">🎯</span>
+              <span class="mode-card-icon">
+                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </span>
               <div class="mode-card-title-group">
                 <span class="mode-card-title">Só Minhas Falas + Deixas</span>
                 <span class="mode-card-badge">Recomendado</span>
@@ -97,7 +139,9 @@
 
           <div class="mode-card" data-mode="cena">
             <div class="mode-card-header">
-              <span class="mode-card-icon">📖</span>
+              <span class="mode-card-icon">
+                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+              </span>
               <div class="mode-card-title-group">
                 <span class="mode-card-title">Passada de Cena (Completa)</span>
                 <span class="mode-card-badge">Cronológico</span>
@@ -108,7 +152,9 @@
 
           <div class="mode-card" data-mode="pingpong">
             <div class="mode-card-header">
-              <span class="mode-card-icon">⚡</span>
+              <span class="mode-card-icon">
+                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </span>
               <div class="mode-card-title-group">
                 <span class="mode-card-title">Ping-Pong de Deixas</span>
                 <span class="mode-card-badge">Reflexo 4s</span>
@@ -119,7 +165,9 @@
 
           <div class="mode-card" data-mode="ponto">
             <div class="mode-card-header">
-              <span class="mode-card-icon">🎧</span>
+              <span class="mode-card-icon">
+                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>
+              </span>
               <div class="mode-card-title-group">
                 <span class="mode-card-title">Ponto Eletrônico</span>
                 <span class="mode-card-badge">Hands-Free</span>
@@ -130,7 +178,9 @@
 
           <div class="mode-card" data-mode="fraquezas">
             <div class="mode-card-header">
-              <span class="mode-card-icon">🧠</span>
+              <span class="mode-card-icon">
+                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
+              </span>
               <div class="mode-card-title-group">
                 <span class="mode-card-title">Foco nas Fraquezas</span>
                 <span class="mode-card-badge">Memorização</span>
@@ -143,18 +193,26 @@
 
       <!-- SEÇÃO 3: BLOCO DRAMÁTICO / BEAT (OPCIONAL) -->
       <section class="camarim-section">
-        <div class="camarim-section-title">🎬 Bloco Dramático / Beat (Opcional)</div>
-        <div class="camarim-select-wrapper">
+        <div class="camarim-section-title">
+          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m4 4 3 4M9 4l3 4M14 4l3 4M19 4l1 4M2 8h20"/></svg>
+          <span>Bloco Dramático / Beat (Opcional)</span>
+        </div>
+        <div class="camarim-select-wrapper custom-select-box">
           <select id="selectBeat" class="camarim-select" title="Filtrar por bloco dramático da cena">
-            <option value="all">🎭 Cena Completa</option>
+            <option value="all">Cena Completa (Todas as falas)</option>
           </select>
+          <div class="select-chevron">
+            <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
       </section>
 
       <!-- BOTÃO HERÓI: ENTRAR EM CENA -->
       <div class="camarim-hero-action">
         <button id="btnEnterStage" class="btn btn-primary btn-enter-stage" type="button">
-          🎭 Entrar em Cena ›
+          <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
+          <span>Entrar em Cena</span>
+          <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
       </div>
     </div>
@@ -164,17 +222,24 @@
       <!-- TOPO MINIMALISTA (HUD DESOBSTRUÍDO) -->
       <header class="stage-header" id="stageHeader">
         <div class="stage-header-inner">
-          <button id="btnBackToLobby" class="btn-stage-back" type="button" title="Voltar ao Camarim">‹ Camarim</button>
+          <button id="btnBackToLobby" class="btn-stage-back" type="button" title="Voltar ao Camarim">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            <span>Camarim</span>
+          </button>
           <div class="stage-center-info">
             <span class="stage-play-title" id="stagePlayTitle">Os Inventariantes</span>
-            <span class="stage-beat-pill" id="stageBeatTitle">🎭 Cena Completa</span>
-            <span class="stage-method-pill" id="stageMethodPill">🗣️ Oral</span>
+            <div class="stage-meta-pills">
+              <span class="stage-beat-pill" id="stageBeatTitle">Cena Completa</span>
+              <span class="stage-method-pill" id="stageMethodPill">Oral</span>
+            </div>
           </div>
           <div class="stage-right-actions">
             <button id="btnStageIndex" class="btn-stage-counter" type="button" title="Índice de Falas">
               <span id="counterText">Fala 1 de 58</span>
             </button>
-            <button id="btnOpenSettingsStage" class="btn-stage-icon" type="button" title="Opções & Vozes">⚙️</button>
+            <button id="btnOpenSettingsStage" class="btn-stage-icon" type="button" title="Opções & Vozes">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
           </div>
         </div>
         <div class="stage-progress-bar">
@@ -191,29 +256,36 @@
       <!-- BARRA DE UM POLEGAR (ONE-THUMB ACTION DOCK) -->
       <footer id="oneThumbDock" class="action-dock">
         <div class="dock-inner">
-          <button id="btnPrev" class="dock-btn-nav" type="button" title="Fala anterior (←)">‹</button>
+          <button id="btnPrev" class="dock-btn-nav" type="button" title="Fala anterior (←)">
+            <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
           <div id="dockHeroArea" class="dock-hero-area">
             <!-- Injetado dinamicamente via UIController.renderView() -->
           </div>
-          <button id="btnNext" class="dock-btn-nav" type="button" title="Próxima fala (→)">›</button>
+          <button id="btnNext" class="dock-btn-nav" type="button" title="Próxima fala (→)">
+            <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
       </footer>
     </div>
   </div>
 
-
-<!-- MODAL: ÍNDICE DE FALAS -->
+  <!-- MODAL: ÍNDICE DE FALAS -->
   <div id="modalIndex" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalIndexTitle" hidden>
     <div class="modal-content">
+      <div class="modal-drag-bar" aria-hidden="true"></div>
       <div class="modal-header">
-        <h2 id="modalIndexTitle">📋 Falas da Cena</h2>
+        <h2 id="modalIndexTitle">
+          <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span>Falas da Cena</span>
+        </h2>
         <button id="btnCloseIndex" class="btn-close" type="button" aria-label="Fechar">&times;</button>
       </div>
       <div class="modal-filter-tabs">
         <button class="filter-tab active" data-filter="all">Todas</button>
         <button class="filter-tab" data-filter="mine">Minhas falas</button>
         <button class="filter-tab" data-filter="weak">Em aprendizado</button>
-        <button class="filter-tab" data-filter="recorded">Com voz real 🎙️</button>
+        <button class="filter-tab" data-filter="recorded">Com voz gravada</button>
       </div>
       <div class="modal-body" id="indexListContainer"></div>
     </div>
@@ -222,8 +294,12 @@
   <!-- MODAL: OPÇÕES, VOZES E ROTEIRO -->
   <div id="modalSettings" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle" hidden>
     <div class="modal-content">
+      <div class="modal-drag-bar" aria-hidden="true"></div>
       <div class="modal-header">
-        <h2 id="modalSettingsTitle">⚙️ Opções & Vozes do Elenco</h2>
+        <h2 id="modalSettingsTitle">
+          <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Opções & Vozes do Elenco</span>
+        </h2>
         <button id="btnCloseSettings" class="btn-close" type="button" aria-label="Fechar">&times;</button>
       </div>
       <div class="modal-body">
@@ -231,46 +307,109 @@
         <div id="characterVoicesContainer"></div>
 
         <!-- Ritmo e Preferências do Palco -->
-        <div class="form-group" style="background:var(--border-subtle); padding:12px; border-radius:10px; margin-bottom:14px;">
-          <label style="font-weight:700; margin-bottom:8px; display:block;">⚡ Ritmo & Preferências do Palco:</label>
-          <div style="margin-bottom:8px;">
-            <label for="selectStudyMethod" style="font-size:0.8rem; color:var(--fg-muted);">Método de Memorização:</label>
-            <select id="selectStudyMethod" class="form-control" title="Método de memorização" style="width:100%; padding:6px; font-weight:600; margin-bottom:8px;">
-              <option value="oral">🗣️ Oral / Cênico (Vocal & Conferência)</option>
-              <option value="quiz">🧩 Alternativas (Banco de Palavras)</option>
-              <option value="typing">⌨️ Digitação (Digitar Lacunas)</option>
-            </select>
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            <span>Ritmo & Preferências do Palco</span>
           </div>
-          <div style="margin-bottom:8px;">
-            <label for="selectTempo" style="font-size:0.8rem; color:var(--fg-muted);">Andamento e Ritmo da Cena:</label>
-            <select id="selectTempo" class="form-control" title="Andamento e ritmo da cena" style="width:100%; padding:6px; font-weight:600;">
-              <option value="normal">⚡ Ritmo: Normal (0.95x)</option>
-              <option value="slow">🐢 Ritmo: Lento (0.80x)</option>
-              <option value="fast">🔥 Ritmo: Urgente (1.20x)</option>
-              <option value="dynamic">🎲 Ritmo: Dinâmico</option>
-            </select>
+
+          <div class="form-group">
+            <label for="selectStudyMethod">Método de Memorização:</label>
+            <div class="custom-select-box">
+              <select id="selectStudyMethod" class="form-control" title="Método de memorização">
+                <option value="oral">Oral / Cênico (Vocal & Conferência)</option>
+                <option value="quiz">Alternativas (Banco de Palavras)</option>
+                <option value="typing">Digitação (Digitar Lacunas)</option>
+              </select>
+              <div class="select-chevron">
+                <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
           </div>
-          <div style="display:flex; flex-direction:column; gap:6px;">
-            <label class="toggle-chip" style="font-size:0.82rem; padding:4px 8px;">
-              <input type="checkbox" id="chkVoice" checked>
-              <span>🔊 Ouvir voz sintetizada do colega</span>
+
+          <div class="form-group">
+            <label for="selectTempo">Andamento e Ritmo da Cena:</label>
+            <div class="custom-select-box">
+              <select id="selectTempo" class="form-control" title="Andamento e ritmo da cena">
+                <option value="normal">Ritmo: Normal (0.95x)</option>
+                <option value="slow">Ritmo: Lento (0.80x)</option>
+                <option value="fast">Ritmo: Urgente (1.20x)</option>
+                <option value="dynamic">Ritmo: Dinâmico</option>
+              </select>
+              <div class="select-chevron">
+                <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- TOGGLES ESTILO IOS (SUBSTITUINDO FORM CHECKBOXES) -->
+          <div class="switch-list">
+            <label class="app-switch-row" for="chkDarkTheme">
+              <div class="switch-info">
+                <span class="switch-title">Tema Noturno de Estúdio</span>
+                <span class="switch-desc">Obsidian velvet com spotlight âmbar cênico</span>
+              </div>
+              <div class="app-switch">
+                <input type="checkbox" id="chkDarkTheme" checked>
+                <span class="switch-slider"></span>
+              </div>
             </label>
-            <label class="toggle-chip" style="font-size:0.82rem; padding:4px 8px;">
-              <input type="checkbox" id="chkAutoAdvance">
-              <span>⚡ Avanço automático após fala do colega</span>
+
+            <label class="app-switch-row" for="chkVoice">
+              <div class="switch-info">
+                <span class="switch-title">Voz Sintetizada</span>
+                <span class="switch-desc">Ouvir voz sintetizada do colega</span>
+              </div>
+              <div class="app-switch">
+                <input type="checkbox" id="chkVoice" checked>
+                <span class="switch-slider"></span>
+              </div>
             </label>
-            <label class="toggle-chip" style="font-size:0.82rem; padding:4px 8px;">
-              <input type="checkbox" id="chkWakeLock" checked>
-              <span>👁️ Manter tela do celular ligada no ensaio</span>
+
+            <label class="app-switch-row" for="chkAutoAdvance">
+              <div class="switch-info">
+                <span class="switch-title">Avanço Automático</span>
+                <span class="switch-desc">Avançar após a fala do colega terminar</span>
+              </div>
+              <div class="app-switch">
+                <input type="checkbox" id="chkAutoAdvance">
+                <span class="switch-slider"></span>
+              </div>
             </label>
-            <label class="toggle-chip" style="font-size:0.82rem; padding:4px 8px;">
-              <input type="checkbox" id="chkStartHidden" checked>
-              <span>🙈 Chegar sempre com a fala oculta (Modo Desafio / Sem spoilers)</span>
+
+            <label class="app-switch-row" for="chkWakeLock">
+              <div class="switch-info">
+                <span class="switch-title">Manter Tela Ligada</span>
+                <span class="switch-desc">Evitar que a tela apague durante o ensaio</span>
+              </div>
+              <div class="app-switch">
+                <input type="checkbox" id="chkWakeLock" checked>
+                <span class="switch-slider"></span>
+              </div>
             </label>
-            <label class="toggle-chip" style="font-size:0.82rem; padding:4px 8px;">
-              <input type="checkbox" id="chkHideRubrics">
-              <span>🎭 Ocultar rubricas entre parênteses (...) nas falas</span>
+
+            <label class="app-switch-row" for="chkStartHidden">
+              <div class="switch-info">
+                <span class="switch-title">Chegar com Fala Oculta</span>
+                <span class="switch-desc">Modo Desafio: sem revelação prévia da réplica</span>
+              </div>
+              <div class="app-switch">
+                <input type="checkbox" id="chkStartHidden" checked>
+                <span class="switch-slider"></span>
+              </div>
             </label>
+
+            <label class="app-switch-row" for="chkHideRubrics">
+              <div class="switch-info">
+                <span class="switch-title">Ocultar Rubricas Cênicas</span>
+                <span class="switch-desc">Ocultar anotações entre parênteses (...)</span>
+              </div>
+              <div class="app-switch">
+                <input type="checkbox" id="chkHideRubrics">
+                <span class="switch-slider"></span>
+              </div>
+            </label>
+
             <!-- Select oculto para compatibilidade com qualquer listener legado -->
             <select id="selectMode" style="display:none;">
               <option value="cena">Modo: Cena Toda</option>
@@ -282,36 +421,46 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="rangeSpeechRate">Velocidade da Voz: <span id="rateLabel">0.95x</span></label>
-          <input type="range" id="rangeSpeechRate" min="0.75" max="1.3" step="0.05" value="0.95" class="form-control">
+        <div class="form-group settings-card">
+          <div class="slider-header-row">
+            <label for="rangeSpeechRate" style="margin:0;">Velocidade da Voz</label>
+            <span class="slider-value-badge" id="rateLabel">0.95x</span>
+          </div>
+          <input type="range" id="rangeSpeechRate" min="0.75" max="1.3" step="0.05" value="0.95" class="app-range-slider">
         </div>
 
         <div class="form-group">
-          <button id="btnOpenFullScriptSettings" class="btn" style="width:100%; font-size:0.85rem; margin-top:8px;" type="button">
-            📖 Abrir Roteiro Completo para Leitura
+          <button id="btnOpenFullScriptSettings" class="btn btn-secondary" style="width:100%;" type="button">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+            <span>Abrir Roteiro Completo para Leitura</span>
           </button>
         </div>
 
         <div class="form-group">
           <label>Gerenciar Áudios Reais Gravados:</label>
-          <button id="btnClearAllRecordings" class="btn" style="width:100%; font-size:0.85rem; border-color:var(--border);">
-            🗑️ Excluir todas as gravações de voz do elenco
+          <button id="btnClearAllRecordings" class="btn btn-secondary" style="width:100%;" type="button">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Excluir todas as gravações de voz do elenco</span>
           </button>
         </div>
 
         <!-- Backup & Restauração -->
-        <div class="form-group" style="background:var(--border-subtle); padding:12px; border-radius:10px;">
-          <label>💾 Backup de Segurança (Dados e Vozes):</label>
-          <p style="font-size:0.78rem; color:var(--fg-muted); margin:0 0 8px;">
-            Baixe um arquivo com todas as suas gravações reais e progresso para não perder nada se limpar ou trocar de celular.
+        <div class="form-group settings-card">
+          <div class="settings-card-header">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Backup de Segurança (Dados e Vozes)</span>
+          </div>
+          <p style="font-size:0.8rem; color:var(--fg-muted); margin:0 0 12px; line-height:1.45;">
+            Baixe um arquivo seguro com todas as gravações e níveis de memorização para restaurar quando quiser.
           </p>
           <div style="display:flex; gap:8px;">
-            <button id="btnExportBackup" class="btn" style="flex:1; min-height:40px; font-size:0.85rem;">
-              📤 Exportar Backup
+            <button id="btnExportBackup" class="btn btn-secondary" style="flex:1;" type="button">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Exportar Backup</span>
             </button>
-            <label class="btn" style="flex:1; min-height:40px; font-size:0.85rem; cursor:pointer; text-align:center; display:inline-flex; align-items:center; justify-content:center;">
-              📥 Restaurar
+            <label class="btn btn-secondary" style="flex:1; cursor:pointer;">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Restaurar</span>
               <input type="file" id="fileImportBackup" accept=".json" style="display:none;">
             </label>
           </div>
@@ -319,8 +468,9 @@
 
         <div class="form-group">
           <label>Zerar Progresso:</label>
-          <button id="btnResetProgress" class="btn" style="width:100%; border-color:var(--danger); color:var(--danger); font-size:0.85rem;">
-            Zerar níveis de memorização deste personagem
+          <button id="btnResetProgress" class="btn btn-danger-outline" style="width:100%;" type="button">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <span>Zerar níveis de memorização deste personagem</span>
           </button>
         </div>
 
@@ -330,8 +480,14 @@
           <label for="scriptEditor">Texto da Peça (Formato Dramatúrgico):</label>
           <textarea id="scriptEditor" class="form-control"></textarea>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <button id="btnSaveScript" class="btn btn-primary" style="flex:1;">Salvar e Carregar Texto</button>
-            <button id="btnRestoreOriginal" class="btn" style="flex:1;">Restaurar "Os Inventariantes"</button>
+            <button id="btnSaveScript" class="btn btn-primary" style="flex:1;" type="button">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Salvar e Carregar Texto</span>
+            </button>
+            <button id="btnRestoreOriginal" class="btn btn-secondary" style="flex:1;" type="button">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              <span>Restaurar "Os Inventariantes"</span>
+            </button>
           </div>
         </div>
       </div>
@@ -341,18 +497,30 @@
   <!-- MODAL: ROTEIRO COMPLETO (LEITURA DE MESA) -->
   <div id="modalFullScript" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fullScriptModalTitle" hidden>
     <div class="modal-content modal-content-wide">
+      <div class="modal-drag-bar" aria-hidden="true"></div>
       <div class="modal-header">
-        <h2 id="fullScriptModalTitle">📖 Leitura de Mesa · Roteiro Completo</h2>
+        <h2 id="fullScriptModalTitle">
+          <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+          <span>Leitura de Mesa · Roteiro Completo</span>
+        </h2>
         <button id="btnCloseFullScript" class="btn-close" type="button" aria-label="Fechar">&times;</button>
       </div>
       <div class="modal-filter-tabs" style="padding:10px 14px; gap:8px; display:flex; flex-wrap:wrap; align-items:center;">
-        <select id="selectBeatFullScript" class="form-control" style="flex:1; min-width:180px; font-weight:600; padding:6px 10px;">
-          <option value="all">Todas as Cenas</option>
-        </select>
-        <input type="search" id="inputSearchScript" class="form-control" placeholder="Buscar no texto da peça..." style="flex:1; min-width:180px; padding:6px 10px;">
-        <button id="btnStartFromScript" class="btn btn-primary" type="button" style="min-height:36px; padding:0 12px; font-size:0.82rem;">▶️ Ensaio</button>
+        <div class="custom-select-box" style="flex:1; min-width:180px;">
+          <select id="selectBeatFullScript" class="form-control" style="width:100%;">
+            <option value="all">Todas as Cenas</option>
+          </select>
+          <div class="select-chevron">
+            <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <input type="search" id="inputSearchScript" class="form-control" placeholder="Buscar no texto da peça..." style="flex:1; min-width:180px;">
+        <button id="btnStartFromScript" class="btn btn-primary" type="button" style="min-height:38px; padding:0 14px; font-size:0.84rem;">
+          <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Ensaio</span>
+        </button>
       </div>
-      <div id="fullScriptStats" style="font-size:0.75rem; color:var(--fg-muted); padding:4px 16px;"></div>
+      <div id="fullScriptStats" style="font-size:0.75rem; color:var(--fg-muted); padding:4px 18px;"></div>
       <div class="script-reader-body" id="fullScriptContainer">
         <!-- Injetado dinamicamente via UIController.renderFullScriptModal() -->
       </div>

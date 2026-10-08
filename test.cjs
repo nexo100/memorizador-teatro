@@ -236,7 +236,7 @@ async function runTestSuite() {
   assert.strictEqual(AppState.speeches.length, 5);
   assert.strictEqual(AppState.characters.length, 5);
   assert.strictEqual(JSON.stringify(AppState.characters), JSON.stringify(['HAMLET', 'OFÉLIA', 'REI CLÁUDIO', 'RAINHA GERTRUDES', 'HORÁCIO']));
-  assert.strictEqual(mockDocument.title, '🎭 Ensaio Teatral · Hamlet de William Shakespeare');
+  assert.strictEqual(mockDocument.title, 'Ensaio Teatral · Hamlet de William Shakespeare');
   console.log('✅ 7. Peça personalizada com 5 personagens carregada dinamicamente com título atualizado');
 
   // Teste 7: Geração dinâmica de seletores de voz para os 5 personagens
@@ -573,7 +573,7 @@ Que tristeza é essa, sobrinho meu?
   // Clicar novamente para interromper
   AudioEngine.playSpeechAudio(0, currentSp, 'SÉRGIO', 0, 1.0, 'normal', { onStatus: (msg) => { audioStatus = msg; } });
   assert.strictEqual(AudioEngine.isPlaying, false, 'AudioEngine deve ter parado (isPlaying=false)');
-  assert.strictEqual(audioStatus, '⏹️ Áudio interrompido.');
+  assert.strictEqual(audioStatus, 'Áudio interrompido.');
   console.log('✅ 29. AudioEngine: controle bidirecional de reprodução e parada imediata (Play/Stop toggle) validado');
 
   // Teste 30: Ocultação de Rubricas entre parênteses
@@ -898,7 +898,36 @@ Meu príncipe, estais bem?
   assert.strictEqual(focusedEl, openerBtn, 'closeModal deve retornar o foco ao botão de abertura');
   console.log('✅ 44. Acessibilidade de modais: type="button", focus trap e retorno de foco validados');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 44 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 45: Sistema de ícones vetoriais SVG nativos, zero emojis no código e gerenciador de temas
+  const testIcons = ['theater', 'masks', 'waveform', 'sun', 'moon', 'play', 'stop', 'mic', 'book'];
+  testIcons.forEach(name => {
+    const svg = Utils.icons.get(name);
+    assert(svg.includes('<svg') && svg.includes('</svg>'), `Icons.get("${name}") deve retornar SVG válido`);
+    assert(svg.includes('app-icon-' + name), `Icons.get("${name}") deve ter classe semântica correspondente`);
+  });
+
+  // Testar alternância de tema
+  AppController.applyTheme('light', true);
+  assert.strictEqual(mockLocalStorage.getItem('stagepro_theme'), 'light', 'Tema claro deve ser salvo no storage');
+  AppController.applyTheme('dark', true);
+  assert.strictEqual(mockLocalStorage.getItem('stagepro_theme'), 'dark', 'Tema escuro deve ser salvo no storage');
+
+  // Validar erradicação de emojis em arquivos-chave da aplicação
+  const appFiles = ['index.html', 'js/app.js', 'js/audio.js', 'js/config.js', 'js/parser.js', 'js/state.js', 'js/storage.js', 'js/ui.js', 'js/utils.js'];
+  const emojiPattern = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{2300}-\u{23FF}\u{25B6}\u{23F8}\u{23F9}]/u;
+  appFiles.forEach(f => {
+    const full = path.join(__dirname, f);
+    const content = fs.readFileSync(full, 'utf8');
+    const lines = content.split('\n');
+    lines.forEach((l, idx) => {
+      // Ignorar apenas entidades ou strings específicas de texto da peça teatral padrão se houver
+      const m = l.match(emojiPattern);
+      assert.strictEqual(m, null, `Nenhum emoji permitido no arquivo ${f}:${idx + 1} -> ${l.trim().slice(0, 50)}`);
+    });
+  });
+  console.log('✅ 45. Sistema de ícones vetoriais SVG, erradicação total de emojis e alternância de temas validados');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 45 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ensaio-teatral-v10';
+const CACHE_NAME = 'ensaio-teatral-v12';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

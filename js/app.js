@@ -3,9 +3,60 @@
       init() {
         this.setupPWA();
         this.setupWakeLock();
+        this.setupTheme();
         this.bindEvents();
         this.bindKeyboard();
         this.loadActiveScript();
+      },
+
+      setupTheme() {
+        let saved = null;
+        try {
+          if (typeof localStorage !== 'undefined') {
+            saved = localStorage.getItem('stagepro_theme');
+          }
+        } catch (e) {}
+
+        const prefersLight = typeof window !== 'undefined' && window.matchMedia && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: light)').matches;
+        const isLight = saved ? saved === 'light' : !!prefersLight;
+        this.applyTheme(isLight ? 'light' : 'dark', false);
+      },
+
+      applyTheme(theme, save = true) {
+        const isLight = theme === 'light';
+        const docEl = (typeof document !== 'undefined' && document.documentElement) ? document.documentElement : null;
+        if (docEl && docEl.setAttribute) {
+          if (isLight) {
+            docEl.setAttribute('data-theme', 'light');
+          } else {
+            docEl.removeAttribute('data-theme');
+          }
+        }
+
+        const chk = Utils.$('chkDarkTheme');
+        if (chk) chk.checked = !isLight;
+
+        const iconContainer = Utils.$('themeHeaderIcon');
+        if (iconContainer && typeof Icons !== 'undefined') {
+          iconContainer.innerHTML = isLight
+            ? Icons.get('moon', { size: 15 })
+            : Icons.get('sun', { size: 15 });
+        }
+
+        if (typeof document !== 'undefined' && document.querySelector) {
+          const metaTheme = document.querySelector('meta[name="theme-color"]');
+          if (metaTheme && metaTheme.setAttribute) {
+            metaTheme.setAttribute('content', isLight ? '#f8fafc' : '#0a0c10');
+          }
+        }
+
+        if (save) {
+          try {
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('stagepro_theme', isLight ? 'light' : 'dark');
+            }
+          } catch (e) {}
+        }
       },
 
       setupPWA() {
@@ -54,9 +105,9 @@
 
         AppState.activeScriptText = scriptText;
         const playTitle = ScriptParser.extractPlayTitle(scriptText);
-        document.title = '🎭 Ensaio Teatral · ' + playTitle;
+        document.title = 'Ensaio Teatral · ' + playTitle;
         const ptEl = Utils.$('playTitle');
-        if (ptEl) ptEl.textContent = '🎭 ' + playTitle;
+        if (ptEl) ptEl.textContent = playTitle;
         const stTitle = Utils.$('stagePlayTitle');
         if (stTitle) stTitle.textContent = playTitle;
 
@@ -291,13 +342,13 @@
         const wordCount = currentSpeech.spokenText.split(/\s+/).length;
         const pauseDuration = Math.max(2500, wordCount * 380 + 1000);
 
-        UIController.showStatus('🎧 Modo Ponto: Ouvindo a deixa...');
+        UIController.showStatus('Modo Ponto: Ouvindo a deixa...');
         const runMyTurn = () => {
           if (AppState.pontoPaused || AppState.rehearsalMode !== 'ponto' || AppState.currentIndex !== currentActiveIndex) return;
-          UIController.showStatus('🎙️ Sua vez de falar em voz alta...');
+          UIController.showStatus('Sua vez de falar em voz alta...');
           AudioEngine.autoAdvanceTimer = setTimeout(() => {
             if (AppState.pontoPaused || AppState.rehearsalMode !== 'ponto' || AppState.currentIndex !== currentActiveIndex) return;
-            UIController.showStatus('👂 Ponto no ouvido: conferindo fala...');
+            UIController.showStatus('Ponto no ouvido: conferindo fala...');
             const actorIdx = AppState.characters.indexOf(currentSpeech.who);
             AudioEngine.playSpeechAudio(
               currentActiveIndex,
@@ -429,12 +480,16 @@
           AppState.pontoPaused = !AppState.pontoPaused;
           if (AppState.pontoPaused) {
             AudioEngine.stopAllAudio();
-            UIController.showStatus('⏸️ Modo Ponto pausado.');
+            UIController.showStatus('Modo Ponto pausado.');
           } else {
-            UIController.showStatus('▶️ Retomando Modo Ponto...');
+            UIController.showStatus('Retomando Modo Ponto...');
             this.startPontoFlow();
           }
           UIController.renderView();
+        } else if (id === 'btnToggleTheme') {
+          const docEl = (typeof document !== 'undefined' && document.documentElement) ? document.documentElement : null;
+          const isLight = docEl && docEl.getAttribute && docEl.getAttribute('data-theme') === 'light';
+          this.applyTheme(isLight ? 'dark' : 'light', true);
         } else if (id === 'btnStopRecord') {
           AudioEngine.stopCastRecording();
         } else if (id === 'btnDeleteCastAudio') {
@@ -819,6 +874,15 @@
             AppState.hideRubrics = e.target.checked;
             StorageManager.saveSettings(AppState);
             UIController.renderView();
+          };
+        }
+
+        if (Utils.$('chkDarkTheme')) {
+          const docEl = (typeof document !== 'undefined' && document.documentElement) ? document.documentElement : null;
+          const isLight = docEl && docEl.getAttribute && docEl.getAttribute('data-theme') === 'light';
+          Utils.$('chkDarkTheme').checked = !isLight;
+          Utils.$('chkDarkTheme').onchange = (e) => {
+            this.applyTheme(e.target.checked ? 'dark' : 'light', true);
           };
         }
 
