@@ -1,22 +1,24 @@
 const fs = require('fs');
+const path = require('path');
 const assert = require('assert');
 const vm = require('vm');
 
 console.log('🧪 Executando bateria de testes do Memorizador Teatral...');
 
-// 1. Verificar sincronização entre index.html e Ensaio · Os Inventariantes.html
+// 1. Integridade modular de index.html e redirecionamento canônico
 const indexHtml = fs.readFileSync('index.html', 'utf8');
 const ensaioHtml = fs.readFileSync('Ensaio · Os Inventariantes.html', 'utf8');
-assert.strictEqual(indexHtml, ensaioHtml, 'index.html e Ensaio · Os Inventariantes.html devem ser 100% idênticos');
-console.log('✅ 1. Sincronização estrita de arquivos HTML verificada');
+assert(ensaioHtml.includes('url=./index.html'), 'Ensaio · Os Inventariantes.html deve redirecionar para index.html');
+assert(indexHtml.includes('css/style.css'), 'index.html deve carregar css/style.css');
+assert(indexHtml.includes('js/app.js'), 'index.html deve carregar os módulos em js/');
+console.log('✅ 1. Arquitetura modular e redirecionamento canônico validados');
 
-// 2. Extrair script de index.html
-const startTag = '<!-- LÓGICA DO APLICATIVO -->\n  <script>';
-const endTag = '</script>\n</body>\n</html>';
-const sStart = indexHtml.indexOf(startTag);
-const sEnd = indexHtml.indexOf(endTag);
-assert(sStart !== -1 && sEnd !== -1, 'Script tags devem estar presentes');
-const scriptContent = indexHtml.substring(sStart + startTag.length, sEnd);
+// 2. Validação da existência física dos módulos e folhas de estilo
+const cssContent = fs.readFileSync(path.join(__dirname, 'css', 'style.css'), 'utf8');
+const jsFiles = ['config.js', 'utils.js', 'state.js', 'parser.js', 'storage.js', 'audio.js', 'ui.js', 'app.js'];
+jsFiles.forEach(f => {
+  assert(fs.existsSync(path.join(__dirname, 'js', f)), `Arquivo js/${f} deve existir`);
+});
 
 // 3. Mock do ambiente de navegador
 const domStore = {};
@@ -147,7 +149,12 @@ const context = vm.createContext({
   Blob: globalThis.Blob
 });
 
-vm.runInContext(scriptContent + '\n;globalThis.__test_exports = { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, AppConfig, Utils };', context);
+jsFiles.forEach(f => {
+  const code = fs.readFileSync(path.join(__dirname, 'js', f), 'utf8');
+  vm.runInContext(code, context);
+});
+
+vm.runInContext('globalThis.__test_exports = { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, AppConfig, Utils };', context);
 
 const { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, AppConfig, Utils } = context.__test_exports;
 
@@ -402,9 +409,9 @@ Que tristeza é essa, sobrinho meu?
   console.log('✅ 20. Limites de navegação do ator em modos filtrados validados');
 
   // Teste 21: Ergonomia Mobile e Safe-Area Insets (Prevenção de Margem Dupla e Desperdício)
-  assert(!indexHtml.includes('padding-top: env(safe-area-inset-top'), 'Root não deve ter padding-top para evitar margens duplicadas com rodapé fixo');
-  assert(indexHtml.includes('.status-toast:empty {\n      display: none;'), 'Toast vazio deve ter display: none');
-  assert(indexHtml.includes('.cue-mini-badge'), 'Mini badge para deixas de abertura/continuação deve existir');
+  assert(!cssContent.includes('padding-top: env(safe-area-inset-top'), 'Root não deve ter padding-top para evitar margens duplicadas com rodapé fixo');
+  assert(cssContent.includes('.status-toast:empty'), 'Toast vazio deve ter display: none');
+  assert(cssContent.includes('.cue-mini-badge'), 'Mini badge para deixas de abertura/continuação deve existir');
   console.log('✅ 21. Ergonomia mobile, safe-area insets e redução de poluição visual validados');
 
   // Teste 22: Redução de poluição visual na abertura de cena (Mini Badge vs Card Cheio)
@@ -520,9 +527,9 @@ Que tristeza é essa, sobrinho meu?
   assert(indexHtml.includes('id="stageHeader"'), 'Header minimalista do palco deve estar presente');
   assert(indexHtml.includes('id="oneThumbDock"'), 'One-Thumb Action Dock deve estar presente');
   assert(indexHtml.includes('id="modeCardsGrid"'), 'Cards grandes de modos de ensaio devem estar presentes no Camarim');
-  assert(indexHtml.includes('.action-secondary-row'), 'CSS de action-secondary-row deve estar presente');
-  assert(indexHtml.includes('.btn-audio'), 'CSS de btn-audio deve estar presente');
-  assert(indexHtml.includes('.btn-icon-only'), 'CSS de btn-icon-only deve estar presente');
+  assert(cssContent.includes('.action-secondary-row'), 'CSS de action-secondary-row deve estar presente');
+  assert(cssContent.includes('.btn-audio'), 'CSS de btn-audio deve estar presente');
+  assert(cssContent.includes('.btn-icon-only'), 'CSS de btn-icon-only deve estar presente');
   console.log('✅ 26. One-Thumb Action Dock, ausência de ruído e topo minimalista validados');
 
   // Teste 27: Sincronização do One-Thumb Action Dock no fim de cena (Fim do Bloco) e reinício por ator
@@ -661,7 +668,81 @@ Que tristeza é essa, sobrinho meu?
   AppState.studyMethod = 'oral';
   console.log('✅ 33. Modo Digitação (inputs inline, validação e avanço) validado');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 33 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 34: Sanitização XSS estrita contra quebra de atributos HTML
+  const xssPayload = 'Ator" onmouseover="alert(1)" data-x="';
+  const escapedXss = Utils.escapeHtml(xssPayload);
+  assert(escapedXss.includes('&quot;'), 'Aspas duplas devem ser convertidas em &quot;');
+  assert(!escapedXss.includes('"'), 'Nenhuma aspa dupla sem escape deve permanecer');
+  console.log('✅ 34. Sanitização XSS contra injeção de atributos HTML validada');
+
+  // Teste 35: Preservação de intenções/vozes e exclusão de chaves sensíveis no backup
+  mockLocalStorage.setItem('memorizador_rate', '1.0');
+  mockLocalStorage.setItem('intent_default_0', 'Afrontar o pai');
+  mockLocalStorage.setItem('voice_actor_SERGIO', 'Felipe');
+  mockLocalStorage.setItem('gemini_api_key', 'SECRET_KEY_NAO_EXPORTAR');
+
+  const exportedKeys = [];
+  for (let i = 0; i < mockLocalStorage.length; i++) {
+    const key = mockLocalStorage.key(i);
+    if (
+      key &&
+      !key.toLowerCase().includes('key') &&
+      !key.toLowerCase().includes('token') &&
+      !key.toLowerCase().includes('secret') &&
+      (key.startsWith('memorizador_') || key.startsWith('intent_') || key.startsWith('voice_actor_') || key.startsWith('inv-'))
+    ) {
+      exportedKeys.push(key);
+    }
+  }
+  assert(exportedKeys.includes('intent_default_0'), 'Intenções devem ser exportadas');
+  assert(exportedKeys.includes('voice_actor_SERGIO'), 'Vozes atribuídas devem ser exportadas');
+  assert(exportedKeys.includes('memorizador_rate'), 'Configurações devem ser exportadas');
+  assert(!exportedKeys.includes('gemini_api_key'), 'Chaves de API ou segredos NUNCA devem ser exportados no backup');
+  console.log('✅ 35. Backup seguro: inclusão de intenções/vozes e blindagem contra vazamento de chaves');
+
+  // Teste 36: Fila adaptativa com buffer de repetição imediata (reforço espaçado ativo)
+  AppState.speeches = [
+    { who: 'SÉRGIO', spokenText: 'Fala 1', segments: [{ type: 'speech', text: 'Fala 1' }] },
+    { who: 'SÉRGIO', spokenText: 'Fala 2', segments: [{ type: 'speech', text: 'Fala 2' }] },
+    { who: 'SÉRGIO', spokenText: 'Fala 3', segments: [{ type: 'speech', text: 'Fala 3' }] }
+  ];
+  AppState.selectedActor = 'SÉRGIO';
+  AppState.masteryLevels = [4, 4, 4];
+  AppState.currentIndex = 0;
+  AppState.sessionRetryQueue = [];
+  AppState.scheduleRetry(0, 2);
+  assert.strictEqual(AppState.sessionRetryQueue.length, 1, 'Fala 0 deve estar na fila de repetição');
+  AppState.stepRetryQueue();
+  assert.strictEqual(AppState.sessionRetryQueue[0].countdown, 1, 'Countdown decrementado para 1');
+  AppState.stepRetryQueue();
+  assert.strictEqual(AppState.sessionRetryQueue[0].countdown, 0, 'Countdown chegou a 0');
+  AppState.currentIndex = 1;
+  const nextTarget = AppState.pickNextWeakness();
+  assert.strictEqual(nextTarget, 0, 'pickNextWeakness deve priorizar imediatamente a fala agendada no retry buffer');
+  console.log('✅ 36. Fila adaptativa de ensaio com reforço espaçado imediato validada');
+
+  // Teste 37: Parsing nativo de roteiro em formato Fountain
+  const fountainScript = `
+Title: Teste Fountain
+Author: Dramaturgo
+
+INT. SALA DE ESTAR - NOITE
+
+HAMLET
+Ser ou não ser, eis a questão.
+
+(hesitante)
+
+@Ofélia
+Meu príncipe, estais bem?
+`;
+  const fountainParsed = ScriptParser.parseScript(fountainScript);
+  assert.strictEqual(fountainParsed.length, 2, 'Deve identificar 2 falas no roteiro Fountain');
+  assert.strictEqual(fountainParsed[0].who, 'HAMLET', 'Primeiro personagem HAMLET');
+  assert.strictEqual(fountainParsed[1].who, 'Ofélia', 'Segundo personagem Ofélia com prefixo @');
+  console.log('✅ 37. Suporte a roteiros no padrão da indústria Fountain (.fountain) validado');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 37 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

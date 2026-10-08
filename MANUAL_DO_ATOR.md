@@ -117,21 +117,25 @@ Se você trocar de celular ou quiser compartilhar suas anotações com o elenco:
 
 ## 📖 8. Como Colar uma Nova Peça de Teatro
 
-O Memorizador Teatral v3.0 aceita qualquer texto dramático:
+O Memorizador Teatral (v3.2) aceita qualquer texto dramático (inclusive no formato internacional **Fountain** `.fountain`):
 1. Toque em **`⚙️ Opções`**.
 2. No campo **"Texto da Peça / Roteiro"**, apague o texto e cole o roteiro da sua nova peça.
 3. Formatos recomendados para identificação perfeita dos personagens:
+   * **Padrão Teatral com Dois Pontos ou Travessão:**
    ```text
    **HAMLET:** Ser ou não ser, eis a questão.
-   
-   **OFÉLIA:** Meu senhor, há muitos dias tenho lembranças vossas.
-   ```
-   *Ou formato simples:*
-   ```text
-   HAMLET: Ser ou não ser, eis a questão.
-   
    OFÉLIA - Meu senhor, há muitos dias tenho lembranças vossas.
    ```
-4. Toque em **`💾 Salvar e Recarregar Peça`**.
+   * **Padrão Fountain / Roteiro (Nome em Linha Própria):**
+   ```text
+   HAMLET
+   Ser ou não ser, eis a questão.
+
+   (hesitante)
+
+   OFÉLIA
+   Meu senhor, como tem passado nestes dias?
+   ```
+4. Toque em **`💾 Salvar e Carregar Texto`**.
 5. O app detectará automaticamente todos os personagens, criará os seletores de voz para cada um e dividirá a cena em blocos de ensaio proporcionais!
-6. Para voltar à peça original de *Os Inventariantes*, basta tocar em **`Restaurar texto original`**.
+6. Para voltar à peça original de *Os Inventariantes*, basta tocar em **`Restaurar "Os Inventariantes"`**.

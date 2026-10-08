@@ -135,10 +135,10 @@ Para evitar que o ator fique com o texto "engessado" ou "viciado" em uma única 
 
 ## 🧪 Testes Automatizados de Integração
 
-O projeto possui uma suíte rigorosa de **28 testes automatizados** para assegurar que nenhuma regressão ocorra em navegação, parsing, cloze semântico, memória, persistência, ergonomia de palco, sincronização de fim de cena e transição de telas:
+O projeto possui uma suíte rigorosa de **37 testes automatizados** para assegurar que nenhuma regressão ocorra em navegação, parsing (incluindo Fountain), cloze semântico, memória, persistência, ergonomia de palco, sincronização de fim de cena, transição de telas, sanitização XSS, integridade de backups e fila adaptativa de ensaio:
 
 ```bash
-# Executa todos os 28 testes de integração
+# Executa todos os 37 testes de integração
 node test.cjs
 ```
 
@@ -148,15 +148,28 @@ node test.cjs
 
 ```
 memorizador-teatro/
-├── index.html                     # Aplicação PWA completa e universal (v3.2)
-├── Ensaio · Os Inventariantes.html # Cópia idêntica sincronizada byte-a-byte
-├── manifest.json                  # Manifesto PWA para instalação no celular
-├── sw.js                          # Service Worker para suporte 100% offline (v8)
+├── index.html                     # Aplicação PWA modularizada e leve (v3.2)
+├── css/
+│   └── style.css                  # Estilos responsivos, temas claro/escuro e safe-area
+├── js/
+│   ├── config.js                  # Constantes e vocabulário funcional
+│   ├── utils.js                   # Utilitários puros, escape XSS e conversão base64
+│   ├── state.js                   # Estado reativo da sessão e fila adaptativa
+│   ├── parser.js                  # Parser universal de dramaturgia e Fountain
+│   ├── storage.js                 # Persistência IndexedDB e LocalStorage
+│   ├── audio.js                   # Síntese Web Speech e MediaRecorder
+│   ├── ui.js                      # Renderização da interface (Camarim e Palco)
+│   └── app.js                     # Controlador principal e eventos do ciclo de vida
+├── Ensaio · Os Inventariantes.html # Redirecionamento canônico para index.html
+├── manifest.json                  # Manifesto PWA com suporte a ícones PNG e SVG
+├── sw.js                          # Service Worker para suporte 100% offline (v10)
 ├── icon.svg                       # Ícone vetorial das máscaras teatrais
-├── test.cjs                       # Suíte automatizada com 28 testes de integração
+├── icon-192.png                   # Ícone PWA 192x192 para Android e iOS
+├── icon-512.png                   # Ícone PWA 512x512 para Android e instalação
+├── test.cjs                       # Suíte automatizada com 37 testes de integração
 ├── MANUAL_DO_ATOR.md              # Guia prático de ensaio e memorização para o elenco
 ├── ARQUITETURA.md                 # Especificação técnica dos módulos e dados
-├── Ensaio · Os Inventariantes.backup.html # Backup de segurança da versão inicial
+├── LICENSE                        # Licença MIT e ressalva de direitos autorais
 └── README.md                      # Visão geral do projeto e guia rápido
 ```
 

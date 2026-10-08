@@ -1,10 +1,20 @@
-const CACHE_NAME = 'ensaio-teatral-v8';
+const CACHE_NAME = 'ensaio-teatral-v10';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './Ensaio · Os Inventariantes.html',
+  './css/style.css',
+  './js/config.js',
+  './js/utils.js',
+  './js/state.js',
+  './js/parser.js',
+  './js/storage.js',
+  './js/audio.js',
+  './js/ui.js',
+  './js/app.js',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -46,10 +56,15 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       }).catch(() => {
         // Fallback offline se for requisição de página
-        const accept = event.request.headers.get('accept');
-        if (accept && accept.includes('text/html')) {
+        const accept = event.request.headers.get('accept') || '';
+        if (accept.includes('text/html')) {
           return caches.match('./index.html');
         }
+        return new Response('Offline: recurso indisponível', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
+        });
       });
     })
   );

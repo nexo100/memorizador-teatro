@@ -1,4 +1,4 @@
-# 🏛️ Arquitetura do Memorizador Teatral (v3.0)
+# 🏛️ Arquitetura do Memorizador Teatral (v3.2)
 
 Este documento descreve a arquitetura técnica, modelo de dados, decisões de engenharia de software e padrões de implementação adotados no **Memorizador Teatral**.
 
@@ -13,7 +13,7 @@ Toda a lógica de persistência, renderização, inteligência linguística de l
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        Camada de Apresentação                          │
-│                                AppUI                                   │
+│                             UIController                               │
 │    (Cards de Fala, Deixas, Cloze Semântico, Modais e Event Listeners)  │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ lê e despacha
@@ -26,7 +26,7 @@ Toda a lógica de persistência, renderização, inteligência linguística de l
         │                           │                            │
         ▼                           ▼                            ▼
 ┌──────────────────┐    ┌──────────────────────┐    ┌────────────────────┐
-│   ScriptParser   │    │     AudioEngine      │    │   StorageEngine    │
+│   ScriptParser   │    │     AudioEngine      │    │   StorageManager   │
 │  Regex universal │    │ Web Speech API (TTS) │    │ IndexedDB (áudios) │
 │  de dramaturgia, │    │    + MediaRecorder   │    │    LocalStorage    │
 │  beats dinâmicos │    │  (gravações reais)   │    │ (progresso/backup) │
@@ -100,7 +100,7 @@ Motor universal de análise sintática dramatúrgica:
   * Rubricas em meio ao diálogo são convertidas em segmentos `{ type: 'rubric', text: '...' }` para estilização visual diferenciada e exclusão do sintetizador de voz (TTS). Podem ser completamente ocultadas visualmente sob demanda (`hideRubrics`).
 * **Particionamento de Beats Dinâmicos**: Caso o texto não seja a peça canônica, divide o roteiro automaticamente em 4 a 6 blocos proporcionais (`start` e `end`).
 
-### 5. `StorageEngine`
+### 5. `StorageManager`
 Camada de persistência local:
 * **IndexedDB (`recordings`)**:
   * Armazena áudios gravados pelo elenco como `Blob` de alta fidelidade.
@@ -124,7 +124,7 @@ Motor de áudio híbrido com controle bidirecional (Play/Stop):
   * Reprodução via `Audio` HTML5 com aplicação dinâmica de `playbackRate`.
   * **Gerenciamento de Memória**: O motor rastreia o `activeAudioUrl` e chama `URL.revokeObjectURL` de forma determinística em `onended`, `onerror` e `stopAllAudio()`, impedindo vazamento de memória durante ensaios longos.
 
-### 7. `AppUI`
+### 7. `UIController`
 Camada de renderização reativa e manipulação do DOM:
 * `updateHeaderStats()`: Atualiza a barra de progresso percentual, o contador de falas, o pill do método de estudo e os botões de navegação.
 * `renderLobby()`: Renderiza os cartões de personagens com percentual de domínio, o grid de métodos de memorização (Oral, Alternativas, Digitação), os modos de ensaio e o banner de leitura integral do roteiro.
@@ -170,7 +170,7 @@ O botão **`💡 Dica` (ou atalho `D`)** revela incrementalmente a próxima pala
 
 ## 🧪 Suíte de Testes Automatizados (`test.cjs`)
 
-Para garantir que nenhuma regressão ocorra em futuras iterações, o repositório conta com uma suíte abrangente de **33 testes automatizados** em Node.js:
+Para garantir que nenhuma regressão ocorra em futuras iterações, o repositório conta com uma suíte abrangente de **37 testes automatizados** em Node.js:
 
 Para rodar a suíte:
 ```bash
@@ -211,6 +211,10 @@ node test.cjs
 31. Chegar com a fala oculta por padrão (alwaysStartHidden) e Leitura Integral (modalFullScript).
 32. Modo Quiz de Alternativas (banco de palavras, distratores e avanço).
 33. Modo Digitação (inputs inline, validação e avanço).
+34. Sanitização XSS contra injeção de atributos HTML.
+35. Backup seguro: inclusão de intenções/vozes e blindagem contra vazamento de chaves.
+36. Fila adaptativa de ensaio com reforço espaçado imediato.
+37. Suporte a roteiros no padrão da indústria Fountain (.fountain).
 
 ---
 
