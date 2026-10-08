@@ -91,6 +91,18 @@
         });
       },
 
+      async deleteRecordingById(key) {
+        const db = await this.getIndexedDB();
+        if (!db) return;
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(this.STORE_NAME, 'readwrite');
+          const store = tx.objectStore(this.STORE_NAME);
+          store.delete(key);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      },
+
       async clearAllCastAudios() {
         const db = await this.getIndexedDB();
         if (!db) return;
@@ -192,6 +204,54 @@
           localStorage.setItem(scopedKey, val);
           if (pId === 'default') localStorage.setItem('intent_' + idx, val);
         }
+      },
+
+      getActorNotesKey(playId) {
+        const pId = playId || AppState.getPlayId();
+        return `memorizador_actor_notes_${pId}`;
+      },
+
+      getActorNotes(playId) {
+        try {
+          return localStorage.getItem(this.getActorNotesKey(playId)) || '';
+        } catch (e) {
+          return '';
+        }
+      },
+
+      setActorNotes(text, playId) {
+        try {
+          const key = this.getActorNotesKey(playId);
+          if (text) {
+            localStorage.setItem(key, text);
+          } else {
+            localStorage.removeItem(key);
+          }
+        } catch (e) {}
+      },
+
+      getSpeechNoteKey(speechIdx, playId) {
+        const pId = playId || AppState.getPlayId();
+        return `memorizador_speech_note_${pId}_${speechIdx}`;
+      },
+
+      getSpeechNote(speechIdx, playId) {
+        try {
+          return localStorage.getItem(this.getSpeechNoteKey(speechIdx, playId)) || '';
+        } catch (e) {
+          return '';
+        }
+      },
+
+      setSpeechNote(speechIdx, text, playId) {
+        try {
+          const key = this.getSpeechNoteKey(speechIdx, playId);
+          if (text) {
+            localStorage.setItem(key, text);
+          } else {
+            localStorage.removeItem(key);
+          }
+        } catch (e) {}
       },
 
       loadSettings() {

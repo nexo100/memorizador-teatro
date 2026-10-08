@@ -591,6 +591,7 @@
           AppState.rehearsalMode = 'fraquezas';
           this.goToSpeech(AppState.pickNextWeakness());
         } else if (id === 'btnOpenFullScriptLobby' || id === 'btnReadScriptBanner' || id === 'btnOpenFullScriptSettings' || id === 'tabBtnScript') {
+          UIController.closeModal('modalCaderno');
           UIController.renderFullScriptModal();
           UIController.openModal('modalFullScript');
           UIController.updateTabBarActive('script');
@@ -601,6 +602,7 @@
           UIController.closeModal('modalFullScript');
           this.enterStage();
         } else if (id === 'btnOpenIndex' || id === 'btnOpenIndexLobby' || id === 'btnStageIndex' || id === 'btnNavIndex' || id === 'tabBtnProgress') {
+          UIController.closeModal('modalCaderno');
           UIController.renderIndexModal();
           UIController.openModal('modalIndex');
           UIController.updateTabBarActive('progress');
@@ -608,16 +610,35 @@
           UIController.closeModal('modalIndex');
           UIController.updateTabBarActive('camarim');
         } else if (id === 'btnOpenSettings' || id === 'btnOpenSettingsLobby' || id === 'btnOpenSettingsStage' || id === 'tabBtnSettings') {
+          UIController.closeModal('modalCaderno');
           UIController.populateVoiceSelectors();
           UIController.openModal('modalSettings');
           UIController.updateTabBarActive('settings');
         } else if (id === 'btnCloseSettings') {
           UIController.closeModal('modalSettings');
           UIController.updateTabBarActive('camarim');
+        } else if (id === 'tabBtnCaderno') {
+          UIController.closeModal('modalFullScript');
+          UIController.closeModal('modalIndex');
+          UIController.closeModal('modalSettings');
+          UIController.closeModal('sheetActor');
+          UIController.closeModal('sheetMode');
+          UIController.closeModal('sheetMethod');
+          UIController.closeModal('sheetBeat');
+          UIController.renderCaderno();
+          UIController.openModal('modalCaderno');
+          UIController.updateTabBarActive('caderno');
+        } else if (id === 'btnCloseCaderno') {
+          UIController.closeModal('modalCaderno');
+          UIController.updateTabBarActive('camarim');
+        } else if (id === 'btnStageCaderno') {
+          UIController.renderCaderno(AppState.currentIndex);
+          UIController.openModal('modalCaderno');
         } else if (id === 'tabBtnCamarim') {
           UIController.closeModal('modalFullScript');
           UIController.closeModal('modalIndex');
           UIController.closeModal('modalSettings');
+          UIController.closeModal('modalCaderno');
           UIController.closeModal('sheetActor');
           UIController.closeModal('sheetMode');
           UIController.closeModal('sheetMethod');
@@ -771,7 +792,7 @@
       },
 
       bindEvents() {
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', async (e) => {
           const actorBtn = e.target.closest('.char-tab');
           if (actorBtn) {
             const actor = actorBtn.dataset.actor;
@@ -809,7 +830,7 @@
             return;
           }
 
-          const indexItem = e.target.closest('[data-idx]');
+          const indexItem = e.target.closest('.index-item[data-idx]');
           if (indexItem) {
             const idx = parseInt(indexItem.dataset.idx, 10);
             if (!isNaN(idx)) {
@@ -818,6 +839,155 @@
                 this.enterStage();
               }
               this.goToSpeech(idx);
+            }
+            return;
+          }
+
+          const cadernoTabBtn = e.target.closest('.caderno-tab-btn');
+          if (cadernoTabBtn) {
+            const subtab = cadernoTabBtn.dataset.subtab;
+            document.querySelectorAll('.caderno-tab-btn').forEach(b => b.classList.toggle('active', b === cadernoTabBtn));
+            const isNotes = subtab === 'notes';
+            if (Utils.$('cadernoSubtabNotes')) Utils.$('cadernoSubtabNotes').hidden = !isNotes;
+            if (Utils.$('cadernoSubtabRecordings')) Utils.$('cadernoSubtabRecordings').hidden = isNotes;
+            return;
+          }
+
+          const btnClearNotes = e.target.closest('#btnCadernoClearFreeNotes');
+          if (btnClearNotes) {
+            if (confirm('Deseja realmente limpar as anotacoes do caderno?')) {
+              StorageManager.setActorNotes('');
+              const ta = Utils.$('cadernoFreeNotes');
+              if (ta) ta.value = '';
+              const wc = Utils.$('cadernoWordCount');
+              if (wc) wc.textContent = '0 palavras';
+            }
+            return;
+          }
+
+          const btnJumpCaderno = e.target.closest('#btnCadernoJumpToStage');
+          if (btnJumpCaderno) {
+            const idx = parseInt(btnJumpCaderno.dataset.idx, 10);
+            if (!isNaN(idx)) {
+              UIController.closeModal('modalCaderno');
+              if (AppState.currentScreen === 'lobby') {
+                this.enterStage();
+              }
+              this.goToSpeech(idx);
+            }
+            return;
+          }
+
+          const btnDeleteSpeechAudio = e.target.closest('#btnCadernoDeleteSpeechAudio');
+          if (btnDeleteSpeechAudio) {
+            const idx = parseInt(btnDeleteSpeechAudio.dataset.idx, 10);
+            if (!isNaN(idx) && confirm('Excluir audio gravado desta fala?')) {
+              await StorageManager.deleteCastAudio(idx);
+              await UIController.renderCadernoSpeechDetail(idx);
+              await UIController.renderCadernoRecordings();
+            }
+            return;
+          }
+
+          const btnPlaySpeechAudio = e.target.closest('#btnCadernoPlaySpeechAudio');
+          if (btnPlaySpeechAudio) {
+            const idx = parseInt(btnPlaySpeechAudio.dataset.idx, 10);
+            if (!isNaN(idx)) {
+              const sp = AppState.speeches[idx];
+              const actorIdx = AppState.characters.indexOf(sp.who);
+              AudioEngine.playSpeechAudio(idx, sp, sp.who, actorIdx >= 0 ? actorIdx : 0, AppState.speechRate, AppState.rehearsalTempo, {
+                onStatus: msg => UIController.showStatus(msg)
+              });
+            }
+            return;
+          }
+
+          const btnRecordCaderno = e.target.closest('#btnRecordCaderno');
+          if (btnRecordCaderno) {
+            if (AudioEngine.isRecordingNow) {
+              AudioEngine.stopCastRecording();
+            } else {
+              const speechSelect = Utils.$('cadernoSpeechSelect');
+              let targetIdx = speechSelect && speechSelect.value !== ''
+                ? parseInt(speechSelect.value, 10)
+                : AppState.currentIndex;
+              if (isNaN(targetIdx) || targetIdx < 0) targetIdx = 0;
+
+              btnRecordCaderno.classList.add('is-recording');
+              const txtEl = Utils.$('btnRecordCadernoText');
+              if (txtEl) txtEl.textContent = 'Gravando... Toque para Parar';
+
+              AudioEngine.startCastRecording(targetIdx, {
+                onTick: (secs) => {
+                  if (txtEl) txtEl.textContent = `Gravando (${secs}s)... Toque para Parar`;
+                },
+                onSaved: async () => {
+                  btnRecordCaderno.classList.remove('is-recording');
+                  if (txtEl) txtEl.textContent = 'Gravar Voz no Ensaio';
+                  await UIController.renderCadernoRecordings();
+                  const curVal = speechSelect ? speechSelect.value : '';
+                  if (curVal !== '') {
+                    await UIController.renderCadernoSpeechDetail(parseInt(curVal, 10));
+                  }
+                },
+                onError: () => {
+                  btnRecordCaderno.classList.remove('is-recording');
+                  if (txtEl) txtEl.textContent = 'Gravar Voz no Ensaio';
+                }
+              });
+            }
+            return;
+          }
+
+          const btnPlayCaderno = e.target.closest('.btn-play-caderno-audio');
+          if (btnPlayCaderno) {
+            const recId = btnPlayCaderno.dataset.id;
+            const recIdx = btnPlayCaderno.dataset.idx !== '' ? parseInt(btnPlayCaderno.dataset.idx, 10) : null;
+            if (AudioEngine.isPlaying) {
+              AudioEngine.stopAllAudio();
+              return;
+            }
+            let blob = null;
+            if (recIdx !== null && !isNaN(recIdx)) {
+              blob = await StorageManager.getCastAudio(recIdx);
+            }
+            if (!blob && recId) {
+              const all = await StorageManager.getAllRecordings();
+              const found = all.find(r => String(r.id) === String(recId));
+              if (found) blob = found.blob || found.audioBlob;
+            }
+            if (blob) {
+              btnPlayCaderno.classList.add('is-playing');
+              btnPlayCaderno.innerHTML = `${Icons.get('stop', { size: 14 })} <span>Parar</span>`;
+              AudioEngine.playCustomBlob(blob, {
+                onEnd: () => {
+                  btnPlayCaderno.classList.remove('is-playing');
+                  btnPlayCaderno.innerHTML = `${Icons.get('play', { size: 14 })} <span>Ouvir</span>`;
+                },
+                onStop: () => {
+                  btnPlayCaderno.classList.remove('is-playing');
+                  btnPlayCaderno.innerHTML = `${Icons.get('play', { size: 14 })} <span>Ouvir</span>`;
+                }
+              });
+            }
+            return;
+          }
+
+          const btnDeleteCaderno = e.target.closest('.btn-delete-caderno-audio');
+          if (btnDeleteCaderno) {
+            const recId = btnDeleteCaderno.dataset.id;
+            const recIdx = btnDeleteCaderno.dataset.idx !== '' ? parseInt(btnDeleteCaderno.dataset.idx, 10) : null;
+            if (confirm('Deseja realmente excluir este audio gravado?')) {
+              if (recIdx !== null && !isNaN(recIdx)) {
+                await StorageManager.deleteCastAudio(recIdx);
+              } else if (recId) {
+                await StorageManager.deleteRecordingById(recId);
+              }
+              await UIController.renderCadernoRecordings();
+              const speechSelect = Utils.$('cadernoSpeechSelect');
+              if (speechSelect && speechSelect.value !== '') {
+                await UIController.renderCadernoSpeechDetail(parseInt(speechSelect.value, 10));
+              }
             }
             return;
           }
@@ -838,6 +1008,42 @@
           if (actionBtn) {
             this.handleActionClick(actionBtn.id);
             return;
+          }
+        });
+
+        if (Utils.$('cadernoFreeNotes')) {
+          Utils.$('cadernoFreeNotes').oninput = (e) => {
+            StorageManager.setActorNotes(e.target.value);
+            const words = e.target.value.trim() ? e.target.value.trim().split(/\s+/).length : 0;
+            const countEl = Utils.$('cadernoWordCount');
+            if (countEl) countEl.textContent = `${words} palavra${words === 1 ? '' : 's'}`;
+          };
+        }
+
+        if (Utils.$('cadernoSpeechSelect')) {
+          Utils.$('cadernoSpeechSelect').onchange = (e) => {
+            const val = e.target.value;
+            if (val === '') {
+              UIController.renderCadernoSpeechDetail(null);
+            } else {
+              UIController.renderCadernoSpeechDetail(parseInt(val, 10));
+            }
+            UIController.updateCadernoRecordTarget();
+          };
+        }
+
+        document.addEventListener('input', (e) => {
+          if (e.target && e.target.id === 'cadernoSpeechNote') {
+            const select = Utils.$('cadernoSpeechSelect');
+            if (select && select.value !== '') {
+              StorageManager.setSpeechNote(parseInt(select.value, 10), e.target.value);
+            }
+          } else if (e.target && e.target.id === 'cadernoSpeechIntent') {
+            const select = Utils.$('cadernoSpeechSelect');
+            if (select && select.value !== '') {
+              const isDefault = ScriptParser.isDefaultPlay(AppState.activeScriptText);
+              StorageManager.setSpeechIntent(parseInt(select.value, 10), e.target.value, isDefault);
+            }
           }
         });
 
@@ -865,7 +1071,7 @@
           };
         });
 
-        ['modalIndex', 'modalSettings', 'modalFullScript', 'sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat'].forEach(modalId => {
+        ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat'].forEach(modalId => {
           const modalEl = Utils.$(modalId);
           if (modalEl) {
             modalEl.onclick = (e) => {

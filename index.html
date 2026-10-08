@@ -350,6 +350,9 @@
             <button id="btnStageIndex" class="btn-stage-counter" type="button" title="Índice de Falas">
               <span id="counterText">Fala 1 de 58</span>
             </button>
+            <button id="btnStageCaderno" class="btn-stage-icon" type="button" title="Caderno de Ensaio & Anotações">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
             <button id="btnOpenSettingsStage" class="btn-stage-icon" type="button" title="Opções & Vozes">
               <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </button>
@@ -388,8 +391,11 @@
         <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
         <span>Camarim</span>
       </button>
-      <button type="button" class="tab-bar-item" id="tabBtnScript" data-tab="script">
-        <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+      <button type="button" class="tab-bar-item" id="tabBtnCaderno" data-tab="caderno">
+        <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Caderno</span>
+      </button>
+      <button type="button" id="tabBtnScript" data-tab="script" style="display:none;" aria-hidden="true">
         <span>Roteiro</span>
       </button>
       <button type="button" class="tab-bar-item" id="tabBtnProgress" data-tab="progress">
@@ -401,6 +407,125 @@
         <span>Ajustes</span>
       </button>
     </nav>
+  </div>
+
+  <!-- MODAL: CADERNO DE ENSAIO (ANOTAÇÕES LIVRES, FALAS & GRAVAÇÕES) -->
+  <div id="modalCaderno" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalCadernoTitle" hidden>
+    <div class="modal-content modal-content-wide">
+      <div class="modal-drag-bar" aria-hidden="true"></div>
+      <div class="modal-header">
+        <h2 id="modalCadernoTitle">
+          <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Caderno de Ensaio · Anotações & Áudios</span>
+        </h2>
+        <button id="btnCloseCaderno" class="btn-close" type="button" aria-label="Fechar">&times;</button>
+      </div>
+
+      <!-- ABAS INTERNAS DO CADERNO -->
+      <div class="caderno-tabs-nav" role="tablist">
+        <button type="button" class="caderno-tab-btn active" id="cadernoTabBtnNotes" data-subtab="notes">
+          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Anotações do Ator</span>
+        </button>
+        <button type="button" class="caderno-tab-btn" id="cadernoTabBtnRecordings" data-subtab="recordings">
+          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg>
+          <span>Gravações de Voz</span>
+          <span class="caderno-rec-count-badge" id="cadernoRecordingsCountBadge">0</span>
+        </button>
+      </div>
+
+      <div class="modal-body caderno-modal-body">
+        <!-- SUBABA 1: ANOTAÇÕES -->
+        <div id="cadernoSubtabNotes" class="caderno-subtab-pane active">
+          <!-- CARD A: ANOTAÇÕES LIVRES DO ATOR -->
+          <div class="caderno-card">
+            <div class="caderno-card-header">
+              <div class="caderno-card-title">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+                <span>Caderno Livre de Bordo</span>
+              </div>
+              <span class="caderno-save-status" id="cadernoAutoSaveIndicator">
+                <svg class="app-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Salvo automaticamente</span>
+              </span>
+            </div>
+            <p class="caderno-card-desc">
+              Espaço livre para seus pensamentos, observações de ensaio, diretrizes da direção, sentimentos da cena ou ideias do personagem.
+            </p>
+            <textarea id="cadernoFreeNotes" class="form-control caderno-textarea" placeholder="Escreva aqui livremente o que desejar..."></textarea>
+            <div class="caderno-card-footer">
+              <span id="cadernoWordCount" class="caderno-meta-text">0 palavras</span>
+              <button type="button" class="btn-caderno-clear" id="btnCadernoClearFreeNotes">Limpar texto</button>
+            </div>
+          </div>
+
+          <!-- CARD B: VINCULAÇÃO OPCIONAL A UMA FALA -->
+          <div class="caderno-card">
+            <div class="caderno-card-header">
+              <div class="caderno-card-title">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                <span>Anotar sobre uma Fala Específica (Opcional)</span>
+              </div>
+            </div>
+            <p class="caderno-card-desc">
+              Selecione uma réplica se quiser associar notas, intenção cênica ou áudio diretamente a ela.
+            </p>
+            <div class="custom-select-box" style="margin-bottom: 12px;">
+              <select id="cadernoSpeechSelect" class="form-control" title="Selecione uma fala para vincular">
+                <option value="">-- Nenhuma fala selecionada (Escrever apenas livremente) --</option>
+              </select>
+              <div class="select-chevron">
+                <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <!-- CONTAINER DETALHADO DA FALA SELECIONADA -->
+            <div id="cadernoSpeechDetailContainer" class="caderno-speech-detail" hidden>
+              <!-- Preenchido via UIController.renderCadernoSpeechDetail() -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBABA 2: GRAVAÇÕES & CENTRAL DE VOZ -->
+        <div id="cadernoSubtabRecordings" class="caderno-subtab-pane" hidden>
+          <!-- CARD A: GRAVADOR RÁPIDO DO CADERNO -->
+          <div class="caderno-card caderno-record-studio-card">
+            <div class="caderno-card-header">
+              <div class="caderno-card-title">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg>
+                <span>Gravador de Ensaio</span>
+              </div>
+            </div>
+            <p class="caderno-card-desc">
+              Grave sua voz para testar intenções, ritmo e dicção. A gravação é salva localmente e pode ser ouvida quando quiser.
+            </p>
+            <div class="caderno-record-controls">
+              <div class="caderno-record-target-row">
+                <span class="caderno-record-target-label">Alvo do áudio:</span>
+                <span class="caderno-record-target-badge" id="cadernoRecordTargetBadge">Fala ativa no ensaio</span>
+              </div>
+              <button type="button" class="btn btn-primary btn-caderno-big-record" id="btnRecordCaderno">
+                <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg>
+                <span id="btnRecordCadernoText">Gravar Voz no Ensaio</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- CARD B: LISTA DE GRAVAÇÕES DA PEÇA -->
+          <div class="caderno-card">
+            <div class="caderno-card-header">
+              <div class="caderno-card-title">
+                <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                <span>Gravações de Voz desta Peça</span>
+              </div>
+            </div>
+            <div id="cadernoRecordingsList" class="caderno-recordings-list">
+              <!-- Preenchido via UIController.renderCadernoRecordings() -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL: ÍNDICE DE FALAS -->

@@ -1341,6 +1341,193 @@ const UIController = {
         </div>
       `;
     }).join('');
+  },
+
+  async renderCaderno(selectedSpeechIdx = null) {
+    // 1. Carregar notas livres
+    const freeNotesEl = Utils.$('cadernoFreeNotes');
+    const wordCountEl = Utils.$('cadernoWordCount');
+    if (freeNotesEl) {
+      const savedNotes = StorageManager.getActorNotes();
+      freeNotesEl.value = savedNotes;
+      if (wordCountEl) {
+        const words = savedNotes.trim() ? savedNotes.trim().split(/\s+/).length : 0;
+        wordCountEl.textContent = `${words} palavra${words === 1 ? '' : 's'}`;
+      }
+    }
+
+    // 2. Preencher seletor de falas
+    const speechSelect = Utils.$('cadernoSpeechSelect');
+    if (speechSelect) {
+      let optionsHtml = '<option value="">-- Nenhuma fala selecionada (Escrever apenas livremente) --</option>';
+      AppState.speeches.forEach((s, idx) => {
+        const snippet = s.spokenText.length > 50 ? s.spokenText.slice(0, 48) + '...' : s.spokenText;
+        optionsHtml += `<option value="${idx}">Fala #${idx + 1} [${Utils.escapeHtml(s.who)}]: ${Utils.escapeHtml(snippet)}</option>`;
+      });
+      speechSelect.innerHTML = optionsHtml;
+
+      const targetIdx = (selectedSpeechIdx !== null && selectedSpeechIdx !== undefined && selectedSpeechIdx !== '')
+        ? String(selectedSpeechIdx)
+        : '';
+
+      speechSelect.value = targetIdx;
+      if (targetIdx !== '') {
+        await this.renderCadernoSpeechDetail(parseInt(targetIdx, 10));
+      } else {
+        const detailContainer = Utils.$('cadernoSpeechDetailContainer');
+        if (detailContainer) detailContainer.hidden = true;
+      }
+    }
+
+    // 3. Atualizar alvo de gravacao
+    this.updateCadernoRecordTarget();
+
+    // 4. Renderizar lista de gravacoes
+    await this.renderCadernoRecordings();
+  },
+
+  updateCadernoRecordTarget() {
+    const targetBadge = Utils.$('cadernoRecordTargetBadge');
+    const speechSelect = Utils.$('cadernoSpeechSelect');
+    if (!targetBadge) return;
+
+    const val = speechSelect ? speechSelect.value : '';
+    if (val !== '' && AppState.speeches[parseInt(val, 10)]) {
+      const sp = AppState.speeches[parseInt(val, 10)];
+      targetBadge.textContent = `Fala #${parseInt(val, 10) + 1} (${sp.who})`;
+    } else if (AppState.currentIndex >= 0 && AppState.speeches[AppState.currentIndex]) {
+      const cur = AppState.speeches[AppState.currentIndex];
+      targetBadge.textContent = `Fala #${AppState.currentIndex + 1} (${cur.who})`;
+    } else {
+      targetBadge.textContent = 'Ensaio Livre da Peca';
+    }
+  },
+
+  async renderCadernoSpeechDetail(speechIdx) {
+    const detailContainer = Utils.$('cadernoSpeechDetailContainer');
+    if (!detailContainer) return;
+
+    if (speechIdx === null || speechIdx === undefined || isNaN(speechIdx) || !AppState.speeches[speechIdx]) {
+      detailContainer.hidden = true;
+      return;
+    }
+
+    const speech = AppState.speeches[speechIdx];
+    const isDefault = ScriptParser.isDefaultPlay(AppState.activeScriptText);
+    const existingNote = StorageManager.getSpeechNote(speechIdx);
+    const existingIntent = StorageManager.getSpeechIntent(speechIdx, isDefault);
+    const hasAudio = await StorageManager.getCastAudio(speechIdx);
+
+    detailContainer.innerHTML = `
+      <div class="caderno-quote-box">
+        <div class="caderno-quote-who">${Utils.escapeHtml(speech.who)} · Fala #${speechIdx + 1}</div>
+        <div class="caderno-quote-text">"${Utils.escapeHtml(speech.spokenText)}"</div>
+      </div>
+
+      <div class="caderno-field-group">
+        <label for="cadernoSpeechNote">Anotacao desta fala (intencao cenica, subtexto, pausas):</label>
+        <textarea id="cadernoSpeechNote" class="form-control" rows="3" placeholder="Ex: Pausa dramatica antes de responder, olhar firme...">${Utils.escapeHtml(existingNote)}</textarea>
+      </div>
+
+      <div class="caderno-field-group">
+        <label for="cadernoSpeechIntent">Acao Dramatica / Intencao de Stanislavski:</label>
+        <input type="text" id="cadernoSpeechIntent" class="form-control" value="${Utils.escapeHtml(existingIntent)}" placeholder="Ex: Intimidar para salvar o pai">
+      </div>
+
+      <div class="caderno-speech-actions">
+        ${hasAudio ? `
+          <button type="button" class="btn btn-audio btn-play-speech-audio" id="btnCadernoPlaySpeechAudio" data-idx="${speechIdx}">
+            ${Icons.get('volume', { size: 15 })}
+            <span>Ouvir Gravacao</span>
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnCadernoDeleteSpeechAudio" data-idx="${speechIdx}" title="Excluir gravacao">
+            ${Icons.get('trash', { size: 15 })}
+            <span>Excluir Audio</span>
+          </button>
+        ` : `
+          <span style="font-size:0.8rem; color:var(--fg-muted);">Nenhum audio gravado nesta fala.</span>
+        `}
+        <button type="button" class="btn btn-primary" id="btnCadernoJumpToStage" data-idx="${speechIdx}" style="margin-left:auto;">
+          ${Icons.get('theater', { size: 15 })}
+          <span>Ensaiar no Palco</span>
+        </button>
+      </div>
+    `;
+
+    detailContainer.hidden = false;
+  },
+
+  async renderCadernoRecordings() {
+    const listEl = Utils.$('cadernoRecordingsList');
+    const badgeEl = Utils.$('cadernoRecordingsCountBadge');
+    if (!listEl) return;
+
+    try {
+      const records = await StorageManager.getAllRecordings();
+      const currentPlayId = AppState.getPlayId();
+      const playRecordings = records.filter(r => {
+        if (!r) return false;
+        if (r.playId) return r.playId === currentPlayId;
+        return currentPlayId === 'default';
+      });
+
+      if (badgeEl) {
+        badgeEl.textContent = String(playRecordings.length);
+      }
+
+      if (playRecordings.length === 0) {
+        listEl.innerHTML = `
+          <div class="caderno-empty-state">
+            <div class="caderno-empty-icon">${Icons.get('mic', { size: 28 })}</div>
+            <div class="caderno-empty-title">Nenhuma gravacao nesta peca</div>
+            <p class="caderno-empty-desc">
+              Grave sua voz usando o gravador acima ou durante o ensaio das deixas no Palco.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      playRecordings.sort((a, b) => {
+        if (typeof a.speechIdx === 'number' && typeof b.speechIdx === 'number') {
+          return a.speechIdx - b.speechIdx;
+        }
+        return (b.timestamp || 0) - (a.timestamp || 0);
+      });
+
+      listEl.innerHTML = playRecordings.map(item => {
+        const hasIdx = typeof item.speechIdx === 'number' && AppState.speeches[item.speechIdx];
+        const title = hasIdx
+          ? `Fala #${item.speechIdx + 1} · ${Utils.escapeHtml(AppState.speeches[item.speechIdx].who)}`
+          : 'Gravacao de Ensaio Livre';
+        const snippet = hasIdx
+          ? `"${Utils.escapeHtml(AppState.speeches[item.speechIdx].spokenText.slice(0, 70))}${AppState.speeches[item.speechIdx].spokenText.length > 70 ? '...' : ''}"`
+          : `Gravado em ${new Date(item.timestamp || Date.now()).toLocaleDateString('pt-BR')}`;
+
+        return `
+          <div class="caderno-audio-item" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${item.speechIdx !== undefined ? item.speechIdx : ''}">
+            <div class="caderno-audio-info">
+              <div class="caderno-audio-title">
+                ${Icons.get('mic', { size: 14 })}
+                <span>${title}</span>
+              </div>
+              <div class="caderno-audio-snippet">${snippet}</div>
+            </div>
+            <div class="caderno-audio-actions">
+              <button type="button" class="btn-play-caderno-audio" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${item.speechIdx !== undefined ? item.speechIdx : ''}">
+                ${Icons.get('play', { size: 14 })}
+                <span>Ouvir</span>
+              </button>
+              <button type="button" class="btn-delete-caderno-audio" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${item.speechIdx !== undefined ? item.speechIdx : ''}" title="Excluir gravacao" aria-label="Excluir">
+                ${Icons.get('trash', { size: 14 })}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      listEl.innerHTML = '<p style="color:var(--fg-muted); font-size:0.85rem;">Nao foi possivel carregar as gravacoes salvas.</p>';
+    }
   }
 };
 

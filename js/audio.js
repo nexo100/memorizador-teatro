@@ -28,6 +28,16 @@
             }
           });
         }
+        const cadernoBtns = document.querySelectorAll('.btn-play-caderno-audio');
+        if (cadernoBtns && cadernoBtns.forEach) {
+          cadernoBtns.forEach(b => {
+            if (!isPlaying) {
+              const playIcon = (typeof Icons !== 'undefined') ? Icons.get('play', { size: 14 }) : '';
+              b.innerHTML = `${playIcon} <span>Ouvir</span>`;
+              b.classList.remove('is-playing');
+            }
+          });
+        }
       },
 
       loadVoices(onVoicesLoaded) {
@@ -60,6 +70,51 @@
           if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
         } catch (e) {}
         this.activeUtterance = null;
+      },
+
+      async playCustomBlob(blob, callbacks = {}) {
+        if (this.isPlaying) {
+          this.stopAllAudio();
+          if (callbacks.onStop) callbacks.onStop();
+          return false;
+        }
+        this.stopAllAudio();
+        this.isPlaying = true;
+        this.updateAudioButtonsUI(true);
+        try {
+          const audioUrl = URL.createObjectURL(blob);
+          this.activeAudioUrl = audioUrl;
+          const audio = new Audio(audioUrl);
+          this.activeAudioPlayer = audio;
+          audio.onended = () => {
+            this.isPlaying = false;
+            this.updateAudioButtonsUI(false);
+            if (this.activeAudioUrl) {
+              try { URL.revokeObjectURL(this.activeAudioUrl); } catch (e) {}
+              this.activeAudioUrl = null;
+            }
+            this.activeAudioPlayer = null;
+            if (callbacks.onEnd) callbacks.onEnd();
+          };
+          audio.onerror = () => {
+            this.isPlaying = false;
+            this.updateAudioButtonsUI(false);
+            if (this.activeAudioUrl) {
+              try { URL.revokeObjectURL(this.activeAudioUrl); } catch (e) {}
+              this.activeAudioUrl = null;
+            }
+            this.activeAudioPlayer = null;
+            if (callbacks.onError) callbacks.onError();
+          };
+          await audio.play();
+          if (callbacks.onStart) callbacks.onStart();
+          return true;
+        } catch (err) {
+          this.isPlaying = false;
+          this.updateAudioButtonsUI(false);
+          if (callbacks.onError) callbacks.onError(err);
+          return false;
+        }
       },
 
       getEffectiveTempoRate(baseRate, tempo) {

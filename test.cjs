@@ -966,7 +966,38 @@ Meu príncipe, estais bem?
   assert.strictEqual(domStore['slotBeatValue'].textContent, 'Cena Completa', 'slotBeatValue deve refletir o corte');
   console.log('✅ 46. Arquitetura App Shell: Bottom Tab Bar, Mission Control de 4 slots e Bottom Sheets validados');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 46 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 47: Caderno de Ensaio (Anotações Livres, Vinculação Opcional a Falas e Gravações de Voz)
+  assert(indexHtml.includes('id="tabBtnCaderno"'), 'index.html deve conter a aba tabBtnCaderno');
+  assert(indexHtml.includes('id="modalCaderno"'), 'index.html deve conter o modal modalCaderno');
+  assert(indexHtml.includes('id="cadernoFreeNotes"'), 'index.html deve conter o campo de anotações livres cadernoFreeNotes');
+  assert(indexHtml.includes('id="cadernoSpeechSelect"'), 'index.html deve conter o seletor de falas cadernoSpeechSelect');
+  assert(indexHtml.includes('id="btnRecordCaderno"'), 'index.html deve conter o gravador btnRecordCaderno');
+  assert(indexHtml.includes('id="cadernoRecordingsList"'), 'index.html deve conter a lista cadernoRecordingsList');
+
+  // Testar abertura e fechamento do Caderno
+  AppController.handleActionClick('tabBtnCaderno');
+  assert.strictEqual(domStore['modalCaderno'].hidden, false, 'tabBtnCaderno deve abrir modalCaderno');
+  AppController.handleActionClick('btnCloseCaderno');
+  assert.strictEqual(domStore['modalCaderno'].hidden, true, 'btnCloseCaderno deve fechar modalCaderno');
+
+  // Testar atalho do Palco para o Caderno
+  AppController.handleActionClick('btnStageCaderno');
+  assert.strictEqual(domStore['modalCaderno'].hidden, false, 'btnStageCaderno deve abrir modalCaderno a partir do palco');
+  AppController.handleActionClick('tabBtnCamarim');
+  assert.strictEqual(domStore['modalCaderno'].hidden, true, 'tabBtnCamarim deve fechar modalCaderno');
+
+  // Testar persistência de notas livres e de falas específicas
+  StorageManager.setActorNotes('Subtexto de Sérgio: frieza e ressentimento contido', 'default');
+  assert.strictEqual(StorageManager.getActorNotes('default'), 'Subtexto de Sérgio: frieza e ressentimento contido', 'Notas do ator devem ser recuperadas com sucesso');
+  StorageManager.setSpeechNote(0, 'Pausar 2 segundos antes de dizer papai', 'default');
+  assert.strictEqual(StorageManager.getSpeechNote(0, 'default'), 'Pausar 2 segundos antes de dizer papai', 'Notas de fala específica devem ser salvas e recuperadas');
+
+  // Testar renderização do Caderno com as notas salvas
+  await UIController.renderCaderno();
+  assert.strictEqual(domStore['cadernoFreeNotes'].value, 'Subtexto de Sérgio: frieza e ressentimento contido', 'renderCaderno deve carregar as notas salvas no textarea');
+  console.log('✅ 47. Caderno de Ensaio: anotações livres, vinculação opcional a falas e central de voz validados');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 47 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

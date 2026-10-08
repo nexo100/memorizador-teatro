@@ -2476,3 +2476,355 @@ textarea.form-control {
   color: var(--accent);
   font-weight: 800;
 }
+
+/* ==========================================================================
+   CADERNO DE ENSAIO (ANOTACOES LIVRES, FALAS & GRAVACOES DE VOZ)
+   ========================================================================== */
+.caderno-tabs-nav {
+  display: flex;
+  gap: 8px;
+  padding: 12px 18px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.caderno-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--fg-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+}
+.caderno-tab-btn:hover {
+  color: var(--fg);
+  background: var(--surface-elevated);
+}
+.caderno-tab-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.caderno-rec-count-badge {
+  background: var(--surface-elevated);
+  color: var(--fg-muted);
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+.caderno-tab-btn.active .caderno-rec-count-badge {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.caderno-modal-body {
+  padding: 16px 18px 28px;
+  overflow-y: auto;
+  max-height: calc(85vh - 120px);
+}
+.caderno-subtab-pane[hidden] {
+  display: none !important;
+}
+
+.caderno-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+.caderno-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.caderno-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--fg);
+}
+.caderno-save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #10b981;
+  font-weight: 700;
+}
+.caderno-card-desc {
+  font-size: 0.82rem;
+  color: var(--fg-muted);
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+.caderno-textarea {
+  width: 100%;
+  min-height: 180px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  font-family: inherit;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.caderno-textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.caderno-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
+.caderno-meta-text {
+  font-weight: 600;
+}
+.btn-caderno-clear {
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 2px 6px;
+  transition: color 0.15s ease;
+}
+.btn-caderno-clear:hover {
+  color: #ef4444;
+}
+
+/* Detalhe da Fala Vinculada */
+.caderno-speech-detail {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.caderno-quote-box {
+  background: var(--surface-elevated);
+  border-left: 3px solid var(--accent);
+  padding: 12px 14px;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 14px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.caderno-quote-who {
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+}
+.caderno-quote-text {
+  font-style: italic;
+  color: var(--fg);
+}
+.caderno-field-group {
+  margin-bottom: 12px;
+}
+.caderno-field-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 4px;
+  display: block;
+}
+.caderno-field-group input,
+.caderno-field-group textarea {
+  width: 100%;
+}
+.caderno-speech-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  align-items: center;
+}
+
+/* Gravador Rápido */
+.caderno-record-studio-card {
+  text-align: center;
+}
+.caderno-record-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0 6px;
+}
+.caderno-record-target-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+.caderno-record-target-label {
+  color: var(--fg-muted);
+}
+.caderno-record-target-badge {
+  background: var(--surface-elevated);
+  color: var(--accent);
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.btn-caderno-big-record {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  border-radius: 999px;
+  min-width: 230px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+}
+.btn-caderno-big-record.is-recording {
+  background: #ef4444 !important;
+  border-color: #dc2626 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Lista de Gravações */
+.caderno-recordings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.caderno-audio-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: all 0.15s ease;
+}
+.caderno-audio-item:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border);
+}
+.caderno-audio-info {
+  flex: 1;
+  min-width: 0;
+}
+.caderno-audio-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.caderno-audio-snippet {
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 3px;
+}
+.caderno-audio-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-play-caderno-audio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  background: var(--accent);
+  color: var(--accent-text);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+.btn-play-caderno-audio:hover {
+  filter: brightness(1.1);
+}
+.btn-play-caderno-audio.is-playing {
+  background: #ef4444;
+  color: #fff;
+}
+.btn-delete-caderno-audio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+.btn-delete-caderno-audio:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+.caderno-empty-state {
+  padding: 36px 16px;
+  text-align: center;
+  color: var(--fg-muted);
+}
+.caderno-empty-icon {
+  margin-bottom: 10px;
+  color: var(--border);
+  display: inline-flex;
+}
+.caderno-empty-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--fg);
+  margin-bottom: 6px;
+}
+.caderno-empty-desc {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 320px;
+  margin: 0 auto;
+}
