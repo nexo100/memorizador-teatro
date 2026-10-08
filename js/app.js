@@ -160,6 +160,12 @@
       },
 
       enterStage(mode) {
+        const hasActor = AppState.hasSavedActor || (typeof localStorage !== 'undefined' && !!localStorage.getItem('memorizador_actor'));
+        if (!hasActor && !mode) {
+          UIController.openModal('sheetActor');
+          UIController.showStatus('Escolha seu personagem antes de entrar no palco!');
+          return;
+        }
         if (mode) {
           AppState.rehearsalMode = mode;
           StorageManager.saveSettings(AppState);
@@ -793,7 +799,7 @@
 
       bindEvents() {
         document.addEventListener('click', async (e) => {
-          const actorBtn = e.target.closest('.char-tab');
+          const actorBtn = e.target.closest('.char-tab, .welcome-actor-btn');
           if (actorBtn) {
             const actor = actorBtn.dataset.actor;
             if (actor) {
@@ -907,11 +913,26 @@
             if (AudioEngine.isRecordingNow) {
               AudioEngine.stopCastRecording();
             } else {
+              const targetSelect = Utils.$('cadernoRecordTargetSelect');
               const speechSelect = Utils.$('cadernoSpeechSelect');
-              let targetIdx = speechSelect && speechSelect.value !== ''
-                ? parseInt(speechSelect.value, 10)
-                : AppState.currentIndex;
-              if (isNaN(targetIdx) || targetIdx < 0) targetIdx = 0;
+              let targetIdx = 'general';
+
+              if (targetSelect && targetSelect.value) {
+                if (targetSelect.value === 'general') {
+                  targetIdx = `general_${Date.now()}`;
+                } else if (targetSelect.value === 'full_scene') {
+                  targetIdx = `full_scene_${Date.now()}`;
+                } else if (targetSelect.value === 'current') {
+                  targetIdx = AppState.currentIndex >= 0 ? AppState.currentIndex : 0;
+                } else {
+                  const p = parseInt(targetSelect.value, 10);
+                  targetIdx = !isNaN(p) ? p : `general_${Date.now()}`;
+                }
+              } else if (speechSelect && speechSelect.value !== '') {
+                targetIdx = parseInt(speechSelect.value, 10);
+              } else {
+                targetIdx = AppState.currentIndex >= 0 ? AppState.currentIndex : 0;
+              }
 
               btnRecordCaderno.classList.add('is-recording');
               const txtEl = Utils.$('btnRecordCadernoText');
@@ -925,9 +946,8 @@
                   btnRecordCaderno.classList.remove('is-recording');
                   if (txtEl) txtEl.textContent = 'Gravar Voz no Ensaio';
                   await UIController.renderCadernoRecordings();
-                  const curVal = speechSelect ? speechSelect.value : '';
-                  if (curVal !== '') {
-                    await UIController.renderCadernoSpeechDetail(parseInt(curVal, 10));
+                  if (typeof targetIdx === 'number') {
+                    await UIController.renderCadernoSpeechDetail(targetIdx);
                   }
                 },
                 onError: () => {
@@ -1107,6 +1127,27 @@
           };
         }
 
+        if (Utils.$('selectHighlightActor')) {
+          Utils.$('selectHighlightActor').onchange = () => {
+            const beat = Utils.$('selectBeatFullScript')?.value || 'all';
+            const query = Utils.$('inputSearchScript')?.value || '';
+            UIController.renderFullScriptModal(beat, query);
+          };
+        }
+
+        if (Utils.$('btnToggleHighlighter')) {
+          Utils.$('btnToggleHighlighter').onclick = () => {
+            UIController.isHighlighterActive = !UIController.isHighlighterActive;
+            const btn = Utils.$('btnToggleHighlighter');
+            if (btn) {
+              btn.classList.toggle('active', UIController.isHighlighterActive);
+              const txt = btn.querySelector('span');
+              if (txt) txt.textContent = UIController.isHighlighterActive ? 'Grifando' : 'Grifar';
+            }
+            UIController.showStatus(UIController.isHighlighterActive ? 'Marca-texto ativo: toque em qualquer fala para grifar.' : 'Marca-texto desativado.');
+          };
+        }
+
         // Seletor de método de memorização no Camarim
         const studyCards = Utils.$('studyMethodsGrid')?.querySelectorAll('.study-method-card');
         studyCards?.forEach(card => {
@@ -1278,6 +1319,7 @@
       bindKeyboard() {
         document.addEventListener('keydown', (e) => {
           if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) return;
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
 
           const openModalId = ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno'].find(id => Utils.$(id) && !Utils.$(id).hidden);
 
@@ -1316,6 +1358,7 @@
           }
 
           if (e.key === 'i' || e.key === 'I') {
+            if (openModalId && openModalId !== 'modalIndex') return;
             e.preventDefault();
             const modalIndex = Utils.$('modalIndex');
             if (modalIndex) {
@@ -1330,6 +1373,7 @@
           }
 
           if (e.key === 'c' || e.key === 'C') {
+            if (openModalId && openModalId !== 'modalCaderno') return;
             e.preventDefault();
             const modalCaderno = Utils.$('modalCaderno');
             if (modalCaderno) {

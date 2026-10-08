@@ -69,6 +69,34 @@ const UIController = {
     }
 
     const hasActor = AppState.hasSavedActor || (typeof localStorage !== 'undefined' && !!localStorage.getItem('memorizador_actor'));
+    const welcomeEl = Utils.$('camarimWelcomeContainer');
+    if (welcomeEl) {
+      if (!hasActor) {
+        welcomeEl.innerHTML = `
+          <div class="camarim-welcome-card" id="camarimWelcomeCard">
+            <div class="welcome-card-header">
+              <div class="welcome-badge">
+                ${Icons.get('sparkles', { size: 14 })}
+                <span>PRIMEIRO PASSO</span>
+              </div>
+              <h3 class="welcome-card-title">Qual personagem você vai interpretar?</h3>
+              <p class="welcome-card-desc">Escolha quem você é nesta cena para organizar suas deixas e o ensaio:</p>
+            </div>
+            <div class="welcome-actors-row">
+              ${AppState.characters.map(c => `
+                <button type="button" class="btn btn-secondary welcome-actor-btn" data-actor="${Utils.escapeHtml(c)}">
+                  ${Icons.get('user', { size: 14 })}
+                  <span>${Utils.escapeHtml(c)}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        welcomeEl.innerHTML = '';
+      }
+    }
+
     const tabsContainer = Utils.$('characterTabs');
     if (tabsContainer) {
       tabsContainer.innerHTML = AppState.characters.map(c => {
@@ -148,19 +176,25 @@ const UIController = {
   },
 
   updateMissionSlots() {
+    const hasActor = AppState.hasSavedActor || (typeof localStorage !== 'undefined' && !!localStorage.getItem('memorizador_actor'));
+
     // 1. Slot Personagem / Papel
     const slotActorVal = Utils.$('slotActorValue');
     const slotActorSub = Utils.$('slotActorSub');
     if (slotActorVal && slotActorSub) {
       if (AppState.selectedActor) {
         slotActorVal.textContent = AppState.selectedActor;
-        const total = AppState.speeches.filter(s => s.who === AppState.selectedActor).length;
-        const mastered = AppState.speeches.map((s, i) => s.who === AppState.selectedActor && (AppState.masteryLevels[i] || 0) >= 3 ? 1 : 0).reduce((a, b) => a + b, 0);
-        const pct = total > 0 ? Math.round((100 * mastered) / total) : 0;
-        slotActorSub.textContent = `${mastered} de ${total} falas dominadas (${pct}%)`;
+        if (hasActor) {
+          const total = AppState.speeches.filter(s => s.who === AppState.selectedActor).length;
+          const mastered = AppState.speeches.map((s, i) => s.who === AppState.selectedActor && (AppState.masteryLevels[i] || 0) >= 3 ? 1 : 0).reduce((a, b) => a + b, 0);
+          const pct = total > 0 ? Math.round((100 * mastered) / total) : 0;
+          slotActorSub.textContent = `${mastered} de ${total} falas dominadas (${pct}%)`;
+        } else {
+          slotActorSub.textContent = 'Toque para confirmar quem você interpreta';
+        }
       } else {
         slotActorVal.textContent = 'Escolha seu Papel';
-        slotActorSub.textContent = 'Toque para selecionar personagem';
+        slotActorSub.textContent = 'Toque para selecionar quem você interpreta';
       }
     }
 
@@ -1064,13 +1098,46 @@ const UIController = {
   },
 
   scriptFontSizeLevel: 0,
+  isHighlighterActive: false,
+
   adjustScriptFontSize(delta) {
     this.scriptFontSizeLevel = Math.max(-2, Math.min(3, this.scriptFontSizeLevel + delta));
     const container = Utils.$('fullScriptContainer');
+    const badge = Utils.$('scriptFontSizeBadge');
+    const percentages = ['80%', '90%', '100%', '115%', '130%', '150%'];
+    const sizes = ['0.86rem', '0.94rem', '1.05rem', '1.20rem', '1.36rem', '1.55rem'];
+    const currentIdx = 2 + this.scriptFontSizeLevel;
     if (container) {
-      const sizes = ['0.88rem', '0.96rem', '1.05rem', '1.18rem', '1.32rem', '1.45rem'];
-      const currentIdx = 2 + this.scriptFontSizeLevel;
       container.style.fontSize = sizes[currentIdx] || '1.05rem';
+    }
+    if (badge) {
+      badge.textContent = percentages[currentIdx] || '100%';
+    }
+  },
+
+  getScriptHighlights() {
+    try {
+      const pId = AppState.getPlayId();
+      const raw = localStorage.getItem(`memorizador_highlights_${pId}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  toggleScriptHighlight(speechIdx) {
+    try {
+      const pId = AppState.getPlayId();
+      let list = this.getScriptHighlights();
+      if (list.includes(speechIdx)) {
+        list = list.filter(i => i !== speechIdx);
+      } else {
+        list.push(speechIdx);
+      }
+      localStorage.setItem(`memorizador_highlights_${pId}`, JSON.stringify(list));
+      return list.includes(speechIdx);
+    } catch (e) {
+      return false;
     }
   },
 
@@ -1100,6 +1167,24 @@ const UIController = {
       }
     }
 
+    // Seletor de foco / destaque de personagem
+    const highlightActorSelect = Utils.$('selectHighlightActor');
+    const focusedActor = highlightActorSelect ? highlightActorSelect.value : 'all';
+    if (highlightActorSelect && (!highlightActorSelect.children || highlightActorSelect.children.length <= 1)) {
+      let actHtml = `<option value="all">Todos os Personagens</option>`;
+      AppState.characters.forEach(c => {
+        actHtml += `<option value="${Utils.escapeHtml(c)}">Destacar: ${Utils.escapeHtml(c)}</option>`;
+      });
+      highlightActorSelect.innerHTML = actHtml;
+      highlightActorSelect.value = focusedActor || 'all';
+    }
+
+    if (focusedActor && focusedActor !== 'all') {
+      container.classList.add('has-actor-focus');
+    } else {
+      container.classList.remove('has-actor-focus');
+    }
+
     let start = 0;
     let end = AppState.speeches.length - 1;
     if (filterBeat !== 'all') {
@@ -1111,6 +1196,7 @@ const UIController = {
     }
 
     const query = (searchQuery || '').trim().toLowerCase();
+    const highlights = this.getScriptHighlights();
     let matchedCount = 0;
     let html = '';
 
@@ -1120,17 +1206,18 @@ const UIController = {
         <header class="dramaturgy-book-cover">
           <div class="dramaturgy-badge">
             ${Icons.get('theater', { size: 14 })}
-            <span>TEXTO DRAMATÚRGICO INTEGRAL</span>
+            <span>TEXTO DRAMATÚRGICO INTEGRAL · LEITURA CONTÍNUA</span>
           </div>
           <h1 class="dramaturgy-title">${Utils.escapeHtml(playTitle)}</h1>
           <div class="dramaturgy-cast-summary">
-            <span class="dramaturgy-cast-label">Personagens em Cena</span>
+            <span class="dramaturgy-cast-label">Cores do Elenco em Cena</span>
             <div class="dramaturgy-cast-pills">
-              ${AppState.characters.map(c => {
+              ${AppState.characters.map((c, cIdx) => {
                 const isMine = c === AppState.selectedActor;
+                const colorCls = `char-color-${cIdx % 6}`;
                 return `
                   <span class="dramaturgy-character-pill ${isMine ? 'active-role' : ''}">
-                    ${isMine ? Icons.get('check', { size: 12, strokeWidth: 2.5 }) : Icons.get('user', { size: 12 })}
+                    <span class="${colorCls}" style="font-weight:900;">•</span>
                     <span>${Utils.escapeHtml(c)}${isMine ? ' (Seu Papel)' : ''}</span>
                   </span>
                 `;
@@ -1157,6 +1244,10 @@ const UIController = {
 
       matchedCount++;
       const isMine = sp.who === AppState.selectedActor;
+      const isHighlighted = highlights.includes(i);
+      const actorIdx = AppState.characters.indexOf(sp.who);
+      const colorClass = `char-color-${actorIdx >= 0 ? (actorIdx % 6) : 0}`;
+      const isFocused = (focusedActor === 'all' || focusedActor === sp.who);
 
       // Cabeçalho de Cena / Beat dramático
       if (!query && beatStartMap[i]) {
@@ -1175,39 +1266,31 @@ const UIController = {
           html += `
             <div class="theatrical-stage-direction">
               <span class="direction-marker">${Icons.get('clapper', { size: 13 })}</span>
-              <p class="direction-text"><em>${Utils.escapeHtml(d)}</em></p>
+              <p class="direction-text"><em>[${Utils.escapeHtml(d)}]</em></p>
             </div>
           `;
         });
       }
 
-      // Formatar fala com rubricas parentéticas destacadas
+      // Formatar fala com rubricas parentéticas elegantes
       const formattedSegments = sp.segments.map(s => {
         if (s.type === 'rubric') {
-          return `<span class="theatrical-parenthetical">(${Utils.escapeHtml(s.text)})</span>`;
+          return `<span class="script-rubric-inline">(${Utils.escapeHtml(s.text)})</span>`;
         }
-        return `<span class="theatrical-spoken-words">${Utils.escapeHtml(s.text)}</span>`;
+        return `<span class="script-spoken-words">${Utils.escapeHtml(s.text)}</span>`;
       }).join(' ');
 
+      // Parágrafo contínuo dramatúrgico (estilo livro / ePub / PDF)
       html += `
-        <article class="script-read-item theatrical-dialogue ${isMine ? 'is-mine' : ''}" data-idx="${i}">
-          <div class="theatrical-speaker-row">
-            <div class="theatrical-speaker-info">
-              <span class="theatrical-speaker-name ${isMine ? 'highlight' : ''}">${Utils.escapeHtml(sp.who)}</span>
-              ${isMine ? `<span class="theatrical-role-badge">${Icons.get('user', { size: 11 })} Seu Papel</span>` : ''}
-            </div>
-            <div class="theatrical-speech-actions">
-              <span class="theatrical-speech-num">#${i + 1}</span>
-              <button class="btn-read-jump" type="button" data-jump="${i}" title="Iniciar ensaio a partir da fala #${i + 1}">
-                ${Icons.get('play', { size: 12 })}
-                <span>Ensaiar</span>
-              </button>
-            </div>
-          </div>
-          <div class="theatrical-speech-text">
-            ${formattedSegments}
-          </div>
-        </article>
+        <div class="script-read-item script-flow-paragraph ${isMine ? 'is-my-role' : ''} ${isHighlighted ? 'is-highlighted' : ''} ${isFocused ? 'is-focused-actor' : 'is-dimmed'}" data-idx="${i}">
+          <button class="btn-read-jump script-marginalia-jump" type="button" data-jump="${i}" title="Iniciar ensaio a partir da fala #${i + 1}">
+            #${i + 1} ${Icons.get('play', { size: 10 })}
+          </button>
+          <span class="script-character-lead ${colorClass}">
+            <strong>${Utils.escapeHtml(sp.who)}</strong>${isMine ? '<span class="script-mine-dot" title="Seu personagem">•</span>' : ''}:
+          </span>
+          <span class="script-dialogue-text">${formattedSegments}</span>
+        </div>
       `;
     }
 
@@ -1222,16 +1305,33 @@ const UIController = {
 
     container.innerHTML = html;
     if (statsEl) {
-      statsEl.textContent = `${matchedCount} de ${AppState.speeches.length} falas · ${AppState.characters.length} personagens`;
+      statsEl.textContent = `${matchedCount} de ${AppState.speeches.length} falas · Leitura de livro contínua`;
     }
 
+    // Ações de salto ao palco
     const jumps = container.querySelectorAll('.btn-read-jump');
     jumps.forEach(btn => {
-      btn.onclick = () => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
         const targetIdx = parseInt(btn.dataset.jump, 10);
         if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = true;
         AppController.goToSpeech(targetIdx);
         AppController.enterStage();
+      };
+    });
+
+    // Clique no parágrafo para grifar quando o marca-texto estiver ativo
+    const paragraphs = container.querySelectorAll('.script-flow-paragraph');
+    paragraphs.forEach(p => {
+      p.onclick = (e) => {
+        if (e.target.closest('.btn-read-jump')) return;
+        const idx = parseInt(p.dataset.idx, 10);
+        if (isNaN(idx)) return;
+        if (this.isHighlighterActive) {
+          const isNow = this.toggleScriptHighlight(idx);
+          p.classList.toggle('is-highlighted', isNow);
+          Utils.triggerHaptic('tap');
+        }
       };
     });
   },
@@ -1287,11 +1387,12 @@ const UIController = {
         if (!tab || !tab.dataset) return;
         const f = tab.dataset.filter;
         let count = totalCount;
-        let label = 'Todas as falas';
-        if (f === 'mine') { count = mineCount; label = 'Minhas falas'; }
-        else if (f === 'weak') { count = weakCount; label = 'Em aprendizado'; }
-        else if (f === 'recorded') { count = recCount; label = 'Com voz gravada'; }
+        let label = 'Todas';
+        if (f === 'mine') { count = mineCount; label = 'Minhas'; }
+        else if (f === 'weak') { count = weakCount; label = 'Dúvidas'; }
+        else if (f === 'recorded') { count = recCount; label = 'Áudios'; }
 
+        tab.classList.toggle('active', f === (AppState.currentFilter || 'all'));
         tab.innerHTML = `<span>${label}</span><span class="filter-tab-count">${count}</span>`;
       });
     }
@@ -1379,7 +1480,33 @@ const UIController = {
       }
     }
 
-    // 3. Atualizar alvo de gravacao
+    // 3. Atualizar e popular seletor de alvo de gravacao
+    const targetSelect = Utils.$('cadernoRecordTargetSelect');
+    if (targetSelect) {
+      const curSelected = targetSelect.value || (selectedSpeechIdx !== null && selectedSpeechIdx !== undefined ? String(selectedSpeechIdx) : 'general');
+      let targetOpts = `
+        <option value="general">Gravação Geral de Ensaio (Notas / Tom de Voz)</option>
+        <option value="full_scene">Texto Completo / Corrida Geral de Cena</option>
+      `;
+      if (AppState.speeches[AppState.currentIndex]) {
+        const curSp = AppState.speeches[AppState.currentIndex];
+        targetOpts += `<option value="current">Fala Atual no Palco (#${AppState.currentIndex + 1} · ${Utils.escapeHtml(curSp.who)})</option>`;
+      }
+      AppState.speeches.forEach((s, idx) => {
+        const snip = s.spokenText.length > 42 ? s.spokenText.slice(0, 40) + '...' : s.spokenText;
+        targetOpts += `<option value="${idx}">Fala #${idx + 1} (${Utils.escapeHtml(s.who)}): "${Utils.escapeHtml(snip)}"</option>`;
+      });
+      targetSelect.innerHTML = targetOpts;
+      if (selectedSpeechIdx !== null && selectedSpeechIdx !== undefined && selectedSpeechIdx !== '') {
+        targetSelect.value = String(selectedSpeechIdx);
+      } else if (curSelected) {
+        targetSelect.value = curSelected;
+      }
+      targetSelect.onchange = () => {
+        this.updateCadernoRecordTarget();
+      };
+    }
+
     this.updateCadernoRecordTarget();
 
     // 4. Renderizar lista de gravacoes
@@ -1388,18 +1515,23 @@ const UIController = {
 
   updateCadernoRecordTarget() {
     const targetBadge = Utils.$('cadernoRecordTargetBadge');
+    const targetSelect = Utils.$('cadernoRecordTargetSelect');
     const speechSelect = Utils.$('cadernoSpeechSelect');
     if (!targetBadge) return;
 
-    const val = speechSelect ? speechSelect.value : '';
-    if (val !== '' && AppState.speeches[parseInt(val, 10)]) {
+    const val = targetSelect ? targetSelect.value : (speechSelect ? speechSelect.value : '');
+    if (val === 'general') {
+      targetBadge.textContent = 'Gravação Geral de Ensaio';
+    } else if (val === 'full_scene') {
+      targetBadge.textContent = 'Texto Completo / Corrida de Cena';
+    } else if (val === 'current') {
+      const cur = AppState.speeches[AppState.currentIndex];
+      targetBadge.textContent = cur ? `Fala #${AppState.currentIndex + 1} (${cur.who})` : 'Fala Atual';
+    } else if (val !== '' && !isNaN(parseInt(val, 10)) && AppState.speeches[parseInt(val, 10)]) {
       const sp = AppState.speeches[parseInt(val, 10)];
       targetBadge.textContent = `Fala #${parseInt(val, 10) + 1} (${sp.who})`;
-    } else if (AppState.currentIndex >= 0 && AppState.speeches[AppState.currentIndex]) {
-      const cur = AppState.speeches[AppState.currentIndex];
-      targetBadge.textContent = `Fala #${AppState.currentIndex + 1} (${cur.who})`;
     } else {
-      targetBadge.textContent = 'Ensaio Livre da Peca';
+      targetBadge.textContent = 'Gravação Geral de Ensaio';
     }
   },
 
@@ -1496,29 +1628,49 @@ const UIController = {
       });
 
       listEl.innerHTML = playRecordings.map(item => {
-        const hasIdx = typeof item.speechIdx === 'number' && AppState.speeches[item.speechIdx];
-        const title = hasIdx
-          ? `Fala #${item.speechIdx + 1} · ${Utils.escapeHtml(AppState.speeches[item.speechIdx].who)}`
-          : 'Gravacao de Ensaio Livre';
-        const snippet = hasIdx
-          ? `"${Utils.escapeHtml(AppState.speeches[item.speechIdx].spokenText.slice(0, 70))}${AppState.speeches[item.speechIdx].spokenText.length > 70 ? '...' : ''}"`
-          : `Gravado em ${new Date(item.timestamp || Date.now()).toLocaleDateString('pt-BR')}`;
+        const strId = String(item.id || '');
+        const isGeneral = item.speechIdx === 'general' || strId.includes('_general');
+        const isFullScene = item.speechIdx === 'full_scene' || strId.includes('_scene') || strId.includes('_full_scene');
+        const numIdx = typeof item.speechIdx === 'number' ? item.speechIdx : (!isNaN(parseInt(item.speechIdx, 10)) ? parseInt(item.speechIdx, 10) : null);
+        const hasIdx = numIdx !== null && AppState.speeches[numIdx];
+
+        let title = 'Gravação Geral de Ensaio';
+        let badgeText = 'Geral';
+        let snippet = `Gravado em ${new Date(item.timestamp || Date.now()).toLocaleDateString('pt-BR')}`;
+
+        if (isFullScene) {
+          title = 'Texto Completo / Corrida Geral de Cena';
+          badgeText = 'Cena Completa';
+          snippet = `Gravação contínua do ensaio · ${new Date(item.timestamp || Date.now()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        } else if (isGeneral) {
+          title = 'Gravação Geral de Ensaio';
+          badgeText = 'Geral';
+          snippet = `Notas vocais e ritmo · ${new Date(item.timestamp || Date.now()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+        } else if (hasIdx) {
+          const sp = AppState.speeches[numIdx];
+          title = `Fala #${numIdx + 1} · ${Utils.escapeHtml(sp.who)}`;
+          badgeText = sp.who;
+          snippet = `"${Utils.escapeHtml(sp.spokenText.slice(0, 70))}${sp.spokenText.length > 70 ? '...' : ''}"`;
+        }
+
+        const dataIdxVal = numIdx !== null ? numIdx : (isFullScene ? 'full_scene' : 'general');
 
         return `
-          <div class="caderno-audio-item" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${item.speechIdx !== undefined ? item.speechIdx : ''}">
+          <div class="caderno-audio-item" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${dataIdxVal}">
             <div class="caderno-audio-info">
               <div class="caderno-audio-title">
                 ${Icons.get('mic', { size: 14 })}
                 <span>${title}</span>
+                <span class="char-badge active" style="font-size:0.65rem; padding:2px 6px;">${badgeText}</span>
               </div>
               <div class="caderno-audio-snippet">${snippet}</div>
             </div>
             <div class="caderno-audio-actions">
-              <button type="button" class="btn-play-caderno-audio" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${item.speechIdx !== undefined ? item.speechIdx : ''}">
+              <button type="button" class="btn-play-caderno-audio" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${dataIdxVal}">
                 ${Icons.get('play', { size: 14 })}
                 <span>Ouvir</span>
               </button>
-              <button type="button" class="btn-delete-caderno-audio" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${item.speechIdx !== undefined ? item.speechIdx : ''}" title="Excluir gravacao" aria-label="Excluir">
+              <button type="button" class="btn-delete-caderno-audio" data-id="${Utils.escapeHtml(String(item.id))}" data-idx="${dataIdxVal}" title="Excluir gravação" aria-label="Excluir">
                 ${Icons.get('trash', { size: 14 })}
               </button>
             </div>

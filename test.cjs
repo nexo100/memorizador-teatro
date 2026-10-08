@@ -997,7 +997,31 @@ Meu príncipe, estais bem?
   assert.strictEqual(domStore['cadernoFreeNotes'].value, 'Subtexto de Sérgio: frieza e ressentimento contido', 'renderCaderno deve carregar as notas salvas no textarea');
   console.log('✅ 47. Caderno de Ensaio: anotações livres, vinculação opcional a falas e central de voz validados');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 47 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 48: Leitura Dramatúrgica Contínua (ePub/PDF), Seletor de Alvo de Áudio, Marca-Texto e Onboarding
+  assert(indexHtml.includes('id="cadernoRecordTargetSelect"'), 'index.html deve conter seletor de alvo de áudio no caderno');
+  assert(indexHtml.includes('id="camarimWelcomeContainer"'), 'index.html deve conter container de primeiro uso do camarim');
+  assert(indexHtml.includes('id="selectHighlightActor"'), 'index.html deve conter seletor de foco de personagem no roteiro');
+  assert(indexHtml.includes('id="btnToggleHighlighter"'), 'index.html deve conter botão de marca-texto');
+
+  // Testar marca-texto e zoom no Roteiro
+  UIController.adjustScriptFontSize(1);
+  assert.strictEqual(domStore['fullScriptContainer'].style.fontSize, '1.20rem', 'adjustScriptFontSize deve aumentar tamanho da fonte');
+  UIController.adjustScriptFontSize(-1);
+  assert.strictEqual(domStore['fullScriptContainer'].style.fontSize, '1.05rem', 'adjustScriptFontSize deve restaurar tamanho padrão');
+
+  const highlightResult = UIController.toggleScriptHighlight(0);
+  assert.strictEqual(highlightResult, true, 'toggleScriptHighlight deve grifar a fala 0');
+  assert(UIController.getScriptHighlights().includes(0), 'getScriptHighlights deve listar fala 0 grifada');
+  UIController.toggleScriptHighlight(0);
+  assert(!UIController.getScriptHighlights().includes(0), 'toggleScriptHighlight deve remover o grifo da fala 0');
+
+  // Testar renderização de Roteiro Contínuo com paleta de personagens
+  await UIController.renderFullScriptModal();
+  assert(domStore['fullScriptContainer'].innerHTML.includes('script-flow-paragraph'), 'Roteiro deve renderizar parágrafos contínuos');
+  assert(domStore['fullScriptContainer'].innerHTML.includes('char-color-'), 'Roteiro deve colorir nomes de personagens com paleta teatral');
+  console.log('✅ 48. Leitura Dramatúrgica Contínua (ePub/PDF), Seletor de Alvo de Áudio, Marca-Texto e Onboarding validados');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 48 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();
