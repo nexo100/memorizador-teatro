@@ -135,10 +135,10 @@ Para evitar que o ator fique com o texto "engessado" ou "viciado" em uma única 
 
 ## 🧪 Testes Automatizados de Integração
 
-O projeto possui uma suíte rigorosa de **40 testes automatizados** para assegurar que nenhuma regressão ocorra em navegação, parsing (incluindo Fountain), cloze semântico, memória, persistência, ergonomia de palco, sincronização de fim de cena, transição de telas, sanitização XSS, integridade de backups, despacho de eventos e fila adaptativa de ensaio:
+O projeto possui uma suíte rigorosa de **42 testes automatizados** para assegurar que nenhuma regressão ocorra em navegação, parsing (incluindo Fountain), cloze semântico, memória, persistência, ergonomia de palco, sincronização de fim de cena, transição de telas, sanitização XSS, integridade de backups, despacho de eventos, concorrência assíncrona e fila adaptativa de ensaio:
 
 ```bash
-# Executa todos os 40 testes de integração
+# Executa todos os 42 testes de integração
 node test.cjs
 ```
 
@@ -166,7 +166,7 @@ memorizador-teatro/
 ├── icon.svg                       # Ícone vetorial das máscaras teatrais
 ├── icon-192.png                   # Ícone PWA 192x192 para Android e iOS
 ├── icon-512.png                   # Ícone PWA 512x512 para Android e instalação
-├── test.cjs                       # Suíte automatizada com 40 testes de integração
+├── test.cjs                       # Suíte automatizada com 42 testes de integração
 ├── MANUAL_DO_ATOR.md              # Guia prático de ensaio e memorização para o elenco
 ├── ARQUITETURA.md                 # Especificação técnica dos módulos e dados
 ├── LICENSE                        # Licença MIT e ressalva de direitos autorais

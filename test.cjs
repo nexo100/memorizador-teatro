@@ -823,7 +823,35 @@ Meu príncipe, estais bem?
   assert.strictEqual(enterStageCalls, 1, 'enterStage deve ser invocado exatamente 1 vez por clique no botão');
   console.log('✅ 40. Despacho único de eventos e eliminação de chamadas duplicadas validados');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 40 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 41: Prevenção de race condition em renderView (descarte de renders defasados)
+  assert.strictEqual(typeof UIController.currentRenderId, 'number', 'UIController deve possuir currentRenderId');
+  AppState.currentIndex = 0;
+  let slowResolve;
+  const origGetCastAudio = StorageManager.getCastAudio;
+  StorageManager.getCastAudio = () => new Promise(res => { slowResolve = res; });
+  const render1Promise = UIController.renderView();
+
+  AppState.currentIndex = 1;
+  StorageManager.getCastAudio = async () => null;
+  await UIController.renderView();
+  const contentFala1 = domStore['mainApp'].innerHTML;
+
+  slowResolve(null);
+  await render1Promise;
+  assert.strictEqual(domStore['mainApp'].innerHTML, contentFala1, 'DOM deve manter a fala 1 mais recente e descartar o render lento anterior');
+  StorageManager.getCastAudio = origGetCastAudio;
+  console.log('✅ 41. Prevenção de race condition em renderView (token incremental de render) validada');
+
+  // Teste 42: Atalho 'I' para alternância do modal de índice
+  const modalIndexEl = domStore['modalIndex'];
+  modalIndexEl.hidden = true;
+  docListeners['keydown']({ key: 'i', preventDefault: () => {}, target: { tagName: 'BODY' } });
+  assert.strictEqual(modalIndexEl.hidden, false, "Pressionar 'i' deve abrir o modal de índice");
+  docListeners['keydown']({ key: 'I', preventDefault: () => {}, target: { tagName: 'BODY' } });
+  assert.strictEqual(modalIndexEl.hidden, true, "Pressionar 'I' novamente deve fechar o modal de índice");
+  console.log('✅ 42. Atalho de teclado I para alternância do índice validado');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 42 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

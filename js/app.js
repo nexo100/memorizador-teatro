@@ -947,6 +947,20 @@
             return;
           }
 
+          if (e.key === 'i' || e.key === 'I') {
+            e.preventDefault();
+            const modalIndex = Utils.$('modalIndex');
+            if (modalIndex) {
+              if (modalIndex.hidden) {
+                UIController.renderIndexModal();
+                modalIndex.hidden = false;
+              } else {
+                modalIndex.hidden = true;
+              }
+            }
+            return;
+          }
+
           if (isModalOpen) return;
 
           if (AppState.currentScreen === 'lobby') {

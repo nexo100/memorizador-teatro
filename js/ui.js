@@ -1,5 +1,7 @@
 // 7. CONTROLADOR DE INTERFACE (UIController)
     const UIController = {
+      currentRenderId: 0,
+
       showStatus(msg) {
         const el = Utils.$('statusMessage');
         if (el) el.textContent = msg;
@@ -564,6 +566,7 @@
       },
 
       async renderView() {
+        const renderId = ++this.currentRenderId;
         this.updateHeaderStats();
         this.renderDockHeroArea();
         const mainApp = Utils.$('mainApp');
@@ -581,6 +584,7 @@
         let html = '';
 
         const hasRealAudio = await StorageManager.getCastAudio(AppState.currentIndex);
+        if (renderId !== this.currentRenderId) return;
         const isDefault = ScriptParser.isDefaultPlay(AppState.activeScriptText);
         const currentIntent = StorageManager.getSpeechIntent(AppState.currentIndex, isDefault);
         const intentHtml = (currentIntent || isMyTurn) ? `
@@ -639,6 +643,7 @@
           let cueHtml = '';
           if (prevSpeech) {
             const hasPrevRealAudio = await StorageManager.getCastAudio(AppState.currentIndex - 1);
+            if (renderId !== this.currentRenderId) return;
             if (prevSpeech.who !== AppState.selectedActor) {
               const cueWords = (prevSpeech.spokenText || '').trim().split(/\s+/).filter(Boolean);
               const cueStartWords = cueWords.slice(0, Math.max(0, cueWords.length - 4));
@@ -718,6 +723,7 @@
           `;
         }
 
+        if (renderId !== this.currentRenderId) return;
         mainApp.innerHTML = html;
         this.renderDockHeroArea();
 
