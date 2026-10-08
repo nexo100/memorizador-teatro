@@ -631,6 +631,15 @@
 
           if (data.localStorage && typeof data.localStorage === 'object') {
             const allowedPrefixes = ['memorizador_', 'intent_', 'voice_actor_', 'inv-'];
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k && allowedPrefixes.some(p => k.startsWith(p))) {
+                keysToRemove.push(k);
+              }
+            }
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+
             Object.keys(data.localStorage).forEach(k => {
               if (
                 allowedPrefixes.some(p => k.startsWith(p)) &&
@@ -644,6 +653,7 @@
           }
 
           if (data.recordings && Array.isArray(data.recordings)) {
+            await StorageManager.clearAllCastAudios();
             const storeName = StorageManager.STORE_NAME || 'recordings';
             const db = await StorageManager.getIndexedDB();
             const tx = db.transaction(storeName, 'readwrite');

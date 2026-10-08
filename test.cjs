@@ -851,7 +851,25 @@ Meu príncipe, estais bem?
   assert.strictEqual(modalIndexEl.hidden, true, "Pressionar 'I' novamente deve fechar o modal de índice");
   console.log('✅ 42. Atalho de teclado I para alternância do índice validado');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 42 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 43: Segurança CSP e higienização limpa na restauração de backup
+  assert(indexHtml.includes('http-equiv="Content-Security-Policy"'), 'index.html deve declarar política CSP estrita');
+
+  let clearedDb = false;
+  const origClearAll = StorageManager.clearAllCastAudios;
+  StorageManager.clearAllCastAudios = async () => { clearedDb = true; };
+  mockLocalStorage.setItem('intent_0_default', 'Intenção Antiga Que Deve Ser Limpa');
+
+  const cleanBackup = {
+    localStorage: { 'memorizador_mode': 'fraquezas' },
+    recordings: []
+  };
+  await AppController.importFullBackup({ text: async () => JSON.stringify(cleanBackup) });
+  assert.strictEqual(clearedDb, true, 'Restauração de backup deve limpar gravações anteriores antes de injetar as novas');
+  assert.strictEqual(mockLocalStorage.getItem('intent_0_default'), null, 'Chaves antigas de intenção/progresso devem ser higienizadas');
+  StorageManager.clearAllCastAudios = origClearAll;
+  console.log('✅ 43. Segurança CSP e higienização limpa de dados na restauração de backup validadas');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 43 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();
