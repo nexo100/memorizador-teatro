@@ -1262,16 +1262,41 @@ const UIController = {
     const container = Utils.$('indexListContainer');
     if (!container) return;
     const range = AppState.getActiveBeatRange();
-    let items = [];
+    let allItems = [];
 
+    const isDefault = ScriptParser.isDefaultPlay(AppState.activeScriptText);
     for (let idx = range.start; idx <= range.end; idx++) {
       if (idx < AppState.speeches.length) {
         const s = AppState.speeches[idx];
         const hasRec = await StorageManager.getCastAudio(idx);
-        items.push({ ...s, index: idx, level: AppState.masteryLevels[idx] || 0, hasRec });
+        const intent = StorageManager.getSpeechIntent(idx, isDefault);
+        allItems.push({ ...s, index: idx, level: AppState.masteryLevels[idx] || 0, hasRec, intent });
       }
     }
 
+    // Atualizar contadores numéricos nas abas de filtro
+    const modalIndexEl = Utils.$('modalIndex');
+    if (modalIndexEl) {
+      const totalCount = allItems.length;
+      const mineCount = allItems.filter(s => s.who === AppState.selectedActor).length;
+      const weakCount = allItems.filter(s => s.who === AppState.selectedActor && s.level < 3).length;
+      const recCount = allItems.filter(s => s.hasRec).length;
+
+      const tabs = modalIndexEl.querySelectorAll('.filter-tab');
+      tabs.forEach(tab => {
+        if (!tab || !tab.dataset) return;
+        const f = tab.dataset.filter;
+        let count = totalCount;
+        let label = 'Todas as falas';
+        if (f === 'mine') { count = mineCount; label = 'Minhas falas'; }
+        else if (f === 'weak') { count = weakCount; label = 'Em aprendizado'; }
+        else if (f === 'recorded') { count = recCount; label = 'Com voz gravada'; }
+
+        tab.innerHTML = `<span>${label}</span><span class="filter-tab-count">${count}</span>`;
+      });
+    }
+
+    let items = allItems;
     if (AppState.currentFilter === 'mine') {
       items = items.filter(s => s.who === AppState.selectedActor);
     } else if (AppState.currentFilter === 'weak') {
@@ -1281,23 +1306,37 @@ const UIController = {
     }
 
     if (items.length === 0) {
-      container.innerHTML = `<p style="color:var(--fg-muted); text-align:center; padding:20px;">Nenhuma fala encontrada neste filtro.</p>`;
+      container.innerHTML = `
+        <div style="text-align:center; padding:32px 16px; color:var(--fg-muted);">
+          <p style="margin:0 0 6px; font-weight:700;">Nenhuma fala encontrada neste filtro.</p>
+          <span style="font-size:0.8rem;">Alterne a aba de filtro acima para visualizar outras réplicas da cena.</span>
+        </div>
+      `;
       return;
     }
 
     container.innerHTML = items.map(item => {
       const isCurrent = item.index === AppState.currentIndex;
       const isMine = item.who === AppState.selectedActor;
-      const badge = isMine ? `<span class="mastery-pill lv${item.level}">${AppConfig.MASTERY_LEVEL_NAMES[item.level] || ('Nível ' + (item.level + 1))}</span>` : `<span class="mastery-pill">Colega</span>`;
+      const badge = isMine
+        ? `<span class="mastery-pill lv${item.level}">${AppConfig.MASTERY_LEVEL_NAMES[item.level] || ('Nível ' + (item.level + 1))}</span>`
+        : `<span class="mastery-pill partner">Colega</span>`;
+
+      const intentHtml = item.intent
+        ? `<div class="index-item-intent">${Icons.get('sparkles', { size: 11 })} <em>${Utils.escapeHtml(item.intent)}</em></div>`
+        : '';
+
       return `
-        <div class="index-item ${isCurrent ? 'current' : ''}" data-idx="${item.index}">
+        <div class="index-item ${isCurrent ? 'current' : ''} ${isMine ? 'is-mine' : ''}" data-idx="${item.index}">
           <div class="index-item-meta">
             <span class="index-item-who">
-              #${item.index + 1} · ${Utils.escapeHtml(item.who)}
-              ${item.hasRec ? Icons.get('mic', { size: 12 }) : ''}
+              <span class="index-num">#${item.index + 1}</span>
+              <strong class="${isMine ? 'highlight' : ''}">${Utils.escapeHtml(item.who)}</strong>
+              ${item.hasRec ? `<span class="badge-rec" title="Áudio gravado">${Icons.get('mic', { size: 11 })}</span>` : ''}
             </span>
             ${badge}
           </div>
+          ${intentHtml}
           <p class="index-item-text">${Utils.escapeHtml(item.spokenText || item.segments.map(s => s.text).join(' '))}</p>
         </div>
       `;
