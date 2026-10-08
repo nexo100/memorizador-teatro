@@ -202,24 +202,67 @@ button, input, select, textarea {
   transform: scale(0.97);
 }
 
-/* BANNER DE ROTEIRO COMPLETO (CAMARIM) */
+/* CARD DRAMATÚRGICO DE LEITURA (CAMARIM) */
+.camarim-script-card,
 .camarim-banner-script {
-  background: var(--card-bg);
+  background: linear-gradient(135deg, rgba(212, 163, 89, 0.08) 0%, var(--card-bg) 65%);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
   border-radius: 14px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 2px;
 }
+.camarim-script-card:hover,
 .camarim-banner-script:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), var(--shadow-glow);
+}
+.script-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.script-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.script-card-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--fg);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.script-card-desc {
+  font-size: 0.76rem;
+  color: var(--fg-muted);
+  line-height: 1.35;
+  margin: 0;
+}
+.script-card-action,
+.btn-banner-action {
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .banner-icon-badge {
   width: 40px;
@@ -248,12 +291,6 @@ button, input, select, textarea {
   font-size: 0.76rem;
   color: var(--fg-muted);
   line-height: 1.35;
-}
-.btn-banner-action {
-  min-height: 36px !important;
-  padding: 0 12px !important;
-  font-size: 0.8rem !important;
-  white-space: nowrap;
 }
 
 /* SEÇÕES DO CAMARIM */
@@ -530,7 +567,8 @@ button, input, select, textarea {
 
 /* BOTÃO HERÓI: ENTRAR EM CENA */
 .camarim-hero-action {
-  margin-top: 4px;
+  margin-top: 24px;
+  margin-bottom: 12px;
 }
 .btn-enter-stage {
   width: 100%;

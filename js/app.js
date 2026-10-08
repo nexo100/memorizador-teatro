@@ -137,6 +137,7 @@
         if (Utils.$('chkStartHidden')) Utils.$('chkStartHidden').checked = AppState.alwaysStartHidden;
 
         const savedActor = settings.selectedActor;
+        AppState.hasSavedActor = !!(savedActor && AppState.characters.includes(savedActor));
         AppState.selectedActor = (savedActor && AppState.characters.includes(savedActor))
           ? savedActor
           : (AppState.characters[0] || '');
@@ -774,13 +775,17 @@
           const actorBtn = e.target.closest('.char-tab');
           if (actorBtn) {
             const actor = actorBtn.dataset.actor;
-            if (actor && actor !== AppState.selectedActor) {
+            if (actor) {
+              const changed = actor !== AppState.selectedActor || !AppState.hasSavedActor;
+              AppState.hasSavedActor = true;
               AppState.selectedActor = actor;
               StorageManager.saveSettings(AppState);
-              AppState.masteryLevels = StorageManager.loadProgress(actor, AppState.speeches.length);
-              const myIndices = AppState.getMySpeechIndices();
-              this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : 0, false);
-              UIController.renderLobby();
+              if (changed) {
+                AppState.masteryLevels = StorageManager.loadProgress(actor, AppState.speeches.length);
+                const myIndices = AppState.getMySpeechIndices();
+                this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : 0, false);
+                UIController.renderLobby();
+              }
             }
             UIController.closeModal('sheetActor');
             return;

@@ -68,10 +68,11 @@ const UIController = {
       titleEl.textContent = cleanTitle;
     }
 
+    const hasActor = AppState.hasSavedActor || (typeof localStorage !== 'undefined' && !!localStorage.getItem('memorizador_actor'));
     const tabsContainer = Utils.$('characterTabs');
     if (tabsContainer) {
       tabsContainer.innerHTML = AppState.characters.map(c => {
-        const isCurrent = c === AppState.selectedActor;
+        const isCurrent = hasActor && c === AppState.selectedActor;
         const total = AppState.speeches.filter(s => s.who === c).length;
         let actorLevels = isCurrent ? AppState.masteryLevels : StorageManager.loadProgress(c, AppState.speeches.length);
         const mastered = AppState.speeches.map((s, i) => s.who === c && (actorLevels[i] || 0) >= 3 ? 1 : 0).reduce((a, b) => a + b, 0);
@@ -127,11 +128,19 @@ const UIController = {
 
     const btnEnter = Utils.$('btnEnterStage');
     if (btnEnter) {
-      btnEnter.innerHTML = `
-        ${Icons.get('theater', { size: 20 })}
-        <span>Entrar em Cena como ${Utils.escapeHtml(AppState.selectedActor || 'Ator')}</span>
-        ${Icons.get('arrowRight', { size: 18, strokeWidth: 2.5 })}
-      `;
+      if (hasActor && AppState.selectedActor) {
+        btnEnter.innerHTML = `
+          ${Icons.get('theater', { size: 20 })}
+          <span>Entrar em Cena como ${Utils.escapeHtml(AppState.selectedActor)}</span>
+          ${Icons.get('arrowRight', { size: 18, strokeWidth: 2.5 })}
+        `;
+      } else {
+        btnEnter.innerHTML = `
+          ${Icons.get('theater', { size: 20 })}
+          <span>Escolha seu Papel para Iniciar</span>
+          ${Icons.get('arrowRight', { size: 18, strokeWidth: 2.5 })}
+        `;
+      }
     }
 
     this.populateBeatSelector();

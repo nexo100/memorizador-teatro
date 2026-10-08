@@ -3,6 +3,7 @@
       speeches: [],
       characters: [],
       selectedActor: '',
+      hasSavedActor: false,
       currentIndex: 0,
       activeBeats: [],
       selectedBeat: 'all',

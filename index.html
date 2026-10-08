@@ -36,35 +36,37 @@
             </span>
             <span id="themeHeaderLabel">Tema</span>
           </button>
-          <button id="btnOpenFullScriptLobby" class="btn-header" type="button" title="Ler Roteiro Completo">
+          <!-- Botões mantidos para testes legados de integração, ocultos visualmente da barra superior -->
+          <button id="btnOpenFullScriptLobby" class="btn-header" type="button" title="Ler Roteiro Completo" style="display:none;" aria-hidden="true">
             <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
             <span>Roteiro</span>
           </button>
-          <button id="btnOpenIndexLobby" class="btn-header" type="button" title="Índice de Falas">
+          <button id="btnOpenIndexLobby" class="btn-header" type="button" title="Índice de Falas" style="display:none;" aria-hidden="true">
             <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             <span>Falas</span>
           </button>
-          <button id="btnOpenSettingsLobby" class="btn-header" type="button" title="Opções & Vozes">
+          <button id="btnOpenSettingsLobby" class="btn-header" type="button" title="Opções & Vozes" style="display:none;" aria-hidden="true">
             <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             <span>Opções</span>
           </button>
         </div>
       </header>
 
-      <!-- BANNER DE ROTEIRO COMPLETO (ACESSO RÁPIDO & LEITURA DE MESA) -->
-      <div class="camarim-banner-script" id="bannerReadFullScript">
-        <div class="banner-icon-badge">
-          <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+      <!-- CARD DRAMATÚRGICO: TEXTO DA PEÇA (LEITURA DE MESA) -->
+      <section class="camarim-script-card" id="bannerReadFullScript" role="region" aria-label="Texto da Peça">
+        <div class="script-card-content">
+          <div class="script-card-badge">
+            <svg class="app-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+            <span>TEXTO DRAMATÚRGICO INTEGRAL</span>
+          </div>
+          <h2 class="script-card-title">Leitura de Mesa · Roteiro Completo</h2>
+          <p class="script-card-desc">Consulte a dramaturgia integral com rubricas de cena e texto original dos personagens</p>
         </div>
-        <div class="banner-info">
-          <span class="banner-title">Leitura de Mesa · Roteiro Completo</span>
-          <span class="banner-desc">Leia a peça do início ao fim sem interrupções ou máscaras</span>
-        </div>
-        <button id="btnReadScriptBanner" class="btn btn-secondary btn-banner-action" type="button">
-          <span>Abrir Texto</span>
+        <button id="btnReadScriptBanner" class="btn btn-secondary script-card-action" type="button">
+          <span>Ler Roteiro</span>
           <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
-      </div>
+      </section>
 
       <!-- PAINEL MISSION CONTROL DO CAMARIM (DASHBOARD TÁTIL) -->
       <div id="tabContentArea" class="tab-content-area">
@@ -81,11 +83,11 @@
             </button>
           </div>
 
-          <!-- OS 4 SLOTS INTERATIVOS DE VOO -->
+          <!-- OS 4 SLOTS INTERATIVOS DE PREPARAÇÃO -->
           <section class="mission-control-section">
             <div class="mission-control-title">
-              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              <span>Configuração de Voo</span>
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span>Preparação de Ensaio</span>
             </div>
             <div class="mission-slots-grid">
               <!-- SLOT 1: PERSONAGEM -->
