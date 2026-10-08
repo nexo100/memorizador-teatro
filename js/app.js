@@ -568,9 +568,10 @@
             }
           }
 
+          const storeName = StorageManager.STORE_NAME || 'recordings';
           const db = await StorageManager.getIndexedDB();
-          const tx = db.transaction(StorageManager.STORE_NAME, 'readonly');
-          const store = tx.objectStore(StorageManager.STORE_NAME);
+          const tx = db.transaction(storeName, 'readonly');
+          const store = tx.objectStore(storeName);
 
           const getAllAudios = () => new Promise((resolve, reject) => {
             const req = store.getAll();
@@ -579,9 +580,15 @@
           });
 
           const records = await getAllAudios();
+          const seenAudioKeys = new Set();
           for (const item of records) {
-            if (item && item.audioBlob) {
-              const b64 = await Utils.blobToBase64(item.audioBlob);
+            const audioData = item && (item.blob || item.audioBlob);
+            if (audioData && item.id !== undefined) {
+              const stringId = String(item.id);
+              // Evitar exportar duplicatas numéricas legadas se temos chaves estruturadas
+              if (seenAudioKeys.has(stringId)) continue;
+              seenAudioKeys.add(stringId);
+              const b64 = await Utils.blobToBase64(audioData);
               data.recordings.push({
                 id: item.id,
                 speechIdx: item.speechIdx,
@@ -627,20 +634,21 @@
           }
 
           if (data.recordings && Array.isArray(data.recordings)) {
+            const storeName = StorageManager.STORE_NAME || 'recordings';
             const db = await StorageManager.getIndexedDB();
-            const tx = db.transaction(StorageManager.STORE_NAME, 'readwrite');
-            const store = tx.objectStore(StorageManager.STORE_NAME);
+            const tx = db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
 
             for (const item of data.recordings) {
-              if (item.base64 && item.id) {
+              if (item.base64 && item.id !== undefined) {
                 const blob = Utils.base64ToBlob(item.base64);
                 let speechIdx = item.speechIdx;
                 let playId = item.playId || 'default';
                 if (speechIdx === undefined) {
-                  const parts = item.id.split('_');
+                  const parts = String(item.id).split('_');
                   speechIdx = parseInt(parts[parts.length - 1], 10);
                 }
-                store.put({ id: item.id, speechIdx, playId, audioBlob: blob, timestamp: Date.now() });
+                store.put({ id: item.id, speechIdx, playId, blob, audioBlob: blob, timestamp: Date.now() });
               }
             }
           }

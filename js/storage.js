@@ -1,5 +1,6 @@
 // 5. STORAGE SERVICE (StorageManager: IndexedDB + LocalStorage)
     const StorageManager = {
+      STORE_NAME: 'recordings',
       dbInstance: null,
 
       getIndexedDB() {
@@ -32,17 +33,14 @@
         const pId = playId || AppState.getPlayId();
         const key = this.getRecordingKey(speechIdx, pId);
         return new Promise((resolve, reject) => {
-          const tx = db.transaction('recordings', 'readwrite');
-          tx.objectStore('recordings').put({
+          const tx = db.transaction(this.STORE_NAME, 'readwrite');
+          tx.objectStore(this.STORE_NAME).put({
             id: key,
             speechIdx,
             playId: pId,
             blob,
             timestamp: Date.now()
           });
-          if (pId === 'default') {
-            try { tx.objectStore('recordings').put({ id: speechIdx, speechIdx, playId: 'default', blob, timestamp: Date.now() }); } catch (e) {}
-          }
           tx.oncomplete = () => resolve();
           tx.onerror = () => reject(tx.error);
         });
@@ -54,15 +52,19 @@
         const pId = playId || AppState.getPlayId();
         const key = this.getRecordingKey(speechIdx, pId);
         return new Promise((resolve, reject) => {
-          const tx = db.transaction('recordings', 'readonly');
-          const store = tx.objectStore('recordings');
+          const tx = db.transaction(this.STORE_NAME, 'readonly');
+          const store = tx.objectStore(this.STORE_NAME);
           const req = store.get(key);
           req.onsuccess = () => {
-            if (req.result && req.result.blob) {
-              resolve(req.result.blob);
+            const res = req.result;
+            if (res && (res.blob || res.audioBlob)) {
+              resolve(res.blob || res.audioBlob);
             } else if (pId === 'default') {
               const legacyReq = store.get(speechIdx);
-              legacyReq.onsuccess = () => resolve(legacyReq.result ? legacyReq.result.blob : null);
+              legacyReq.onsuccess = () => {
+                const legRes = legacyReq.result;
+                resolve(legRes ? (legRes.blob || legRes.audioBlob) : null);
+              };
               legacyReq.onerror = () => resolve(null);
             } else {
               resolve(null);
@@ -78,8 +80,8 @@
         const pId = playId || AppState.getPlayId();
         const key = this.getRecordingKey(speechIdx, pId);
         return new Promise((resolve, reject) => {
-          const tx = db.transaction('recordings', 'readwrite');
-          const store = tx.objectStore('recordings');
+          const tx = db.transaction(this.STORE_NAME, 'readwrite');
+          const store = tx.objectStore(this.STORE_NAME);
           store.delete(key);
           if (pId === 'default') {
             try { store.delete(speechIdx); } catch (e) {}
@@ -93,8 +95,8 @@
         const db = await this.getIndexedDB();
         if (!db) return;
         return new Promise((resolve, reject) => {
-          const tx = db.transaction('recordings', 'readwrite');
-          tx.objectStore('recordings').clear();
+          const tx = db.transaction(this.STORE_NAME, 'readwrite');
+          tx.objectStore(this.STORE_NAME).clear();
           tx.oncomplete = () => resolve();
           tx.onerror = () => reject(tx.error);
         });
@@ -104,8 +106,8 @@
         const db = await this.getIndexedDB();
         if (!db) return [];
         return new Promise((resolve, reject) => {
-          const tx = db.transaction('recordings', 'readonly');
-          const req = tx.objectStore('recordings').getAll();
+          const tx = db.transaction(this.STORE_NAME, 'readonly');
+          const req = tx.objectStore(this.STORE_NAME).getAll();
           req.onsuccess = () => resolve(req.result || []);
           req.onerror = () => reject(req.error);
         });

@@ -742,7 +742,60 @@ Meu príncipe, estais bem?
   assert.strictEqual(fountainParsed[1].who, 'Ofélia', 'Segundo personagem Ofélia com prefixo @');
   console.log('✅ 37. Suporte a roteiros no padrão da indústria Fountain (.fountain) validado');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 37 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 38: Coerência de backup e restauração de áudio (STORE_NAME, export e import com getCastAudio)
+  assert.strictEqual(StorageManager.STORE_NAME, 'recordings', 'StorageManager deve definir STORE_NAME');
+
+  const inMemStore = {};
+  const mockDbAudio = {
+    transaction: (sName) => {
+      assert.strictEqual(sName, 'recordings', 'Transaction deve usar store recordings');
+      const tx = {
+        objectStore: () => ({
+          put: (item) => { inMemStore[item.id] = item; },
+          get: (key) => {
+            const req = { onsuccess: null, onerror: null, result: inMemStore[key] || null };
+            setTimeout(() => { if (req.onsuccess) req.onsuccess(); }, 0);
+            return req;
+          },
+          getAll: () => {
+            const req = { onsuccess: null, onerror: null, result: Object.values(inMemStore) };
+            setTimeout(() => { if (req.onsuccess) req.onsuccess(); }, 0);
+            return req;
+          },
+          clear: () => {
+            Object.keys(inMemStore).forEach(k => delete inMemStore[k]);
+          }
+        }),
+        oncomplete: null,
+        onerror: null
+      };
+      setTimeout(() => { if (tx.oncomplete) tx.oncomplete(); }, 0);
+      return tx;
+    }
+  };
+  const prevGetIndexedDB = StorageManager.getIndexedDB;
+  StorageManager.getIndexedDB = async () => mockDbAudio;
+
+  const testBlob = { size: 100, type: 'audio/webm' };
+  await StorageManager.saveCastAudio(10, testBlob, 'default');
+  const readBlob = await StorageManager.getCastAudio(10, 'default');
+  assert.strictEqual(readBlob, testBlob, 'getCastAudio deve recuperar o blob salvo');
+
+  const backupWithAudio = {
+    localStorage: { 'memorizador_mode': 'cena' },
+    recordings: [
+      { id: 'default_12', speechIdx: 12, playId: 'default', base64: 'data:audio/webm;base64,AAAA' }
+    ]
+  };
+  await AppController.importFullBackup({ text: async () => JSON.stringify(backupWithAudio) });
+  const restoredAudio = await StorageManager.getCastAudio(12, 'default');
+  assert(restoredAudio !== null, 'getCastAudio deve encontrar áudio restaurado do backup');
+  assert.strictEqual(restoredAudio.type, 'audio/webm', 'Tipo do áudio restaurado deve ser preservado');
+
+  StorageManager.getIndexedDB = prevGetIndexedDB;
+  console.log('✅ 38. Coerência de backup e restauração de áudio (STORE_NAME, gravação e recuperação) validada');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 38 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();
