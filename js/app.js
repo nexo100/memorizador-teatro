@@ -1279,7 +1279,7 @@
         document.addEventListener('keydown', (e) => {
           if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) return;
 
-          const openModalId = ['modalIndex', 'modalSettings', 'modalFullScript'].find(id => Utils.$(id) && !Utils.$(id).hidden);
+          const openModalId = ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno'].find(id => Utils.$(id) && !Utils.$(id).hidden);
 
           if (e.key === 'Tab' && openModalId) {
             const modal = Utils.$(openModalId);
@@ -1306,6 +1306,7 @@
           if (e.key === 'Escape') {
             if (openModalId) {
               UIController.closeModal(openModalId);
+              UIController.updateTabBarActive('camarim');
               return;
             }
             if (AppState.currentScreen === 'stage') {
@@ -1323,6 +1324,22 @@
                 UIController.openModal('modalIndex');
               } else {
                 UIController.closeModal('modalIndex');
+              }
+            }
+            return;
+          }
+
+          if (e.key === 'c' || e.key === 'C') {
+            e.preventDefault();
+            const modalCaderno = Utils.$('modalCaderno');
+            if (modalCaderno) {
+              if (modalCaderno.hidden) {
+                UIController.renderCaderno(AppState.currentScreen === 'stage' ? AppState.currentIndex : null);
+                UIController.openModal('modalCaderno');
+                UIController.updateTabBarActive('caderno');
+              } else {
+                UIController.closeModal('modalCaderno');
+                UIController.updateTabBarActive('camarim');
               }
             }
             return;
