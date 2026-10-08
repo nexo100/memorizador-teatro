@@ -793,6 +793,8 @@ Meu príncipe, estais bem?
   assert.strictEqual(restoredAudio.type, 'audio/webm', 'Tipo do áudio restaurado deve ser preservado');
 
   StorageManager.getIndexedDB = prevGetIndexedDB;
+  console.log('✅ 38. Coerência de backup e restauração de áudio (STORE_NAME, gravação e recuperação) validada');
+
   // Teste 39: Restauração de configurações salvas no AppState e controles de UI
   mockLocalStorage.setItem('memorizador_study_method', 'quiz');
   mockLocalStorage.setItem('memorizador_hide_rubrics', 'true');
@@ -804,7 +806,24 @@ Meu príncipe, estais bem?
   assert.strictEqual(AppState.alwaysStartHidden, false, 'alwaysStartHidden salvo deve ser restaurado no AppState');
   console.log('✅ 39. Restauração de configurações salvas (studyMethod, hideRubrics, alwaysStartHidden) validada');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 39 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 40: Despacho único de eventos de clique e ausência de duplicação
+  let enterStageCalls = 0;
+  const origEnterStage = AppController.enterStage;
+  AppController.enterStage = () => { enterStageCalls++; };
+
+  const realBtn = domStore['btnEnterStage'];
+  realBtn.closest = (sel) => sel.includes('button') ? realBtn : null;
+
+  // Simular clique do usuário: listener em document + onclick direto no botão
+  const clickEvt = { target: realBtn };
+  docListeners['click'](clickEvt);
+  if (realBtn.onclick) realBtn.onclick(clickEvt);
+
+  AppController.enterStage = origEnterStage;
+  assert.strictEqual(enterStageCalls, 1, 'enterStage deve ser invocado exatamente 1 vez por clique no botão');
+  console.log('✅ 40. Despacho único de eventos e eliminação de chamadas duplicadas validados');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 40 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

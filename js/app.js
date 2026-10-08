@@ -513,6 +513,10 @@
           AppState.isRetryState = false;
           AppState.scheduleRetry(AppState.currentIndex, 2);
           this.advanceNext();
+        } else if (id === 'btnPrev') {
+          this.advancePrev();
+        } else if (id === 'btnNext') {
+          this.advanceNext();
         } else if (id === 'btnEnterStage') {
           this.enterStage();
         } else if (id === 'btnBackToLobby' || id === 'btnReturnLobbyFinished') {
@@ -722,48 +726,7 @@
             this.handleActionClick(actionBtn.id);
             return;
           }
-
-          if (e.target.id) {
-            this.handleActionClick(e.target.id);
-          }
         });
-
-        if (Utils.$('btnPrev')) Utils.$('btnPrev').onclick = () => this.advancePrev();
-        if (Utils.$('btnNext')) Utils.$('btnNext').onclick = () => this.advanceNext();
-        if (Utils.$('btnEnterStage')) Utils.$('btnEnterStage').onclick = () => this.enterStage();
-        if (Utils.$('btnBackToLobby')) Utils.$('btnBackToLobby').onclick = () => this.returnToLobby();
-
-        ['btnOpenIndex', 'btnOpenIndexLobby', 'btnStageIndex', 'btnNavIndex'].forEach(id => {
-          const btn = Utils.$(id);
-          if (btn) {
-            btn.onclick = () => {
-              UIController.renderIndexModal();
-              if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = false;
-            };
-          }
-        });
-
-        if (Utils.$('btnCloseIndex')) {
-          Utils.$('btnCloseIndex').onclick = () => {
-            if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = true;
-          };
-        }
-
-        ['btnOpenSettings', 'btnOpenSettingsLobby', 'btnOpenSettingsStage'].forEach(id => {
-          const btn = Utils.$(id);
-          if (btn) {
-            btn.onclick = () => {
-              UIController.populateVoiceSelectors();
-              if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = false;
-            };
-          }
-        });
-
-        if (Utils.$('btnCloseSettings')) {
-          Utils.$('btnCloseSettings').onclick = () => {
-            if (Utils.$('modalSettings')) Utils.$('modalSettings').hidden = true;
-          };
-        }
 
         if (Utils.$('selectBeat')) {
           Utils.$('selectBeat').onchange = (e) => {
@@ -799,23 +762,6 @@
           }
         });
 
-        // Roteiro Completo
-        ['btnOpenFullScriptLobby', 'btnReadScriptBanner', 'btnOpenFullScriptSettings'].forEach(id => {
-          const btn = Utils.$(id);
-          if (btn) {
-            btn.onclick = () => {
-              UIController.renderFullScriptModal();
-              if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = false;
-            };
-          }
-        });
-
-        if (Utils.$('btnCloseFullScript')) {
-          Utils.$('btnCloseFullScript').onclick = () => {
-            if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = true;
-          };
-        }
-
         if (Utils.$('selectBeatFullScript')) {
           Utils.$('selectBeatFullScript').onchange = (e) => {
             UIController.renderFullScriptModal(e.target.value, Utils.$('inputSearchScript')?.value);
@@ -825,13 +771,6 @@
         if (Utils.$('inputSearchScript')) {
           Utils.$('inputSearchScript').oninput = (e) => {
             UIController.renderFullScriptModal(Utils.$('selectBeatFullScript')?.value, e.target.value);
-          };
-        }
-
-        if (Utils.$('btnStartFromScript')) {
-          Utils.$('btnStartFromScript').onclick = () => {
-            if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = true;
-            this.enterStage();
           };
         }
 
