@@ -51,7 +51,7 @@
         </div>
       </header>
 
-      <!-- BANNER DE ROTEIRO COMPLETO -->
+      <!-- BANNER DE ROTEIRO COMPLETO (ACESSO RÁPIDO & LEITURA DE MESA) -->
       <div class="camarim-banner-script" id="bannerReadFullScript">
         <div class="banner-icon-badge">
           <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
@@ -66,154 +66,265 @@
         </button>
       </div>
 
-      <!-- SEÇÃO 1: PERSONAGEM ATIVO (CARDS MODERNOS & TÁTEIS) -->
-      <section class="camarim-section">
-        <div class="camarim-section-title">
-          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span>Escolha seu Personagem</span>
-        </div>
-        <div class="character-cards-grid" id="characterTabs" role="tablist">
-          <!-- Injetado dinamicamente via UIController.renderLobby() -->
-        </div>
-      </section>
+      <!-- PAINEL MISSION CONTROL DO CAMARIM (DASHBOARD TÁTIL) -->
+      <div id="tabContentArea" class="tab-content-area">
+        <div id="tabCamarim" class="tab-pane active">
+          <!-- CARD DE CONTINUAÇÃO RÁPIDA (QUICK RESUME) -->
+          <div id="resumeRehearsalCard" class="camarim-resume-card" style="display:none;">
+            <div class="resume-card-left">
+              <span class="resume-card-badge">Último Ensaio</span>
+              <span class="resume-card-title" id="resumeCardTitle">Continuar da fala 1</span>
+            </div>
+            <button id="btnQuickResume" class="btn btn-secondary btn-resume-action" type="button">
+              <span>Continuar</span>
+              <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+          </div>
 
-      <!-- SEÇÃO 1.5: MÉTODO DE MEMORIZAÇÃO -->
-      <section class="camarim-section">
-        <div class="camarim-section-title">
-          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
-          <span>Método de Memorização</span>
-        </div>
-        <div class="study-methods-grid" id="studyMethodsGrid">
-          <button type="button" class="study-method-card active" data-method="oral">
-            <span class="method-card-icon">
-              <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg>
-            </span>
-            <div class="method-card-info">
-              <span class="method-card-title">Oral / Cênico</span>
-              <span class="method-card-badge">Padrão</span>
+          <!-- OS 4 SLOTS INTERATIVOS DE VOO -->
+          <section class="mission-control-section">
+            <div class="mission-control-title">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Configuração de Voo</span>
             </div>
-            <p class="method-card-desc">Fale alto de cabeça e toque para conferir.</p>
-          </button>
-          <button type="button" class="study-method-card" data-method="quiz">
-            <span class="method-card-icon">
-              <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19.4 7.8c0-1.6.8-2.2 1.6-2.8-1.3-1.3-3.1-2-5-2-1.6 0-2.2.8-2.8 1.6a2 2 0 0 1-2.3 0C10.2 3.8 9.6 3 8 3 6.2 3 4.3 3.7 3 5c.8.7 1.6 1.3 1.6 2.8a2 2 0 0 1-1.1 1.8C2.8 10.2 2 10.8 2 12.4c0 1.6.8 2.2 1.6 2.8a2 2 0 0 1 1.1 1.8c-.8.8-1.6 1.4-2.4 2.1 1.3 1.3 3.1 2 5 2 1.6 0 2.2-.8 2.8-1.6a2 2 0 0 1 2.3 0c.7.8 1.3 1.6 2.8 1.6 1.8 0 3.7-.7 5-2-.8-.7-1.6-1.3-1.6-2.8a2 2 0 0 1 1.1-1.8c.6-.5 1.4-1.1 1.4-2.7 0-1.6-.8-2.2-1.6-2.8a2 2 0 0 1-1.1-1.8Z"/></svg>
-            </span>
-            <div class="method-card-info">
-              <span class="method-card-title">Alternativas</span>
-              <span class="method-card-badge">Interativo</span>
-            </div>
-            <p class="method-card-desc">Complete lacunas escolhendo opções.</p>
-          </button>
-          <button type="button" class="study-method-card" data-method="typing">
-            <span class="method-card-icon">
-              <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
-            </span>
-            <div class="method-card-info">
-              <span class="method-card-title">Digitação</span>
-              <span class="method-card-badge">Teclado</span>
-            </div>
-            <p class="method-card-desc">Digite as palavras que faltam no texto.</p>
-          </button>
-        </div>
-      </section>
+            <div class="mission-slots-grid">
+              <!-- SLOT 1: PERSONAGEM -->
+              <button type="button" class="mission-slot-card" id="slotActorBtn">
+                <div class="slot-card-top">
+                  <div class="slot-card-label">
+                    <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Meu Papel</span>
+                  </div>
+                  <span class="slot-edit-pill">Alterar</span>
+                </div>
+                <div class="slot-card-value" id="slotActorValue">SÉRGIO</div>
+                <div class="slot-card-sub" id="slotActorSub">Toque para selecionar</div>
+              </button>
 
-      <!-- SEÇÃO 2: MODOS DE ENSAIO (CARDS MODERNOS COM FOCO DRAMÁTICO) -->
-      <section class="camarim-section">
-        <div class="camarim-section-title">
-          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
-          <span>Modo de Ensaio</span>
+              <!-- SLOT 2: MODO DE ENSAIO -->
+              <button type="button" class="mission-slot-card" id="slotModeBtn">
+                <div class="slot-card-top">
+                  <div class="slot-card-label">
+                    <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
+                    <span>Modo</span>
+                  </div>
+                  <span class="slot-edit-pill">Alterar</span>
+                </div>
+                <div class="slot-card-value" id="slotModeValue">Só Minhas + Deixas</div>
+                <div class="slot-card-sub" id="slotModeSub">Foco em réplicas diretas</div>
+              </button>
+
+              <!-- SLOT 3: MÉTODO DE ESTUDO -->
+              <button type="button" class="mission-slot-card" id="slotMethodBtn">
+                <div class="slot-card-top">
+                  <div class="slot-card-label">
+                    <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
+                    <span>Método</span>
+                  </div>
+                  <span class="slot-edit-pill">Alterar</span>
+                </div>
+                <div class="slot-card-value" id="slotMethodValue">Oral / Cênico</div>
+                <div class="slot-card-sub" id="slotMethodSub">Fale alto de cabeça</div>
+              </button>
+
+              <!-- SLOT 4: CORTE CÊNICO (BEAT) -->
+              <button type="button" class="mission-slot-card" id="slotBeatBtn">
+                <div class="slot-card-top">
+                  <div class="slot-card-label">
+                    <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m4 4 3 4M9 4l3 4M14 4l3 4M19 4l1 4M2 8h20"/></svg>
+                    <span>Corte Cênico</span>
+                  </div>
+                  <span class="slot-edit-pill">Alterar</span>
+                </div>
+                <div class="slot-card-value" id="slotBeatValue">Cena Completa</div>
+                <div class="slot-card-sub" id="slotBeatSub">Todas as falas da cena</div>
+              </button>
+            </div>
+          </section>
+
+          <!-- BOTÃO HERÓI: ENTRAR EM CENA -->
+          <div class="camarim-hero-action">
+            <button id="btnEnterStage" class="btn btn-primary btn-enter-stage" type="button">
+              <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
+              <span>Entrar em Cena</span>
+              <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
         </div>
-        <div class="mode-cards-grid" id="modeCardsGrid">
-          <div class="mode-card active" data-mode="minhas">
-            <div class="mode-card-header">
-              <span class="mode-card-icon">
-                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-              </span>
-              <div class="mode-card-title-group">
-                <span class="mode-card-title">Só Minhas Falas + Deixas</span>
-                <span class="mode-card-badge">Recomendado</span>
+      </div>
+
+      <!-- BOTTOM SHEETS DOS SLOTS DE CONFIGURAÇÃO -->
+      <!-- SHEET 1: ESCOLHA DE PERSONAGEM -->
+      <div id="sheetActor" class="modal-backdrop slot-sheet" hidden>
+        <div class="modal-content">
+          <div class="modal-drag-bar" aria-hidden="true"></div>
+          <div class="modal-header">
+            <h2>
+              <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Escolha seu Personagem</span>
+            </h2>
+            <button id="btnCloseSheetActor" class="btn-close" type="button" aria-label="Fechar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="character-cards-grid" id="characterTabs" role="tablist">
+              <!-- Injetado dinamicamente via UIController.renderLobby() -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHEET 2: MODO DE ENSAIO -->
+      <div id="sheetMode" class="modal-backdrop slot-sheet" hidden>
+        <div class="modal-content">
+          <div class="modal-drag-bar" aria-hidden="true"></div>
+          <div class="modal-header">
+            <h2>
+              <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
+              <span>Modo de Ensaio</span>
+            </h2>
+            <button id="btnCloseSheetMode" class="btn-close" type="button" aria-label="Fechar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="mode-cards-grid" id="modeCardsGrid">
+              <div class="mode-card active" data-mode="minhas">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">
+                    <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                  </span>
+                  <div class="mode-card-title-group">
+                    <span class="mode-card-title">Só Minhas Falas + Deixas</span>
+                    <span class="mode-card-badge">Recomendado</span>
+                  </div>
+                </div>
+                <p class="mode-card-desc">Foque apenas nas suas réplicas, com a deixa do colega conectada e destacada no topo.</p>
+              </div>
+
+              <div class="mode-card" data-mode="cena">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">
+                    <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+                  </span>
+                  <div class="mode-card-title-group">
+                    <span class="mode-card-title">Passada de Cena (Completa)</span>
+                    <span class="mode-card-badge">Cronológico</span>
+                  </div>
+                </div>
+                <p class="mode-card-desc">Passe todas as falas da peça do início ao fim, ouvindo ou lendo cada personagem.</p>
+              </div>
+
+              <div class="mode-card" data-mode="pingpong">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">
+                    <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  </span>
+                  <div class="mode-card-title-group">
+                    <span class="mode-card-title">Ping-Pong de Deixas</span>
+                    <span class="mode-card-badge">Reflexo 4s</span>
+                  </div>
+                </div>
+                <p class="mode-card-desc">O colega fala e um cronômetro de reflexo de 4s abre para testar seu tempo de resposta.</p>
+              </div>
+
+              <div class="mode-card" data-mode="ponto">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">
+                    <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>
+                  </span>
+                  <div class="mode-card-title-group">
+                    <span class="mode-card-title">Ponto Eletrônico</span>
+                    <span class="mode-card-badge">Hands-Free</span>
+                  </div>
+                </div>
+                <p class="mode-card-desc">Ensaio 100% auditivo para você ensaiar com fone no ouvido, viva-voz ou sem as mãos.</p>
+              </div>
+
+              <div class="mode-card" data-mode="fraquezas">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">
+                    <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
+                  </span>
+                  <div class="mode-card-title-group">
+                    <span class="mode-card-title">Foco nas Fraquezas</span>
+                    <span class="mode-card-badge">Memorização</span>
+                  </div>
+                </div>
+                <p class="mode-card-desc">Repetição espaçada inteligente priorizando as falas onde você mais errou ou tem dúvida.</p>
               </div>
             </div>
-            <p class="mode-card-desc">Foque apenas nas suas réplicas, com a deixa do colega conectada e destacada no topo.</p>
-          </div>
-
-          <div class="mode-card" data-mode="cena">
-            <div class="mode-card-header">
-              <span class="mode-card-icon">
-                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
-              </span>
-              <div class="mode-card-title-group">
-                <span class="mode-card-title">Passada de Cena (Completa)</span>
-                <span class="mode-card-badge">Cronológico</span>
-              </div>
-            </div>
-            <p class="mode-card-desc">Passe todas as falas da peça do início ao fim, ouvindo ou lendo cada personagem.</p>
-          </div>
-
-          <div class="mode-card" data-mode="pingpong">
-            <div class="mode-card-header">
-              <span class="mode-card-icon">
-                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              </span>
-              <div class="mode-card-title-group">
-                <span class="mode-card-title">Ping-Pong de Deixas</span>
-                <span class="mode-card-badge">Reflexo 4s</span>
-              </div>
-            </div>
-            <p class="mode-card-desc">O colega fala e um cronômetro de reflexo de 4s abre para testar seu tempo de resposta.</p>
-          </div>
-
-          <div class="mode-card" data-mode="ponto">
-            <div class="mode-card-header">
-              <span class="mode-card-icon">
-                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>
-              </span>
-              <div class="mode-card-title-group">
-                <span class="mode-card-title">Ponto Eletrônico</span>
-                <span class="mode-card-badge">Hands-Free</span>
-              </div>
-            </div>
-            <p class="mode-card-desc">Ensaio 100% auditivo para você ensaiar com fone no ouvido, viva-voz ou sem as mãos.</p>
-          </div>
-
-          <div class="mode-card" data-mode="fraquezas">
-            <div class="mode-card-header">
-              <span class="mode-card-icon">
-                <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
-              </span>
-              <div class="mode-card-title-group">
-                <span class="mode-card-title">Foco nas Fraquezas</span>
-                <span class="mode-card-badge">Memorização</span>
-              </div>
-            </div>
-            <p class="mode-card-desc">Repetição espaçada inteligente priorizando as falas onde você mais errou ou tem dúvida.</p>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- SEÇÃO 3: BLOCO DRAMÁTICO / BEAT (OPCIONAL) -->
-      <section class="camarim-section">
-        <div class="camarim-section-title">
-          <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m4 4 3 4M9 4l3 4M14 4l3 4M19 4l1 4M2 8h20"/></svg>
-          <span>Bloco Dramático / Beat (Opcional)</span>
-        </div>
-        <div class="camarim-select-wrapper custom-select-box">
-          <select id="selectBeat" class="camarim-select" title="Filtrar por bloco dramático da cena">
-            <option value="all">Cena Completa (Todas as falas)</option>
-          </select>
-          <div class="select-chevron">
-            <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      <!-- SHEET 3: MÉTODO DE MEMORIZAÇÃO -->
+      <div id="sheetMethod" class="modal-backdrop slot-sheet" hidden>
+        <div class="modal-content">
+          <div class="modal-drag-bar" aria-hidden="true"></div>
+          <div class="modal-header">
+            <h2>
+              <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z"/></svg>
+              <span>Método de Memorização</span>
+            </h2>
+            <button id="btnCloseSheetMethod" class="btn-close" type="button" aria-label="Fechar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="study-methods-grid" id="studyMethodsGrid">
+              <button type="button" class="study-method-card active" data-method="oral">
+                <span class="method-card-icon">
+                  <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/></svg>
+                </span>
+                <div class="method-card-info">
+                  <span class="method-card-title">Oral / Cênico</span>
+                  <span class="method-card-badge">Padrão</span>
+                </div>
+                <p class="method-card-desc">Fale alto de cabeça e toque para conferir.</p>
+              </button>
+              <button type="button" class="study-method-card" data-method="quiz">
+                <span class="method-card-icon">
+                  <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19.4 7.8c0-1.6.8-2.2 1.6-2.8-1.3-1.3-3.1-2-5-2-1.6 0-2.2.8-2.8 1.6a2 2 0 0 1-2.3 0C10.2 3.8 9.6 3 8 3 6.2 3 4.3 3.7 3 5c.8.7 1.6 1.3 1.6 2.8a2 2 0 0 1-1.1 1.8C2.8 10.2 2 10.8 2 12.4c0 1.6.8 2.2 1.6 2.8a2 2 0 0 1 1.1 1.8c-.8.8-1.6 1.4-2.4 2.1 1.3 1.3 3.1 2 5 2 1.6 0 2.2-.8 2.8-1.6a2 2 0 0 1 2.3 0c.7.8 1.3 1.6 2.8 1.6 1.8 0 3.7-.7 5-2-.8-.7-1.6-1.3-1.6-2.8a2 2 0 0 1 1.1-1.8c.6-.5 1.4-1.1 1.4-2.7 0-1.6-.8-2.2-1.6-2.8a2 2 0 0 1-1.1-1.8Z"/></svg>
+                </span>
+                <div class="method-card-info">
+                  <span class="method-card-title">Alternativas</span>
+                  <span class="method-card-badge">Interativo</span>
+                </div>
+                <p class="method-card-desc">Complete lacunas escolhendo opções.</p>
+              </button>
+              <button type="button" class="study-method-card" data-method="typing">
+                <span class="method-card-icon">
+                  <svg class="app-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/></svg>
+                </span>
+                <div class="method-card-info">
+                  <span class="method-card-title">Digitação</span>
+                  <span class="method-card-badge">Teclado</span>
+                </div>
+                <p class="method-card-desc">Digite as palavras que faltam no texto.</p>
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- BOTÃO HERÓI: ENTRAR EM CENA -->
-      <div class="camarim-hero-action">
-        <button id="btnEnterStage" class="btn btn-primary btn-enter-stage" type="button">
-          <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
-          <span>Entrar em Cena</span>
-          <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
+      <!-- SHEET 4: CORTE CÊNICO (BEAT) -->
+      <div id="sheetBeat" class="modal-backdrop slot-sheet" hidden>
+        <div class="modal-content">
+          <div class="modal-drag-bar" aria-hidden="true"></div>
+          <div class="modal-header">
+            <h2>
+              <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m4 4 3 4M9 4l3 4M14 4l3 4M19 4l1 4M2 8h20"/></svg>
+              <span>Bloco Dramático / Beat</span>
+            </h2>
+            <button id="btnCloseSheetBeat" class="btn-close" type="button" aria-label="Fechar">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="camarim-select-wrapper custom-select-box">
+              <select id="selectBeat" class="camarim-select" title="Filtrar por bloco dramático da cena">
+                <option value="all">Cena Completa (Todas as falas)</option>
+              </select>
+              <div class="select-chevron">
+                <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -268,6 +379,26 @@
         </div>
       </footer>
     </div>
+
+    <!-- BARRA DE NAVEGAÇÃO INFERIOR DO APP (BOTTOM TAB BAR NATIVA) -->
+    <nav id="appTabBar" class="app-tab-bar" aria-label="Navegação Principal">
+      <button type="button" class="tab-bar-item active" id="tabBtnCamarim" data-tab="camarim">
+        <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
+        <span>Camarim</span>
+      </button>
+      <button type="button" class="tab-bar-item" id="tabBtnScript" data-tab="script">
+        <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+        <span>Roteiro</span>
+      </button>
+      <button type="button" class="tab-bar-item" id="tabBtnProgress" data-tab="progress">
+        <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        <span>Falas</span>
+      </button>
+      <button type="button" class="tab-bar-item" id="tabBtnSettings" data-tab="settings">
+        <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Ajustes</span>
+      </button>
+    </nav>
   </div>
 
   <!-- MODAL: ÍNDICE DE FALAS -->

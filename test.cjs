@@ -927,7 +927,46 @@ Meu príncipe, estais bem?
   });
   console.log('✅ 45. Sistema de ícones vetoriais SVG, erradicação total de emojis e alternância de temas validados');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 45 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 46: Arquitetura App Shell, Bottom Tab Bar nativa, Mission Control de 4 slots e Bottom Sheets
+  assert(indexHtml.includes('id="appTabBar"'), 'index.html deve conter a barra appTabBar');
+  assert(indexHtml.includes('id="tabBtnCamarim"'), 'index.html deve conter tabBtnCamarim');
+  assert(indexHtml.includes('id="tabBtnScript"'), 'index.html deve conter tabBtnScript');
+  assert(indexHtml.includes('id="tabBtnProgress"'), 'index.html deve conter tabBtnProgress');
+  assert(indexHtml.includes('id="tabBtnSettings"'), 'index.html deve conter tabBtnSettings');
+  assert(indexHtml.includes('id="slotActorBtn"'), 'index.html deve conter slotActorBtn');
+  assert(indexHtml.includes('id="slotModeBtn"'), 'index.html deve conter slotModeBtn');
+  assert(indexHtml.includes('id="slotMethodBtn"'), 'index.html deve conter slotMethodBtn');
+  assert(indexHtml.includes('id="slotBeatBtn"'), 'index.html deve conter slotBeatBtn');
+  assert(indexHtml.includes('id="sheetActor"'), 'index.html deve conter sheetActor');
+  assert(indexHtml.includes('id="sheetMode"'), 'index.html deve conter sheetMode');
+  assert(indexHtml.includes('id="sheetMethod"'), 'index.html deve conter sheetMethod');
+  assert(indexHtml.includes('id="sheetBeat"'), 'index.html deve conter sheetBeat');
+
+  // Testar acionamento das abas
+  AppController.handleActionClick('tabBtnScript');
+  assert.strictEqual(domStore['modalFullScript'].hidden, false, 'tabBtnScript deve exibir leitor de roteiro');
+  AppController.handleActionClick('tabBtnCamarim');
+  assert.strictEqual(domStore['modalFullScript'].hidden, true, 'tabBtnCamarim deve fechar telas e focar no Camarim');
+
+  // Testar abertura e fechamento de bottom sheets de slots
+  AppController.handleActionClick('slotActorBtn');
+  assert.strictEqual(domStore['sheetActor'].hidden, false, 'slotActorBtn deve abrir sheetActor');
+  AppController.handleActionClick('btnCloseSheetActor');
+  assert.strictEqual(domStore['sheetActor'].hidden, true, 'btnCloseSheetActor deve fechar sheetActor');
+
+  // Testar sincronização de slots no Camarim
+  AppState.selectedActor = 'SÉRGIO';
+  AppState.rehearsalMode = 'minhas';
+  AppState.studyMethod = 'oral';
+  AppState.selectedBeat = 'all';
+  UIController.updateMissionSlots();
+  assert.strictEqual(domStore['slotActorValue'].textContent, 'SÉRGIO', 'slotActorValue deve refletir o ator ativo');
+  assert.strictEqual(domStore['slotModeValue'].textContent, 'Só Minhas Falas + Deixas', 'slotModeValue deve refletir o modo');
+  assert.strictEqual(domStore['slotMethodValue'].textContent, 'Oral / Cênico', 'slotMethodValue deve refletir o método');
+  assert.strictEqual(domStore['slotBeatValue'].textContent, 'Cena Completa', 'slotBeatValue deve refletir o corte');
+  console.log('✅ 46. Arquitetura App Shell: Bottom Tab Bar, Mission Control de 4 slots e Bottom Sheets validados');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 46 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

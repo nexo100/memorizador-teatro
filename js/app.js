@@ -589,24 +589,57 @@
           AppState.isSceneFinished = false;
           AppState.rehearsalMode = 'fraquezas';
           this.goToSpeech(AppState.pickNextWeakness());
-        } else if (id === 'btnOpenFullScriptLobby' || id === 'btnReadScriptBanner' || id === 'btnOpenFullScriptSettings') {
+        } else if (id === 'btnOpenFullScriptLobby' || id === 'btnReadScriptBanner' || id === 'btnOpenFullScriptSettings' || id === 'tabBtnScript') {
           UIController.renderFullScriptModal();
           UIController.openModal('modalFullScript');
+          UIController.updateTabBarActive('script');
         } else if (id === 'btnCloseFullScript') {
           UIController.closeModal('modalFullScript');
+          UIController.updateTabBarActive('camarim');
         } else if (id === 'btnStartFromScript') {
           UIController.closeModal('modalFullScript');
           this.enterStage();
-        } else if (id === 'btnOpenIndex' || id === 'btnOpenIndexLobby' || id === 'btnStageIndex' || id === 'btnNavIndex') {
+        } else if (id === 'btnOpenIndex' || id === 'btnOpenIndexLobby' || id === 'btnStageIndex' || id === 'btnNavIndex' || id === 'tabBtnProgress') {
           UIController.renderIndexModal();
           UIController.openModal('modalIndex');
+          UIController.updateTabBarActive('progress');
         } else if (id === 'btnCloseIndex') {
           UIController.closeModal('modalIndex');
-        } else if (id === 'btnOpenSettings' || id === 'btnOpenSettingsLobby' || id === 'btnOpenSettingsStage') {
+          UIController.updateTabBarActive('camarim');
+        } else if (id === 'btnOpenSettings' || id === 'btnOpenSettingsLobby' || id === 'btnOpenSettingsStage' || id === 'tabBtnSettings') {
           UIController.populateVoiceSelectors();
           UIController.openModal('modalSettings');
+          UIController.updateTabBarActive('settings');
         } else if (id === 'btnCloseSettings') {
           UIController.closeModal('modalSettings');
+          UIController.updateTabBarActive('camarim');
+        } else if (id === 'tabBtnCamarim') {
+          UIController.closeModal('modalFullScript');
+          UIController.closeModal('modalIndex');
+          UIController.closeModal('modalSettings');
+          UIController.closeModal('sheetActor');
+          UIController.closeModal('sheetMode');
+          UIController.closeModal('sheetMethod');
+          UIController.closeModal('sheetBeat');
+          UIController.updateTabBarActive('camarim');
+        } else if (id === 'slotActorBtn') {
+          UIController.openModal('sheetActor', Utils.$('slotActorBtn'));
+        } else if (id === 'btnCloseSheetActor') {
+          UIController.closeModal('sheetActor');
+        } else if (id === 'slotModeBtn') {
+          UIController.openModal('sheetMode', Utils.$('slotModeBtn'));
+        } else if (id === 'btnCloseSheetMode') {
+          UIController.closeModal('sheetMode');
+        } else if (id === 'slotMethodBtn') {
+          UIController.openModal('sheetMethod', Utils.$('slotMethodBtn'));
+        } else if (id === 'btnCloseSheetMethod') {
+          UIController.closeModal('sheetMethod');
+        } else if (id === 'slotBeatBtn') {
+          UIController.openModal('sheetBeat', Utils.$('slotBeatBtn'));
+        } else if (id === 'btnCloseSheetBeat') {
+          UIController.closeModal('sheetBeat');
+        } else if (id === 'btnQuickResume') {
+          this.enterStage();
         }
       },
 
@@ -749,6 +782,7 @@
               this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : 0, false);
               UIController.renderLobby();
             }
+            UIController.closeModal('sheetActor');
             return;
           }
 
@@ -756,8 +790,17 @@
           if (modeCard) {
             const mode = modeCard.dataset.mode;
             if (mode) {
-              this.enterStage(mode);
+              AppState.rehearsalMode = mode;
+              StorageManager.saveSettings(AppState);
+              UIController.closeModal('sheetMode');
+              UIController.renderLobby();
             }
+            return;
+          }
+
+          const tabBtn = e.target.closest('.tab-bar-item');
+          if (tabBtn) {
+            this.handleActionClick(tabBtn.id);
             return;
           }
 
@@ -803,6 +846,7 @@
             } else {
               this.goToSpeech(range.start, false);
             }
+            UIController.closeModal('sheetBeat');
             UIController.renderLobby();
           };
         }
@@ -816,12 +860,13 @@
           };
         });
 
-        ['modalIndex', 'modalSettings', 'modalFullScript'].forEach(modalId => {
+        ['modalIndex', 'modalSettings', 'modalFullScript', 'sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat'].forEach(modalId => {
           const modalEl = Utils.$(modalId);
           if (modalEl) {
             modalEl.onclick = (e) => {
               if (e.target === modalEl || (e.target.classList && e.target.classList.contains('modal-drag-bar'))) {
                 UIController.closeModal(modalId);
+                UIController.updateTabBarActive('camarim');
               }
             };
           }
@@ -846,6 +891,7 @@
             AppState.studyMethod = card.dataset.method;
             StorageManager.saveSettings(AppState);
             if (Utils.$('selectStudyMethod')) Utils.$('selectStudyMethod').value = AppState.studyMethod;
+            UIController.closeModal('sheetMethod');
             UIController.renderLobby();
           };
         });

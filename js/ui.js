@@ -33,15 +33,32 @@ const UIController = {
     AppState.currentScreen = screenName;
     const lobby = Utils.$('lobbyView');
     const stage = Utils.$('rehearsalView');
+    const tabBar = Utils.$('appTabBar');
     if (screenName === 'lobby') {
       if (lobby) lobby.hidden = false;
       if (stage) stage.hidden = true;
+      if (tabBar) tabBar.hidden = false;
       this.renderLobby();
+      this.updateTabBarActive('camarim');
     } else {
       if (lobby) lobby.hidden = true;
       if (stage) stage.hidden = false;
+      if (tabBar) tabBar.hidden = true;
       this.renderView();
     }
+  },
+
+  updateTabBarActive(tabId) {
+    const bar = Utils.$('appTabBar');
+    if (!bar) return;
+    const items = bar.querySelectorAll('.tab-bar-item');
+    items.forEach(it => {
+      if (it.dataset.tab === tabId) {
+        it.classList.add('active');
+      } else {
+        it.classList.remove('active');
+      }
+    });
   },
 
   renderLobby() {
@@ -118,6 +135,91 @@ const UIController = {
     }
 
     this.populateBeatSelector();
+    this.updateMissionSlots();
+  },
+
+  updateMissionSlots() {
+    // 1. Slot Personagem / Papel
+    const slotActorVal = Utils.$('slotActorValue');
+    const slotActorSub = Utils.$('slotActorSub');
+    if (slotActorVal && slotActorSub) {
+      if (AppState.selectedActor) {
+        slotActorVal.textContent = AppState.selectedActor;
+        const total = AppState.speeches.filter(s => s.who === AppState.selectedActor).length;
+        const mastered = AppState.speeches.map((s, i) => s.who === AppState.selectedActor && (AppState.masteryLevels[i] || 0) >= 3 ? 1 : 0).reduce((a, b) => a + b, 0);
+        const pct = total > 0 ? Math.round((100 * mastered) / total) : 0;
+        slotActorSub.textContent = `${mastered} de ${total} falas dominadas (${pct}%)`;
+      } else {
+        slotActorVal.textContent = 'Escolha seu Papel';
+        slotActorSub.textContent = 'Toque para selecionar personagem';
+      }
+    }
+
+    // 2. Slot Modo de Ensaio
+    const slotModeVal = Utils.$('slotModeValue');
+    const slotModeSub = Utils.$('slotModeSub');
+    if (slotModeVal && slotModeSub) {
+      const modeTitles = {
+        minhas: 'Só Minhas Falas + Deixas',
+        cena: 'Passada de Cena (Completa)',
+        pingpong: 'Ping-Pong de Deixas',
+        ponto: 'Ponto Eletrônico',
+        fraquezas: 'Foco nas Fraquezas'
+      };
+      const modeSubs = {
+        minhas: 'Foco apenas nas suas réplicas e deixas',
+        cena: 'Todas as falas em ordem cronológica',
+        pingpong: 'Cronômetro de reflexo de 4 segundos',
+        ponto: 'Ensaio 100% auditivo hands-free',
+        fraquezas: 'Repetição espaçada focada em dúvidas'
+      };
+      slotModeVal.textContent = modeTitles[AppState.rehearsalMode] || AppState.rehearsalMode;
+      slotModeSub.textContent = modeSubs[AppState.rehearsalMode] || 'Modo ativo';
+    }
+
+    // 3. Slot Método de Memorização
+    const slotMethodVal = Utils.$('slotMethodValue');
+    const slotMethodSub = Utils.$('slotMethodSub');
+    if (slotMethodVal && slotMethodSub) {
+      const methodTitles = {
+        oral: 'Oral / Cênico',
+        quiz: 'Alternativas',
+        typing: 'Digitação'
+      };
+      const methodSubs = {
+        oral: 'Fale alto de cabeça e toque para conferir',
+        quiz: 'Complete lacunas escolhendo opções',
+        typing: 'Digite as palavras que faltam no texto'
+      };
+      slotMethodVal.textContent = methodTitles[AppState.studyMethod] || AppState.studyMethod;
+      slotMethodSub.textContent = methodSubs[AppState.studyMethod] || 'Método ativo';
+    }
+
+    // 4. Slot Corte Cênico / Beat
+    const slotBeatVal = Utils.$('slotBeatValue');
+    const slotBeatSub = Utils.$('slotBeatSub');
+    if (slotBeatVal && slotBeatSub) {
+      if (AppState.selectedBeat === 'all' || !AppState.activeBeats[parseInt(AppState.selectedBeat, 10)]) {
+        slotBeatVal.textContent = 'Cena Completa';
+        slotBeatSub.textContent = `Todas as ${AppState.speeches.length} falas da peça`;
+      } else {
+        const beatObj = AppState.activeBeats[parseInt(AppState.selectedBeat, 10)];
+        slotBeatVal.textContent = beatObj ? beatObj.name : 'Bloco Cênico';
+        slotBeatSub.textContent = beatObj ? `Falas ${beatObj.startLine + 1} a ${beatObj.endLine + 1}` : 'Trecho selecionado';
+      }
+    }
+
+    // 5. Card de Continuação Rápida (Smart Resume)
+    const resumeCard = Utils.$('resumeRehearsalCard');
+    const resumeTitle = Utils.$('resumeCardTitle');
+    if (resumeCard && resumeTitle) {
+      if (AppState.currentIndex > 0 && AppState.currentIndex < AppState.speeches.length) {
+        resumeCard.style.display = 'flex';
+        resumeTitle.textContent = `Continuar da fala ${AppState.currentIndex + 1} de ${AppState.speeches.length}`;
+      } else {
+        resumeCard.style.display = 'none';
+      }
+    }
   },
 
   populateBeatSelector() {
