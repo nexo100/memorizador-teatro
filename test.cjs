@@ -10,6 +10,7 @@ const indexHtml = fs.readFileSync('index.html', 'utf8');
 const ensaioHtml = fs.readFileSync('Ensaio · Os Inventariantes.html', 'utf8');
 assert(ensaioHtml.includes('url=./index.html'), 'Ensaio · Os Inventariantes.html deve redirecionar para index.html');
 assert(indexHtml.includes('css/style.css'), 'index.html deve carregar css/style.css');
+assert(indexHtml.includes('plays/default-play.js'), 'index.html deve carregar plays/default-play.js');
 assert(indexHtml.includes('js/app.js'), 'index.html deve carregar os módulos em js/');
 console.log('✅ 1. Arquitetura modular e redirecionamento canônico validados');
 
@@ -19,6 +20,8 @@ const jsFiles = ['config.js', 'utils.js', 'state.js', 'parser.js', 'storage.js',
 jsFiles.forEach(f => {
   assert(fs.existsSync(path.join(__dirname, 'js', f)), `Arquivo js/${f} deve existir`);
 });
+assert(fs.existsSync(path.join(__dirname, 'plays', 'default-play.js')), 'Arquivo plays/default-play.js deve existir');
+assert(fs.existsSync(path.join(__dirname, 'plays', 'os-inventariantes.json')), 'Arquivo plays/os-inventariantes.json deve existir');
 
 // 3. Mock do ambiente de navegador
 const domStore = {};
@@ -120,12 +123,6 @@ const mockIndexedDB = {
   }
 };
 
-const defaultPlayTag = 'id="defaultPlay">';
-const dpStart = indexHtml.indexOf(defaultPlayTag) + defaultPlayTag.length;
-const dpEnd = indexHtml.indexOf('</script>', dpStart);
-const defaultPlayText = indexHtml.substring(dpStart, dpEnd);
-domStore['defaultPlay'] = { textContent: defaultPlayText };
-
 // 4. Executar script no contexto VM
 const context = vm.createContext({
   document: mockDocument,
@@ -149,14 +146,18 @@ const context = vm.createContext({
   Blob: globalThis.Blob
 });
 
+// Carregar peca padrao desacoplada antes dos modulos do app
+const defaultPlayCode = fs.readFileSync(path.join(__dirname, 'plays', 'default-play.js'), 'utf8');
+vm.runInContext(defaultPlayCode, context);
+
 jsFiles.forEach(f => {
   const code = fs.readFileSync(path.join(__dirname, 'js', f), 'utf8');
   vm.runInContext(code, context);
 });
 
-vm.runInContext('globalThis.__test_exports = { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, AppConfig, Utils };', context);
+vm.runInContext('globalThis.__test_exports = { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, DramaturgyAnalyzer, AppConfig, Utils, DefaultPlay, PlayStore };', context);
 
-const { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, AppConfig, Utils } = context.__test_exports;
+const { AppState, AppController, UIController, StorageManager, AudioEngine, ScriptParser, DramaBeats, DramaturgyAnalyzer, AppConfig, Utils, DefaultPlay, PlayStore } = context.__test_exports;
 
 async function runTestSuite() {
   await new Promise(r => setTimeout(r, 40));
@@ -913,7 +914,7 @@ Meu príncipe, estais bem?
   assert.strictEqual(mockLocalStorage.getItem('stagepro_theme'), 'dark', 'Tema escuro deve ser salvo no storage');
 
   // Validar erradicação de emojis em arquivos-chave da aplicação
-  const appFiles = ['index.html', 'js/app.js', 'js/audio.js', 'js/config.js', 'js/parser.js', 'js/state.js', 'js/storage.js', 'js/ui.js', 'js/utils.js'];
+  const appFiles = ['index.html', 'js/app.js', 'js/audio.js', 'js/config.js', 'js/parser.js', 'js/state.js', 'js/storage.js', 'js/ui.js', 'js/utils.js', 'plays/default-play.js'];
   const emojiPattern = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{2300}-\u{23FF}\u{25B6}\u{23F8}\u{23F9}]/u;
   appFiles.forEach(f => {
     const full = path.join(__dirname, f);
@@ -1021,7 +1022,410 @@ Meu príncipe, estais bem?
   assert(domStore['fullScriptContainer'].innerHTML.includes('char-color-'), 'Roteiro deve colorir nomes de personagens com paleta teatral');
   console.log('✅ 48. Leitura Dramatúrgica Contínua (ePub/PDF), Seletor de Alvo de Áudio, Marca-Texto e Onboarding validados');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 48 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 49: Catálogo Multi-Peças (PlayStore), Integridade Canônica e Persistência
+  assert(typeof PlayStore !== 'undefined', 'PlayStore deve estar definido');
+  assert(StorageManager.plays === PlayStore, 'StorageManager.plays deve apontar para PlayStore');
+  const allPlaysInit = PlayStore.getAll();
+  assert(allPlaysInit.length >= 1, 'Catálogo deve conter pelo menos a peça canônica padrão');
+  const canonicalPlay = PlayStore.get('os-inventariantes');
+  assert(canonicalPlay, 'Peça canônica deve ser recuperada por id os-inventariantes');
+  assert.strictEqual(canonicalPlay.title, 'Os Inventariantes');
+  assert.strictEqual(canonicalPlay.isDefault, true);
+  assert.strictEqual(PlayStore.getActivePlayId(), 'os-inventariantes', 'Peça ativa inicial deve ser os-inventariantes');
+  console.log('✅ 49. Catálogo Multi-Peças (PlayStore), integridade canônica e persistência validados');
+
+  // Teste 50: Cadastro Dinâmico e Coexistência de Múltiplos Roteiros no Catálogo
+  const hamletText = `
+# Hamlet
+**HAMLET:** Ser ou não ser, eis a questão.
+**OFÉLIA:** Meu senhor, como tem passado nestes dias?
+**REI CLÁUDIO:** *(Com voz grave)* Hamlet, que melancolia é essa?
+**RAINHA GERTRUDES:** Querido filho, desfaça essa expressão sombria.
+**HORÁCIO:** Meu príncipe, ouvi passos estranhos na muralha.
+`;
+  const hamletPlay = PlayStore.createPlayFromScript(hamletText, 'Hamlet', 'William Shakespeare');
+  assert(hamletPlay && hamletPlay.id, 'Hamlet deve ser criada com id válido');
+  assert.strictEqual(hamletPlay.title, 'Hamlet');
+  assert.strictEqual(hamletPlay.characters.length, 5);
+
+  const autoText = `
+# Auto da Compadecida
+**JOÃO GRILO:** Valha-me Nossa Senhora, Mãe de Deus de Nazaré!
+**CHICÓ:** Não sei, só sei que foi assim.
+**SEVERINO:** *(Empunhando o rifle)* Ninguém se mexe nesta igreja!
+`;
+  const autoPlay = PlayStore.createPlayFromScript(autoText, 'Auto da Compadecida', 'Ariano Suassuna');
+  assert(autoPlay && autoPlay.id, 'Auto da Compadecida deve ser criada com id válido');
+  assert.strictEqual(autoPlay.characters.length, 3);
+
+  const playsAfterCreation = PlayStore.getAll();
+  assert(playsAfterCreation.length >= 3, 'Catálogo deve conter pelo menos 3 peças cadastradas');
+  assert(playsAfterCreation.some(p => p.id === hamletPlay.id), 'Catálogo deve conter Hamlet');
+  assert(playsAfterCreation.some(p => p.id === autoPlay.id), 'Catálogo deve conter Auto da Compadecida');
+  console.log('✅ 50. Criação dinâmica e coexistência de múltiplos roteiros no catálogo validadas');
+
+  // Teste 51: Alternância Atômica de Peças e Isolamento Rigoroso de Atores, Progresso e Notas
+  // Configurar dados na peça canônica (Os Inventariantes)
+  AppController.switchPlay('os-inventariantes');
+  AppState.selectedActor = 'SÉRGIO';
+  StorageManager.setSelectedActor('SÉRGIO', 'default');
+  AppState.masteryLevels = StorageManager.loadProgress('SÉRGIO', AppState.speeches.length, 'default');
+  AppState.masteryLevels[0] = 4;
+  StorageManager.saveProgress('SÉRGIO', AppState.masteryLevels, 'default');
+  StorageManager.setActorNotes('Subtexto de Sérgio: frieza metódica', 'default');
+
+  // Alternar para Hamlet
+  AppController.switchPlay(hamletPlay.id);
+  assert.strictEqual(AppState.activePlay.id, hamletPlay.id, 'Peça ativa deve ser Hamlet');
+  assert.strictEqual(AppState.characters.length, 5, 'Hamlet deve ter 5 personagens');
+  AppState.selectedActor = 'HAMLET';
+  StorageManager.setSelectedActor('HAMLET', hamletPlay.id);
+  const hamletProgress = StorageManager.loadProgress('HAMLET', AppState.speeches.length, hamletPlay.id);
+  assert.strictEqual(hamletProgress[0], 0, 'Progresso inicial de Hamlet na fala 0 deve ser 0 (isolado de Sérgio)');
+  hamletProgress[0] = 5;
+  StorageManager.saveProgress('HAMLET', hamletProgress, hamletPlay.id);
+  StorageManager.setActorNotes('Caderno de Hamlet: fantasma na muralha', hamletPlay.id);
+
+  // Alternar para Auto da Compadecida
+  AppController.switchPlay(autoPlay.id);
+  assert.strictEqual(AppState.activePlay.id, autoPlay.id, 'Peça ativa deve ser Auto da Compadecida');
+  assert.strictEqual(AppState.characters.length, 3, 'Auto da Compadecida deve ter 3 personagens');
+  AppState.selectedActor = 'JOÃO GRILO';
+  StorageManager.setSelectedActor('JOÃO GRILO', autoPlay.id);
+  StorageManager.setActorNotes('Caderno do Grilo: esperteza contra os cangaceiros', autoPlay.id);
+
+  // Voltar para Os Inventariantes e validar isolamento perfeito
+  AppController.switchPlay('os-inventariantes');
+  assert.strictEqual(AppState.activePlay.id, 'os-inventariantes', 'Deve voltar para Os Inventariantes');
+  assert.strictEqual(AppState.characters.length, 2);
+  const actorRestoredInventariantes = StorageManager.getSelectedActor('default');
+  assert.strictEqual(actorRestoredInventariantes, 'SÉRGIO', 'Ator restaurado para Os Inventariantes deve ser SÉRGIO');
+  const inventariantesProgressRestored = StorageManager.loadProgress('SÉRGIO', AppState.speeches.length, 'default');
+  assert.strictEqual(inventariantesProgressRestored[0], 4, 'Progresso nível 4 de Sérgio deve permanecer intacto');
+  assert.strictEqual(StorageManager.getActorNotes('default'), 'Subtexto de Sérgio: frieza metódica', 'Notas de Sérgio preservadas');
+
+  // Voltar para Hamlet e validar integridade isolada
+  AppController.switchPlay(hamletPlay.id);
+  const actorRestoredHamlet = StorageManager.getSelectedActor(hamletPlay.id);
+  assert.strictEqual(actorRestoredHamlet, 'HAMLET', 'Ator restaurado para Hamlet deve ser HAMLET');
+  const hamletProgressRestored = StorageManager.loadProgress('HAMLET', AppState.speeches.length, hamletPlay.id);
+  assert.strictEqual(hamletProgressRestored[0], 5, 'Progresso nível 5 de Hamlet preservado');
+  assert.strictEqual(StorageManager.getActorNotes(hamletPlay.id), 'Caderno de Hamlet: fantasma na muralha', 'Notas de Hamlet preservadas');
+  console.log('✅ 51. Alternância atômica de peças e isolamento rigoroso de atores, progresso e notas validados');
+
+  // Teste 52: Cálculo de Métricas Dramáticas e Estatísticas por Peça (PlayStore.getStats)
+  const statsInventariantes = PlayStore.getStats('os-inventariantes');
+  assert(statsInventariantes, 'Deve gerar estatísticas para Os Inventariantes');
+  assert.strictEqual(statsInventariantes.totalSpeeches, 58);
+  assert.strictEqual(statsInventariantes.characterCount, 2);
+  assert.strictEqual(statsInventariantes.beatsCount, 5);
+
+  const statsHamlet = PlayStore.getStats(hamletPlay.id);
+  assert(statsHamlet, 'Deve gerar estatísticas para Hamlet');
+  assert.strictEqual(statsHamlet.totalSpeeches, 5);
+  assert.strictEqual(statsHamlet.characterCount, 5);
+  assert.strictEqual(statsHamlet.characterCounts['HAMLET'], 1);
+  console.log('✅ 52. Cálculo de métricas dramáticas, beats e domínio por peça (PlayStore.getStats) validado');
+
+  // Teste 53: Exclusão com Purga e Blindagem da Peça Canônica Padrão
+  const deleteDefaultAttempt = PlayStore.delete('os-inventariantes');
+  assert.strictEqual(deleteDefaultAttempt, false, 'Peça canônica padrão não deve poder ser excluída');
+  assert(PlayStore.get('os-inventariantes'), 'Peça canônica padrão continua no catálogo');
+
+  const deleteAutoResult = PlayStore.delete(autoPlay.id, { purgeUserData: true });
+  assert.strictEqual(deleteAutoResult, true, 'Auto da Compadecida deve ser excluída');
+  assert.strictEqual(PlayStore.get(autoPlay.id), null, 'Auto da Compadecida não deve mais existir no catálogo');
+  assert.strictEqual(StorageManager.getActorNotes(autoPlay.id), '', 'Notas de Auto da Compadecida devem ter sido purgadas');
+
+  // Restaurar peça ativa limpa para os Inventariantes
+  AppController.switchPlay('os-inventariantes');
+  console.log('✅ 53. Exclusão de peças com purga e blindagem imutável da peça canônica padrão validadas');
+
+  // Teste 54: Ponto de Acesso no Camarim (#lobbyView), Botão de Upload/Seleção e Estrutura dos Modais
+  assert(indexHtml.includes('id="btnOpenPlayCatalog"'), 'index.html deve conter o ponto de acesso principal btnOpenPlayCatalog');
+  assert(indexHtml.includes('id="btnOpenCatalogHeader"'), 'index.html deve conter o botão de catálogo no cabeçalho btnOpenCatalogHeader');
+  assert(indexHtml.includes('id="modalPlayCatalog"'), 'index.html deve conter o modal modalPlayCatalog');
+  assert(indexHtml.includes('id="modalImportPlay"'), 'index.html deve conter o modal modalImportPlay');
+  assert(indexHtml.includes('id="btnOpenImportFlow"'), 'index.html deve conter o botão btnOpenImportFlow');
+  assert(indexHtml.includes('id="btnAnalyzeImport"'), 'index.html deve conter o botão btnAnalyzeImport');
+  assert(indexHtml.includes('id="btnConfirmImportSave"'), 'index.html deve conter o botão btnConfirmImportSave');
+  assert(indexHtml.includes('id="inputScriptFile"'), 'index.html deve conter o input de arquivo inputScriptFile');
+
+  // Testar abertura e fechamento dos modais
+  AppController.handleActionClick('btnOpenPlayCatalog');
+  assert.strictEqual(domStore['modalPlayCatalog'].hidden, false, 'btnOpenPlayCatalog deve abrir o modal de catálogo');
+  AppController.handleActionClick('btnClosePlayCatalog');
+  assert.strictEqual(domStore['modalPlayCatalog'].hidden, true, 'btnClosePlayCatalog deve fechar o modal de catálogo');
+
+  AppController.handleActionClick('btnOpenCatalogHeader');
+  assert.strictEqual(domStore['modalPlayCatalog'].hidden, false, 'btnOpenCatalogHeader deve abrir o modal de catálogo');
+  AppController.handleActionClick('btnOpenImportFlow');
+  assert.strictEqual(domStore['modalPlayCatalog'].hidden, true, 'btnOpenImportFlow deve fechar o modal de catálogo');
+  assert.strictEqual(domStore['modalImportPlay'].hidden, false, 'btnOpenImportFlow deve abrir o modal de importação');
+  AppController.handleActionClick('btnCloseImportPlay');
+  assert.strictEqual(domStore['modalImportPlay'].hidden, true, 'btnCloseImportPlay deve fechar o modal de importação');
+  console.log('✅ 54. Ponto de acesso no Camarim e acionamento dos modais de biblioteca/importação validados');
+
+  // Teste 55: Bottom Sheet / Modal da Biblioteca de Roteiros (Renderização da Lista, Estatísticas de Domínio e Troca de Peça com 1 Toque)
+  UIController.renderPlayCatalog();
+  assert(domStore['playCatalogList'].innerHTML.includes('play-catalog-card'), 'Catálogo deve renderizar cards de peças');
+  assert(domStore['playCatalogList'].innerHTML.includes('Os Inventariantes'), 'Catálogo deve listar a peça canônica');
+  assert(domStore['playCatalogList'].innerHTML.includes('Em Ensaio'), 'Peça ativa deve exibir badge Em Ensaio');
+
+  const macbethText = `
+# Macbeth
+Autor: William Shakespeare
+
+**MACBETH:** O que foi feito nunca pode ser desfeito.
+**LADY MACBETH:** Sai, mancha maldita!
+`;
+  const macbethPlay = PlayStore.createPlayFromScript(macbethText, 'Macbeth', 'William Shakespeare');
+  assert(macbethPlay && macbethPlay.id, 'Macbeth deve ser cadastrada com sucesso');
+
+  UIController.renderPlayCatalog();
+  assert(domStore['playCatalogList'].innerHTML.includes('Macbeth'), 'Catálogo deve conter Macbeth após cadastro');
+  assert(domStore['playCatalogList'].innerHTML.includes('William Shakespeare'), 'Catálogo deve exibir autor');
+
+  // Testar alternância de peça com 1 toque
+  AppController.switchPlay(macbethPlay.id);
+  assert.strictEqual(AppState.activePlay.id, macbethPlay.id, 'Peça ativa deve mudar para Macbeth');
+  assert.strictEqual(PlayStore.getActivePlayId(), macbethPlay.id, 'PlayStore deve registrar Macbeth como ativa');
+  assert.strictEqual(AppState.characters.length, 2, 'Macbeth deve ter 2 personagens');
+  assert.strictEqual(AppState.characters[0], 'MACBETH');
+
+  // Voltar para os inventariantes
+  AppController.switchPlay('os-inventariantes');
+  assert.strictEqual(AppState.activePlay.id, 'os-inventariantes', 'Deve restaurar Os Inventariantes');
+  console.log('✅ 55. Biblioteca de Roteiros, estatísticas de domínio e alternância de peça com 1 toque validadas');
+
+  // Teste 56: Fluxo de Importação de Nova Peça (Upload/Leitura e Entrada de Texto Livre)
+  UIController.openImportPlayModal();
+  assert.strictEqual(domStore['modalImportPlay'].hidden, false, 'Modal de importação deve abrir');
+  assert.strictEqual(domStore['importStepInput'].hidden, false, 'Etapa 1 de entrada deve estar visível');
+  assert.strictEqual(domStore['importStepReview'].hidden, true, 'Etapa 2 de revisão deve estar oculta');
+  assert.strictEqual(domStore['importRawScriptText'].value, '', 'Campo de texto deve ser limpo na abertura');
+
+  const pagadorText = `
+# O Pagador de Promessas
+Autor: Dias Gomes
+
+**ZÉ DO BURRO:** *(Aflito, olhando para a igreja)* Eu fiz uma promessa a Santa Bárbara.
+**ROSA:** Zé, você está louco! Essa promessa vai te matar.
+**PADRE OLAVO:** Esta igreja não aceita promessas pagãs!
+**BONITÃO:** Deixe o homem entrar, seu padre.
+`;
+  assert.strictEqual(ScriptParser.extractAuthor(pagadorText), 'Dias Gomes', 'extractAuthor deve detectar Dias Gomes');
+  assert.strictEqual(ScriptParser.extractPlayTitle(pagadorText), 'O Pagador de Promessas', 'extractPlayTitle deve detectar O Pagador de Promessas');
+  console.log('✅ 56. Fluxo de importação e leitura heurística de formatos teatrais livres validados');
+
+  // Teste 57: Prévia e Personalização Dramatúrgica (Revisão de Título, Adição/Remoção de Personagens e Partição de Beats)
+  const analysisPagador = DramaturgyAnalyzer.analyzeOffline(pagadorText);
+  assert.strictEqual(analysisPagador.title, 'O Pagador de Promessas');
+  assert.strictEqual(analysisPagador.author, 'Dias Gomes');
+  assert.strictEqual(analysisPagador.characters.length, 4);
+  assert(analysisPagador.characters.includes('ZÉ DO BURRO'));
+  assert(analysisPagador.characters.includes('ROSA'));
+  assert(analysisPagador.characters.includes('PADRE OLAVO'));
+  assert(analysisPagador.characters.includes('BONITÃO'));
+
+  UIController.renderImportReview(analysisPagador);
+  assert.strictEqual(domStore['importStepReview'].hidden, false, 'Etapa de revisão deve ficar visível');
+  assert.strictEqual(domStore['importReviewTitle'].value, 'O Pagador de Promessas');
+  assert.strictEqual(domStore['importReviewAuthor'].value, 'Dias Gomes');
+
+  // Testar remoção de personagem (ex: remover falso positivo BONITÃO)
+  UIController.removeReviewCharacter('BONITÃO');
+  assert(!UIController.ImportFlowState.characters.includes('BONITÃO'), 'BONITÃO deve ter sido removido');
+  assert.strictEqual(UIController.ImportFlowState.characters.length, 3);
+
+  // Testar adição de novo personagem personalizado
+  UIController.addReviewCharacter('SEGREDO');
+  assert(UIController.ImportFlowState.characters.includes('SEGREDO'), 'SEGREDO deve ter sido adicionado');
+  assert.strictEqual(UIController.ImportFlowState.characters.length, 4);
+
+  // Testar estratégias de partição de beats
+  const singleBeats = DramaBeats.generateBeats(analysisPagador.speeches, pagadorText, null, 'single');
+  assert.strictEqual(singleBeats.length, 1, 'Estratégia single deve gerar 1 beat');
+
+  const blockBeats = DramaBeats.generateBeats(analysisPagador.speeches, pagadorText, null, 'block10');
+  assert(blockBeats.length >= 1, 'Estratégia block10 deve particionar corretamente');
+
+  // Salvar peça personalizada com confirmação
+  const pagadorPlay = PlayStore.createPlayFromScript(pagadorText, 'O Pagador de Promessas (Versão Ensaio)', 'Dias Gomes', {
+    characters: UIController.ImportFlowState.characters,
+    beats: singleBeats
+  });
+  assert.strictEqual(pagadorPlay.title, 'O Pagador de Promessas (Versão Ensaio)');
+  assert.deepStrictEqual(pagadorPlay.characters, UIController.ImportFlowState.characters);
+
+  AppController.switchPlay(pagadorPlay.id);
+  assert.strictEqual(AppState.activePlay.id, pagadorPlay.id);
+  assert.strictEqual(AppState.activeBeats.length, 1);
+  console.log('✅ 57. Prévia e personalização dramatúrgica de roteiros reais validada');
+
+  // Teste 58: Gancho Arquitetural para IA do Passo 4 (DramaturgyAnalyzer Plugável e Resiliência)
+  assert(typeof DramaturgyAnalyzer !== 'undefined', 'DramaturgyAnalyzer deve estar definido');
+  assert.strictEqual(typeof DramaturgyAnalyzer.analyze, 'function');
+  assert.strictEqual(typeof DramaturgyAnalyzer.setAIProvider, 'function');
+
+  // Análise offline determinística padrão
+  const offlineResult = await DramaturgyAnalyzer.analyze('**ATOR:** Fala de teste.');
+  assert.strictEqual(offlineResult.source, 'heuristic_offline');
+
+  // Provedor de IA simulado plugado
+  const mockAI = {
+    name: 'Gemini-Mock',
+    analyzeScript: async (text) => ({
+      title: 'Antígona',
+      author: 'Sófocles',
+      characters: ['ANTÍGONA', 'ISMENE', 'CREONTE'],
+      speeches: ScriptParser.parseScript(text),
+      beats: [{ name: 'Prólogo', start: 0, end: 1 }],
+      suggestions: ['Cena de alta tensão trágica']
+    })
+  };
+  DramaturgyAnalyzer.setAIProvider(mockAI);
+  assert.strictEqual(DramaturgyAnalyzer.getAIProvider(), mockAI);
+  const aiResult = await DramaturgyAnalyzer.analyze('**ANTÍGONA:** Enterrarei meu irmão.');
+  assert.strictEqual(aiResult.source, 'ai_assisted');
+  assert.strictEqual(aiResult.title, 'Antígona');
+  assert.strictEqual(aiResult.author, 'Sófocles');
+
+  // Fallback transparente quando IA falha
+  DramaturgyAnalyzer.setAIProvider({
+    analyzeScript: async () => { throw new Error('API Rate Limit ou Sem Conexão'); }
+  });
+  const fallbackResult = await DramaturgyAnalyzer.analyze('**ISMENE:** Não desafies o rei.');
+  assert.strictEqual(fallbackResult.source, 'heuristic_offline');
+  assert.strictEqual(fallbackResult.characters[0], 'ISMENE');
+
+  // Limpeza de estado e retorno a Os Inventariantes
+  DramaturgyAnalyzer.setAIProvider(null);
+  assert.strictEqual(DramaturgyAnalyzer.getAIProvider(), null);
+  PlayStore.delete(macbethPlay.id, { purgeUserData: true });
+  PlayStore.delete(pagadorPlay.id, { purgeUserData: true });
+  AppController.switchPlay('os-inventariantes');
+  console.log('✅ 58. Gancho arquitetural plugável para IA e resiliência offline validados');
+
+  // Teste 59: Curadoria Completa de Personagens (Renomear, Filtrar e Persistir Falas Customizadas)
+  const othelloScript = `
+Othello
+Autor: William Shakespeare
+
+IAGO (sussurra):
+Ponha dinheiro na bolsa, Rodrigo.
+
+RODRIGO:
+Irei vender todas as minhas terras.
+
+1º SOLDADO (em guarda):
+Quem vem lá? O general se aproxima.
+`;
+  const othelloAnalysis = await DramaturgyAnalyzer.analyze(othelloScript);
+  assert.strictEqual(othelloAnalysis.title, 'Othello');
+  assert.strictEqual(othelloAnalysis.author, 'William Shakespeare');
+  assert.strictEqual(othelloAnalysis.characters.length, 3);
+  assert(othelloAnalysis.characters.includes('1º SOLDADO'));
+
+  UIController.renderImportReview(othelloAnalysis);
+
+  // Renomear '1º SOLDADO' para 'CASSIO'
+  UIController.renameReviewCharacter('1º SOLDADO', 'CASSIO');
+  assert(!UIController.ImportFlowState.characters.includes('1º SOLDADO'), '1º SOLDADO deve ter sido renomeado');
+  assert(UIController.ImportFlowState.characters.includes('CASSIO'), 'CASSIO deve estar na lista');
+  const cassioSpeech = UIController.ImportFlowState.speeches.find(s => s.who === 'CASSIO');
+  assert(cassioSpeech, 'A fala do 1º SOLDADO deve ter sido atualizada para CASSIO');
+  assert.strictEqual(cassioSpeech.spokenText, 'Quem vem lá? O general se aproxima.');
+
+  // Remover RODRIGO da lista permitida
+  UIController.removeReviewCharacter('RODRIGO');
+  assert(!UIController.ImportFlowState.characters.includes('RODRIGO'));
+
+  // Salvar a peça customizada com falas curadas
+  const curatedSpeeches = ScriptParser.filterSpeechesByCharacters(
+    UIController.ImportFlowState.speeches,
+    UIController.ImportFlowState.characters
+  );
+  assert.strictEqual(curatedSpeeches.length, 2, 'Apenas falas de IAGO e CASSIO devem restar');
+
+  const othelloPlay = PlayStore.createPlayFromScript(othelloScript, 'Othello Adaptado', 'William Shakespeare', {
+    characters: UIController.ImportFlowState.characters,
+    speeches: curatedSpeeches
+  });
+
+  // Alternar para Othello e verificar que AppState carrega as falas curadas e personagens
+  AppController.switchPlay(othelloPlay.id);
+  assert.strictEqual(AppState.activePlay.id, othelloPlay.id);
+  assert.strictEqual(AppState.characters.length, 2);
+  assert(AppState.characters.includes('IAGO'));
+  assert(AppState.characters.includes('CASSIO'));
+  assert(!AppState.characters.includes('RODRIGO'));
+  assert.strictEqual(AppState.speeches.length, 2);
+  assert.strictEqual(AppState.speeches[1].who, 'CASSIO');
+
+  // Verificar que PlayStore.getStats reflete os personagens e falas curadas
+  const othelloStats = PlayStore.getStats(othelloPlay.id);
+  assert.strictEqual(othelloStats.totalSpeeches, 2);
+  assert.strictEqual(othelloStats.characterCount, 2);
+  assert.strictEqual(othelloStats.characterCounts['CASSIO'], 1);
+  console.log('✅ 59. Curadoria de personagens (renomear, filtrar e persistir falas customizadas) validada');
+
+  // Teste 60: Robustez do ScriptParser com Rubricas Próximas, Sluglines e Títulos Livres
+  const robustScript = `
+Bodas de Sangue
+Federico García Lorca
+
+NOIVO
+(abraçando a mãe)
+Vou para a vinha.
+
+(Uma pausa longa e densa.)
+
+MÃE
+(amarga)
+A vinha... Leva a faca contigo?
+
+INT. COZINHA - NOITE
+
+VIZINHA (em off):
+Ouvi passos lá fora!
+`;
+  const robustParsed = ScriptParser.parseScript(robustScript);
+  assert.strictEqual(robustParsed.length, 3, 'Deve identificar 3 falas');
+  // Rubrica em linha isolada após personagem anexada como segmento de rubrica
+  assert.strictEqual(robustParsed[0].who, 'NOIVO');
+  assert.strictEqual(robustParsed[0].segments[0].type, 'rubric');
+  assert.strictEqual(robustParsed[0].segments[0].text, 'abraçando a mãe');
+  assert.strictEqual(robustParsed[0].spokenText, 'Vou para a vinha.');
+
+  // Direção entre falas não foi atribuída ao NOIVO e sim à MÃE
+  assert.strictEqual(robustParsed[1].who, 'MÃE');
+  assert(robustParsed[1].directions.some(d => d.includes('pausa longa e densa')));
+  assert.strictEqual(robustParsed[1].segments[0].type, 'rubric');
+  assert.strictEqual(robustParsed[1].segments[0].text, 'amarga');
+
+  // Slugline fechou a fala anterior e foi anexada como direção para VIZINHA
+  assert.strictEqual(robustParsed[2].who, 'VIZINHA');
+  assert(robustParsed[2].directions.some(d => d.includes('INT. COZINHA - NOITE')));
+  assert.strictEqual(robustParsed[2].segments[0].type, 'rubric');
+  assert.strictEqual(robustParsed[2].segments[0].text, 'em off');
+  assert.strictEqual(robustParsed[2].spokenText, 'Ouvi passos lá fora!');
+  console.log('✅ 60. ScriptParser: rubricas isoladas, transições cênicas e sluglines validados');
+
+  // Teste 61: Exclusão Segura da Peça Ativa com Fallback Automático para a Peça Padrão
+  assert.strictEqual(AppState.getPlayId(), othelloPlay.id);
+  const wasActiveOthello = AppState.getPlayId() === othelloPlay.id || PlayStore.getActivePlayId() === othelloPlay.id;
+  PlayStore.delete(othelloPlay.id, { purgeUserData: true });
+  if (wasActiveOthello) {
+    AppController.switchPlay('os-inventariantes');
+  }
+  assert.strictEqual(AppState.activePlay.id, 'os-inventariantes', 'AppState.activePlay deve retornar para os-inventariantes');
+  assert.strictEqual(AppState.getPlayId(), 'default', 'AppState.getPlayId deve retornar default para retrocompatibilidade');
+  assert.strictEqual(PlayStore.getActivePlayId(), 'os-inventariantes', 'PlayStore deve ter os-inventariantes como peça ativa');
+  assert.strictEqual(PlayStore.get(othelloPlay.id), null, 'Peça excluída não deve mais constar no catálogo');
+  console.log('✅ 61. Exclusão segura da peça ativa com fallback limpo para a peça padrão validada');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 61 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite();

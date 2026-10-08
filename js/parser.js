@@ -15,51 +15,135 @@
           s.startsWith('texto ') ||
           s.startsWith('ato ') ||
           s.startsWith('cena ') ||
+          s.startsWith('quadro ') ||
           s.startsWith('int.') ||
           s.startsWith('ext.') ||
           s.startsWith('est.') ||
           s.startsWith('i/e.') ||
           s.startsWith('fade ') ||
+          s.startsWith('corte para') ||
+          s.startsWith('dissolve para') ||
           /^ato\s+[0-9ivxlcdm]+/i.test(s) ||
-          /^cena\s+[0-9ivxlcdm]+/i.test(s)
+          /^cena\s+[0-9ivxlcdm]+/i.test(s) ||
+          /^quadro\s+[0-9ivxlcdm]+/i.test(s)
         );
       },
 
       isDefaultPlay(rawText) {
+        if (typeof DefaultPlay !== 'undefined' && DefaultPlay.title) {
+          const norm = (rawText || '').toUpperCase();
+          return norm.includes(DefaultPlay.title.toUpperCase()) || norm.includes('WALTER PAIVA');
+        }
         return (rawText || '').includes('OS INVENTARIANTES') || (rawText || '').includes('Walter Paiva');
       },
 
       extractPlayTitle(rawText) {
-        const lines = (rawText || '').split(/\r?\n/).slice(0, 15);
+        const lines = (rawText || '').split(/\r?\n/).slice(0, 20);
+        let candidateTitle = null;
+
         for (const l of lines) {
           const trimmed = l.trim();
           if (!trimmed) continue;
-          if (trimmed.toLowerCase().includes('inventariantes')) {
-            return 'Os Inventariantes';
-          }
+
+          const titleHeaderMatch = trimmed.match(/^(?:title|t[ií]tulo):\s*(.+)$/i);
+          if (titleHeaderMatch) return titleHeaderMatch[1].replace(/\*+/g, '').trim();
+
           const hashMatch = trimmed.match(/^#+\s*(.+)$/);
-          if (hashMatch) return hashMatch[1].replace(/\*+/g, '').trim();
+          if (hashMatch) {
+            const hTitle = hashMatch[1].replace(/\*+/g, '').trim();
+            if (hTitle && !this.isMetaKeyword(hTitle)) return hTitle;
+          }
 
           const boldMatch = trimmed.match(/^\*\*([^*]+)\*\*$/);
           if (boldMatch) {
             const title = boldMatch[1].replace(/\*+/g, '').trim();
-            if (title && !this.isMetaKeyword(title) && !title.startsWith('Texto')) {
+            if (title && !this.isMetaKeyword(title) && !title.toLowerCase().startsWith('texto')) {
               return title;
             }
           }
-          if (/^[A-ZÀ-Ú0-9\s]{3,40}$/.test(trimmed) && !this.isMetaKeyword(trimmed)) {
-            return trimmed;
+
+          if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
+            const clean = trimmed.replace(/\*+/g, '').trim();
+            if (clean && !this.isMetaKeyword(clean) && !clean.toLowerCase().startsWith('texto')) {
+              return clean;
+            }
+          }
+
+          if (!candidateTitle && trimmed.length >= 3 && trimmed.length <= 60 && !trimmed.includes(':') && !trimmed.startsWith('(') && !trimmed.startsWith('[')) {
+            const clean = trimmed.replace(/\*+/g, '').trim();
+            const isMeta = this.isMetaKeyword(clean) || /^(?:autor|author|por|by|de|dramaturgia|escrito)\b/i.test(clean);
+            if (!isMeta) {
+              candidateTitle = clean;
+            }
           }
         }
-        return 'Os Inventariantes';
+
+        if (candidateTitle) return candidateTitle;
+
+        if (typeof DefaultPlay !== 'undefined' && this.isDefaultPlay(rawText)) {
+          return DefaultPlay.title;
+        }
+        return 'Roteiro Sem Título';
+      },
+
+      extractAuthor(rawText) {
+        const lines = (rawText || '').split(/\r?\n/).slice(0, 25);
+        for (const l of lines) {
+          const trimmed = l.trim();
+          if (!trimmed) continue;
+
+          const authorMatch = trimmed.match(/^(?:author|autor|dramaturgia|texto|de|escrito por|por|by|texto por|obra de|peça de)[:\-—–]\s*(.+)$/i);
+          if (authorMatch) {
+            const clean = authorMatch[1].replace(/\*+/g, '').trim();
+            if (clean && !this.isMetaKeyword(clean)) return clean;
+          }
+
+          const byMatch = trimmed.match(/^(?:por|by|de|escrito por)\s+([A-Za-zÀ-ÖØ-öø-ÿ0-9\s.,'\-–—]{3,50})$/i);
+          if (byMatch) {
+            const clean = byMatch[1].replace(/\*+/g, '').trim();
+            if (clean && !this.isMetaKeyword(clean)) return clean;
+          }
+        }
+
+        if (typeof DefaultPlay !== 'undefined' && this.isDefaultPlay(rawText)) {
+          return DefaultPlay.author;
+        }
+        return 'Autor não informado';
+      },
+
+      filterSpeechesByCharacters(speeches, allowedCharacters) {
+        if (!Array.isArray(allowedCharacters) || allowedCharacters.length === 0) return speeches;
+        const set = new Set(allowedCharacters.map(c => (c || '').trim()));
+        const normSet = new Set(allowedCharacters.map(c => (c || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()));
+        return (speeches || []).filter(s => {
+          if (set.has(s.who)) return true;
+          const sNorm = (s.who || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+          return normSet.has(sNorm);
+        });
+      },
+
+      renameCharacterInSpeeches(speeches, oldName, newName) {
+        if (!oldName || !newName || oldName === newName) return speeches;
+        return (speeches || []).map(s => s.who === oldName ? { ...s, who: newName } : s);
       },
 
       parseScript(rawText) {
         const lines = (rawText || '').split(/\r?\n/);
         const parsed = [];
         let pendingDirections = [];
+        let pendingBeat = null;
         let currentSpeech = null;
         let inDramatisPersonae = false;
+        let lastLineWasBlank = false;
+        const detectedTitle = this.extractPlayTitle(rawText);
+
+        const isTitleOrMeta = (cand) => {
+          if (!cand) return true;
+          if (this.isMetaKeyword(cand)) return true;
+          const clean = cand.replace(/\*+/g, '').trim().toLowerCase();
+          if (clean.startsWith('texto ') || clean.startsWith('adapt') || clean.startsWith('autor')) return true;
+          return false;
+        };
 
         const pushCurrent = () => {
           if (currentSpeech && currentSpeech.segments.length > 0) {
@@ -104,20 +188,52 @@
 
         for (let rawLine of lines) {
           const line = rawLine.trim();
-          if (!line) continue;
+          if (!line) {
+            lastLineWasBlank = true;
+            continue;
+          }
+
+          // Detecção de marcadores explícitos de Beat, Cena ou Quadro
+          const beatMatch = line.match(/^(?:\[\[(?:beat|cena|bloco|quadro)\s*:\s*([^\]]+)\]\]|---+\s*(?:beat|cena|bloco|quadro)\s*:\s*([^-]+)---+|===+\s*(?:beat|cena|bloco|quadro)\s*:\s*([^=]+)===+|#+\s*(?:beat|cena|bloco|quadro)\s*[:\s]*([^\n]+)|(?:beat|cena|quadro)\s+([0-9ivxlcdm]+[:\s\S]*))$/i);
+          if (beatMatch) {
+            pushCurrent();
+            const rawBeat = (beatMatch[1] || beatMatch[2] || beatMatch[3] || beatMatch[4] || beatMatch[5] || '').trim();
+            if (rawBeat) {
+              pendingBeat = rawBeat.startsWith('Beat') || rawBeat.startsWith('Cena') || rawBeat.startsWith('Quadro') ? rawBeat : `Beat: ${rawBeat}`;
+            }
+            lastLineWasBlank = false;
+            continue;
+          }
 
           // Dramatis personae block detection (e.g. **Personagens:**)
           if (/^(\*\*|#+\s*)?Personagens:?(\*\*)?$/i.test(line)) {
+            pushCurrent();
             inDramatisPersonae = true;
+            lastLineWasBlank = false;
             continue;
           }
           if (inDramatisPersonae) {
-            if (/^(\*\*|#+\s*)?(Cenário|Cenario|Ato|Cena):?/i.test(line) ||
+            if (/^(\*\*|#+\s*)?(Cenário|Cenario|Ato|Cena|Quadro):?/i.test(line) ||
                 line.startsWith('*(') || line.startsWith('(')) {
               inDramatisPersonae = false;
             } else if (line.startsWith('-') || line.startsWith('•') || line.startsWith('*')) {
+              lastLineWasBlank = false;
               continue;
             }
+          }
+
+          if (/^(\*\*|#+\s*)?(Cenário|Cenario):?/i.test(line)) {
+            pushCurrent();
+            lastLineWasBlank = false;
+            continue;
+          }
+
+          // Sluglines (Fountain/Theatrical INT. / EXT.) e Transições
+          if (/^(?:int\.|ext\.|est\.|i\/e\.)\s+/i.test(line) || /^(?:fade\s+(?:in|out|to)|corte\s+para|dissolve\s+para)\b/i.test(line)) {
+            pushCurrent();
+            pendingDirections.push(line);
+            lastLineWasBlank = false;
+            continue;
           }
 
           // Full-line scene directions
@@ -126,50 +242,105 @@
                                  (line.startsWith('[') && line.endsWith(']'));
           if (isFullParenDir) {
             const cleanDir = line.replace(/^\*?[\(\[]\s*/, '').replace(/\s*[\)\]]\*?$/, '').replace(/\*/g, '').trim();
-            if (cleanDir) {
-              pendingDirections.push(cleanDir);
+            if (currentSpeech && currentSpeech.segments.length === 0) {
+              if (cleanDir) {
+                currentSpeech.segments.push({ type: 'rubric', text: cleanDir });
+              }
+            } else if (currentSpeech && !lastLineWasBlank) {
+              if (cleanDir) {
+                currentSpeech.segments.push({ type: 'rubric', text: cleanDir });
+              }
+            } else {
+              pushCurrent();
+              if (cleanDir) {
+                pendingDirections.push(cleanDir);
+              }
             }
+            lastLineWasBlank = false;
             continue;
           }
 
-          // Ignore Markdown section headers
-          if (/^#+\s+/.test(line)) continue;
+          // Ignore Markdown section headers and close current speech
+          if (/^#+\s+/.test(line)) {
+            pushCurrent();
+            lastLineWasBlank = false;
+            continue;
+          }
 
-          let m = line.match(/^\*\*([^*:]+):\*\*\s*(.*)$/);
-          if (!m) m = line.match(/^\*\*([^*:]+)\*\*:\s*(.*)$/);
-          if (!m) m = line.match(/^\*\*([^*:]+)\*\*\s*[-—–]\s+(.*)$/);
-          if (!m) {
-            m = line.match(/^([A-Za-zÀ-ÖØ-öø-ÿ0-9\s_'-]{2,35}):\s*(.*)$/);
-            if (m && this.isMetaKeyword(m[1])) m = null;
+          const extractWhoAndRubric = (rawWho) => {
+            const clean = (rawWho || '').replace(/\*+/g, '').trim();
+            const parenMatch = clean.match(/^([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]+?)\s*[\(\[](.*?)[\)\]]$/);
+            if (parenMatch) {
+              return { who: parenMatch[1].trim(), rubric: parenMatch[2].trim() };
+            }
+            return { who: clean, rubric: null };
+          };
+
+          let m = null;
+          let inlineRubric = null;
+
+          let p1 = line.match(/^\*\*([^*:]+):\*\*\s*(.*)$/);
+          if (!p1) p1 = line.match(/^\*\*([^*:]+)\*\*:\s*(.*)$/);
+          if (!p1) p1 = line.match(/^\*\*([^*:]+)\*\*\s*[-—–]\s*(.*)$/);
+          if (p1) {
+            const extracted = extractWhoAndRubric(p1[1]);
+            if (!isTitleOrMeta(extracted.who)) {
+              m = [line, extracted.who, p1[2] || ''];
+              inlineRubric = extracted.rubric;
+            }
           }
+
           if (!m) {
-            m = line.match(/^([A-ZÀ-Ú0-9\s]{2,25})\s*[-—–]\s*(.*)$/);
-            if (m && this.isMetaKeyword(m[1])) m = null;
-          }
-          if (!m) {
-            const bm = line.match(/^\*\*([^*:\n]{2,35})\*\*$/);
-            if (bm) {
-              const cand = bm[1].replace(/\*+/g, '').trim();
-              if (!this.isMetaKeyword(cand) && !cand.toLowerCase().includes('inventariantes')) {
-                m = [line, cand, ''];
+            const p2 = line.match(/^([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]{2,35})(?:\s*[\(\[](.*?)[\)\]])?:\s*(.*)$/);
+            if (p2) {
+              const whoCandidate = p2[1].trim();
+              if (!isTitleOrMeta(whoCandidate)) {
+                m = [line, whoCandidate, p2[3] || ''];
+                inlineRubric = p2[2] ? p2[2].trim() : null;
               }
             }
           }
+
           if (!m) {
-            const cm = line.match(/^([A-ZÀ-Ú0-9\s]{2,25})$/);
-            if (cm) {
-              const cand = cm[1].trim();
-              if (!this.isMetaKeyword(cand) && !cand.toLowerCase().includes('inventariantes')) {
-                m = [line, cand, ''];
+            const p3 = line.match(/^([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]+?)(?:\s*[\(\[](.*?)[\)\]])?\s*[-—–]\s*(.*)$/);
+            if (p3) {
+              const whoCandidate = p3[1].trim();
+              if (!isTitleOrMeta(whoCandidate)) {
+                m = [line, whoCandidate, p3[3] || ''];
+                inlineRubric = p3[2] ? p3[2].trim() : null;
               }
             }
           }
+
           if (!m) {
-            const fm = line.match(/^@([A-Za-zÀ-ÖØ-öø-ÿ0-9\s_'-]{2,35})$/);
-            if (fm) {
-              const cand = fm[1].trim();
-              if (!this.isMetaKeyword(cand) && !cand.toLowerCase().includes('inventariantes')) {
-                m = [line, cand, ''];
+            const p4 = line.match(/^\*\*([^*:\n]{2,40})\*\*$/);
+            if (p4) {
+              const extracted = extractWhoAndRubric(p4[1]);
+              if (!isTitleOrMeta(extracted.who)) {
+                m = [line, extracted.who, ''];
+                inlineRubric = extracted.rubric;
+              }
+            }
+          }
+
+          if (!m) {
+            const p5 = line.match(/^@([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]{2,35})(?:\s*[\(\[](.*?)[\)\]])?$/);
+            if (p5) {
+              const whoCandidate = p5[1].trim();
+              if (!isTitleOrMeta(whoCandidate)) {
+                m = [line, whoCandidate, ''];
+                inlineRubric = p5[2] ? p5[2].trim() : null;
+              }
+            }
+          }
+
+          if (!m) {
+            const p6 = line.match(/^([A-ZÀ-Ú0-9ºª\s]{2,35})(?:\s*[\(\[](.*?)[\)\]])?$/);
+            if (p6) {
+              const whoCandidate = p6[1].trim();
+              if (!isTitleOrMeta(whoCandidate)) {
+                m = [line, whoCandidate, ''];
+                inlineRubric = p6[2] ? p6[2].trim() : null;
               }
             }
           }
@@ -178,18 +349,24 @@
             const whoCandidate = m[1].replace(/\*+/g, '').trim();
             const rawContent = (m[2] || '').trim();
 
-            if (!this.isMetaKeyword(whoCandidate) && !whoCandidate.toLowerCase().includes('inventariantes')) {
+            if (!isTitleOrMeta(whoCandidate)) {
               pushCurrent();
               currentSpeech = {
                 who: whoCandidate,
                 segments: [],
                 spokenText: '',
-                directions: [...pendingDirections]
+                directions: [...pendingDirections],
+                beatMarker: pendingBeat
               };
               pendingDirections = [];
+              pendingBeat = null;
+              if (inlineRubric) {
+                currentSpeech.segments.push({ type: 'rubric', text: inlineRubric });
+              }
               if (rawContent) {
                 appendContent(currentSpeech, rawContent);
               }
+              lastLineWasBlank = false;
               continue;
             }
           }
@@ -198,6 +375,7 @@
           if (currentSpeech) {
             appendContent(currentSpeech, line);
           }
+          lastLineWasBlank = false;
         }
 
         pushCurrent();
@@ -206,17 +384,72 @@
     };
 
     const DramaBeats = {
-      generateBeats(speeches, rawText) {
-        if (ScriptParser.isDefaultPlay(rawText) && speeches.length === 58) {
-          return [...AppConfig.DEFAULT_DRAMA_BEATS];
+      generateBeats(speeches, rawText, predefinedBeats = null, strategy = 'auto') {
+        // 1. Beats explicitamente informados (ex: do objeto da peca carregada)
+        if (Array.isArray(predefinedBeats) && predefinedBeats.length > 0) {
+          return [...predefinedBeats];
         }
 
-        const total = speeches.length;
+        // 2. Se for a peca modelo e tiver beats definidos em DefaultPlay
+        if (typeof DefaultPlay !== 'undefined' && DefaultPlay.beats && ScriptParser.isDefaultPlay(rawText) && speeches && speeches.length === 58) {
+          return [...DefaultPlay.beats];
+        }
+
+        const total = (speeches || []).length;
+        if (total === 0) return [];
+
+        // 3. Estratégia de cena única completa
+        if (strategy === 'single') {
+          return [{
+            name: `Cena Completa (Falas 1-${total})`,
+            start: 0,
+            end: total - 1
+          }];
+        }
+
+        // 4. Estratégia de bloco fixo (10 ou 15 falas)
+        if (strategy === 'block10' || strategy === 'block15') {
+          const blockSize = strategy === 'block10' ? 10 : 15;
+          const beats = [];
+          let start = 0;
+          let beatNum = 1;
+          while (start < total) {
+            const end = Math.min(total - 1, start + blockSize - 1);
+            beats.push({
+              name: `Beat ${beatNum}: Falas ${start + 1}-${end + 1}`,
+              start,
+              end
+            });
+            start = end + 1;
+            beatNum++;
+          }
+          return beats;
+        }
+
+        // 5. Detectar marcadores coletados durante o parse (estratégia 'headers' ou 'auto')
+        const markedBeats = [];
+        for (let i = 0; i < total; i++) {
+          if (speeches[i].beatMarker) {
+            if (markedBeats.length > 0) {
+              markedBeats[markedBeats.length - 1].end = i - 1;
+            }
+            markedBeats.push({
+              name: speeches[i].beatMarker,
+              start: i,
+              end: total - 1
+            });
+          }
+        }
+        if (markedBeats.length >= 2) {
+          return markedBeats;
+        }
+
+        // 6. Particionamento proporcional inteligente padrão
         if (total <= 15) {
           return [{
-            name: `Cena Completa (Falas 1-${Math.max(1, total)})`,
+            name: `Cena Completa (Falas 1-${total})`,
             start: 0,
-            end: Math.max(0, total - 1)
+            end: total - 1
           }];
         }
 
@@ -238,6 +471,66 @@
       }
     };
 
+    // 4.1 ANALISADOR DRAMATÚRGICO HÍBRIDO (DramaturgyAnalyzer)
+    // Arquitetura com gancho preparado para integração de IA (Passo 4) mantendo operação offline
+    const DramaturgyAnalyzer = {
+      aiProvider: null,
+
+      setAIProvider(provider) {
+        this.aiProvider = provider;
+      },
+
+      getAIProvider() {
+        return this.aiProvider;
+      },
+
+      async analyze(rawText, options = {}) {
+        if (this.aiProvider && typeof this.aiProvider.analyzeScript === 'function' && !options.forceOffline) {
+          try {
+            const aiResult = await this.aiProvider.analyzeScript(rawText, options);
+            if (aiResult && aiResult.characters && aiResult.characters.length > 0) {
+              const speeches = Array.isArray(aiResult.speeches) && aiResult.speeches.length > 0
+                ? aiResult.speeches
+                : ScriptParser.parseScript(rawText);
+              const beats = Array.isArray(aiResult.beats) && aiResult.beats.length > 0
+                ? aiResult.beats
+                : DramaBeats.generateBeats(speeches, rawText, null, options.beatStrategy || 'auto');
+              return {
+                title: (aiResult.title || '').trim() || ScriptParser.extractPlayTitle(rawText),
+                author: (aiResult.author || '').trim() || ScriptParser.extractAuthor(rawText),
+                characters: [...aiResult.characters],
+                speeches,
+                beats,
+                source: 'ai_assisted',
+                providerName: this.aiProvider.name || 'AI'
+              };
+            }
+          } catch (err) {
+            console.warn('Falha na analise de IA, aplicando fallback heuristico offline:', err?.message || err);
+          }
+        }
+
+        return this.analyzeOffline(rawText, options);
+      },
+
+      analyzeOffline(rawText, options = {}) {
+        const title = ScriptParser.extractPlayTitle(rawText);
+        const author = ScriptParser.extractAuthor(rawText);
+        const speeches = ScriptParser.parseScript(rawText);
+        const detectedCharacters = [...new Set(speeches.map(s => s.who))];
+        const beats = DramaBeats.generateBeats(speeches, rawText, null, options.beatStrategy || 'auto');
+
+        return {
+          title,
+          author,
+          characters: detectedCharacters,
+          speeches,
+          beats,
+          source: 'heuristic_offline'
+        };
+      }
+    };
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { ScriptParser };
+  module.exports = { ScriptParser, DramaBeats, DramaturgyAnalyzer };
 }

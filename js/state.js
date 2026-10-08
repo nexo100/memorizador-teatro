@@ -23,6 +23,7 @@
       wakeLockEnabled: true,
       speechRate: 0.95,
       activeScriptText: '',
+      activePlay: null,
       currentFilter: 'all',
       currentScreen: 'lobby',
       isRetryState: false,
@@ -35,10 +36,19 @@
       wakeLock: null,
 
       getPlayId() {
-        if (ScriptParser.isDefaultPlay(this.activeScriptText)) {
+        if (this.activePlay && this.activePlay.id) {
+          if (this.activePlay.id === 'os-inventariantes' || this.activePlay.id === 'default') return 'default';
+          return this.activePlay.id;
+        }
+        if (typeof PlayStore !== 'undefined') {
+          const actId = PlayStore.getActivePlayId();
+          if (actId === 'os-inventariantes' || actId === 'default') return 'default';
+          return actId;
+        }
+        if (typeof ScriptParser !== 'undefined' && ScriptParser.isDefaultPlay(this.activeScriptText)) {
           return 'default';
         }
-        const title = ScriptParser.extractPlayTitle(this.activeScriptText);
+        const title = (typeof ScriptParser !== 'undefined') ? ScriptParser.extractPlayTitle(this.activeScriptText) : 'custom';
         return 'play_' + Utils.sanitizeId(title || 'custom');
       },
 

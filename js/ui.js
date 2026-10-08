@@ -1680,6 +1680,247 @@ const UIController = {
     } catch (e) {
       listEl.innerHTML = '<p style="color:var(--fg-muted); font-size:0.85rem;">Nao foi possivel carregar as gravacoes salvas.</p>';
     }
+  },
+
+  // 7.1 ESTADO DO FLUXO DE IMPORTAÇÃO & PERSONALIZAÇÃO
+  ImportFlowState: {
+    rawText: '',
+    title: '',
+    author: '',
+    characters: [],
+    speeches: [],
+    beatStrategy: 'headers',
+    source: 'heuristic_offline'
+  },
+
+  // 7.2 RENDERIZAÇÃO DO CATÁLOGO DE PEÇAS
+  renderPlayCatalog() {
+    const listEl = Utils.$('playCatalogList');
+    if (!listEl) return;
+    if (typeof PlayStore === 'undefined') {
+      listEl.innerHTML = '<p class="caderno-empty-desc">Catálogo de peças indisponível.</p>';
+      return;
+    }
+
+    const allPlays = PlayStore.getAll();
+    const activePlayId = PlayStore.getActivePlayId();
+
+    if (allPlays.length === 0) {
+      listEl.innerHTML = '<p class="caderno-empty-desc">Nenhum roteiro cadastrado na biblioteca.</p>';
+      return;
+    }
+
+    listEl.innerHTML = `
+      <div class="play-catalog-grid">
+        ${allPlays.map(play => {
+          const stats = PlayStore.getStats(play.id) || {
+            totalSpeeches: 0,
+            characterCount: 0,
+            characters: [],
+            beatsCount: 0,
+            masteryPercentage: 0
+          };
+          const isActive = play.id === activePlayId;
+          const charsPreview = stats.characters.slice(0, 3).join(', ') + (stats.characters.length > 3 ? '...' : '');
+
+          return `
+            <div class="play-catalog-card ${isActive ? 'active-play-card' : ''}" data-play-id="${Utils.escapeHtml(play.id)}">
+              <div class="play-card-header">
+                <div class="play-card-title-group">
+                  <span class="play-card-title">${Utils.escapeHtml(play.title)}</span>
+                  <span class="play-card-author">${Utils.escapeHtml(play.author || 'Autor não informado')}</span>
+                </div>
+                <div class="play-card-badges">
+                  ${isActive ? `<span class="play-badge-active">${Icons.get('check', { size: 12, strokeWidth: 2.5 })} Em Ensaio</span>` : ''}
+                  ${play.isDefault ? `<span class="play-badge-default">Peça Modelo</span>` : ''}
+                </div>
+              </div>
+
+              <div class="play-card-stats-row">
+                <span class="play-card-stat-item">
+                  ${Icons.get('speak', { size: 14 })}
+                  <span><strong>${stats.totalSpeeches}</strong> falas</span>
+                </span>
+                <span class="play-card-stat-item">
+                  ${Icons.get('user', { size: 14 })}
+                  <span><strong>${stats.characterCount}</strong> papéis (${Utils.escapeHtml(charsPreview || 'Elenco')})</span>
+                </span>
+                <span class="play-card-stat-item">
+                  ${Icons.get('clapper', { size: 14 })}
+                  <span><strong>${stats.beatsCount}</strong> beats</span>
+                </span>
+              </div>
+
+              <div class="play-card-progress">
+                <div class="play-card-progress-bar">
+                  <div class="play-card-progress-fill" style="width: ${stats.masteryPercentage}%;"></div>
+                </div>
+                <span class="play-card-progress-label">${stats.masteryPercentage}%</span>
+              </div>
+
+              <div class="play-card-actions">
+                ${!play.isDefault ? `
+                  <button type="button" class="btn btn-secondary btn-play-delete" data-play-id="${Utils.escapeHtml(play.id)}" title="Excluir peça do catálogo" aria-label="Excluir">
+                    ${Icons.get('trash', { size: 15 })}
+                  </button>
+                ` : ''}
+                <button type="button" class="btn ${isActive ? 'btn-secondary' : 'btn-primary'} btn-play-switch" data-play-id="${Utils.escapeHtml(play.id)}" ${isActive ? 'disabled' : ''}>
+                  ${isActive ? Icons.get('check', { size: 14, strokeWidth: 2.5 }) : Icons.get('theater', { size: 15 })}
+                  <span>${isActive ? 'Peça Ativa' : 'Ensaiar esta Peça'}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  },
+
+  openPlayCatalogModal(openerEl = null) {
+    this.renderPlayCatalog();
+    this.openModal('modalPlayCatalog', openerEl);
+  },
+
+  openImportPlayModal(openerEl = null) {
+    this.ImportFlowState = {
+      rawText: '',
+      title: '',
+      author: '',
+      characters: [],
+      speeches: [],
+      beatStrategy: 'headers',
+      source: 'heuristic_offline'
+    };
+    if (Utils.$('importRawScriptText')) Utils.$('importRawScriptText').value = '';
+    if (Utils.$('fileUploadFeedback')) Utils.$('fileUploadFeedback').style.display = 'none';
+    if (Utils.$('inputScriptFile')) Utils.$('inputScriptFile').value = '';
+    if (Utils.$('importStepInput')) Utils.$('importStepInput').hidden = false;
+    if (Utils.$('importStepReview')) Utils.$('importStepReview').hidden = true;
+    if (Utils.$('importModalStepTitle')) Utils.$('importModalStepTitle').textContent = 'Importar Novo Roteiro';
+    this.openModal('modalImportPlay', openerEl);
+  },
+
+  renderImportReview(analysis) {
+    if (!analysis) return;
+    this.ImportFlowState = {
+      rawText: analysis.rawText || (Utils.$('importRawScriptText') ? Utils.$('importRawScriptText').value : ''),
+      title: analysis.title || 'Roteiro Sem Título',
+      author: analysis.author || 'Autor não informado',
+      characters: Array.isArray(analysis.characters) ? [...analysis.characters] : [],
+      speeches: Array.isArray(analysis.speeches) ? analysis.speeches : [],
+      beatStrategy: 'headers',
+      source: analysis.source || 'heuristic_offline'
+    };
+
+    if (Utils.$('importReviewTitle')) Utils.$('importReviewTitle').value = this.ImportFlowState.title;
+    if (Utils.$('importReviewAuthor')) Utils.$('importReviewAuthor').value = this.ImportFlowState.author;
+    if (Utils.$('importReviewBeatStrategy')) Utils.$('importReviewBeatStrategy').value = 'headers';
+
+    const sourceBadge = Utils.$('dramaturgyAnalyzerSource');
+    if (sourceBadge) {
+      if (this.ImportFlowState.source === 'ai_assisted') {
+        sourceBadge.innerHTML = `
+          ${Icons.get('sparkles', { size: 14 })}
+          <span>Análise Assistida por IA Ativa</span>
+        `;
+      } else {
+        sourceBadge.innerHTML = `
+          ${Icons.get('sparkles', { size: 14 })}
+          <span>Análise Heurística Offline (Gancho para IA Passo 4 pronto)</span>
+        `;
+      }
+    }
+
+    if (Utils.$('importModalStepTitle')) Utils.$('importModalStepTitle').textContent = 'Prévia & Personalização Dramatúrgica';
+    if (Utils.$('importStepInput')) Utils.$('importStepInput').hidden = true;
+    if (Utils.$('importStepReview')) Utils.$('importStepReview').hidden = false;
+
+    this.renderReviewCharacterChips();
+    this.updateReviewStats();
+  },
+
+  renderReviewCharacterChips() {
+    const container = Utils.$('importReviewCharactersList');
+    if (!container) return;
+    const chars = this.ImportFlowState.characters || [];
+    if (chars.length === 0) {
+      container.innerHTML = '<span style="font-size:0.78rem; color:var(--fg-muted); padding:4px;">Nenhum personagem definido ainda. Adicione abaixo.</span>';
+      return;
+    }
+    container.innerHTML = chars.map(c => `
+      <span class="char-chip" data-char="${Utils.escapeHtml(c)}">
+        <span class="char-chip-name">${Utils.escapeHtml(c)}</span>
+        <button type="button" class="btn-rename-char" data-char="${Utils.escapeHtml(c)}" title="Renomear personagem ${Utils.escapeHtml(c)}" aria-label="Renomear">
+          ${Icons.get('edit', { size: 12 })}
+        </button>
+        <button type="button" class="btn-remove-char" data-char="${Utils.escapeHtml(c)}" title="Remover personagem ${Utils.escapeHtml(c)}" aria-label="Remover">
+          &times;
+        </button>
+      </span>
+    `).join('');
+  },
+
+  renameReviewCharacter(oldName, newName) {
+    if (!oldName || !newName || !this.ImportFlowState) return;
+    const formattedOld = oldName.trim().toUpperCase();
+    const formattedNew = newName.trim().toUpperCase();
+    if (!formattedOld || !formattedNew || formattedOld === formattedNew) return;
+
+    const chars = this.ImportFlowState.characters || [];
+    const idx = chars.indexOf(formattedOld);
+    if (idx >= 0) {
+      if (chars.includes(formattedNew)) {
+        chars.splice(idx, 1);
+      } else {
+        chars[idx] = formattedNew;
+      }
+    }
+
+    if (Array.isArray(this.ImportFlowState.speeches) && typeof ScriptParser !== 'undefined' && typeof ScriptParser.renameCharacterInSpeeches === 'function') {
+      this.ImportFlowState.speeches = ScriptParser.renameCharacterInSpeeches(this.ImportFlowState.speeches, formattedOld, formattedNew);
+    }
+
+    this.renderReviewCharacterChips();
+    this.updateReviewStats();
+  },
+
+  removeReviewCharacter(charName) {
+    if (!charName || !this.ImportFlowState) return;
+    this.ImportFlowState.characters = (this.ImportFlowState.characters || []).filter(c => c !== charName);
+    this.renderReviewCharacterChips();
+    this.updateReviewStats();
+  },
+
+  addReviewCharacter(charName) {
+    if (!charName || !this.ImportFlowState) return;
+    const formatted = charName.trim().toUpperCase();
+    if (!formatted) return;
+    if (!this.ImportFlowState.characters.includes(formatted)) {
+      this.ImportFlowState.characters.push(formatted);
+      this.renderReviewCharacterChips();
+      this.updateReviewStats();
+    }
+  },
+
+  updateReviewStats() {
+    const statsBox = Utils.$('importReviewStatsBox');
+    if (!statsBox || !this.ImportFlowState) return;
+    const chars = this.ImportFlowState.characters || [];
+    const allSpeeches = this.ImportFlowState.speeches || [];
+    const filteredSpeeches = (typeof ScriptParser !== 'undefined' && typeof ScriptParser.filterSpeechesByCharacters === 'function')
+      ? ScriptParser.filterSpeechesByCharacters(allSpeeches, chars)
+      : allSpeeches.filter(s => chars.includes(s.who));
+
+    const strat = Utils.$('importReviewBeatStrategy') ? Utils.$('importReviewBeatStrategy').value : (this.ImportFlowState.beatStrategy || 'headers');
+    const beats = (typeof DramaBeats !== 'undefined')
+      ? DramaBeats.generateBeats(filteredSpeeches, this.ImportFlowState.rawText, null, strat)
+      : [];
+
+    statsBox.innerHTML = `
+      <div><strong>Total de Falas Válidas:</strong> ${filteredSpeeches.length} (de ${allSpeeches.length} detectadas originalmente)</div>
+      <div><strong>Personagens Confirmados:</strong> ${chars.length}</div>
+      <div><strong>Divisão Dramatúrgica:</strong> ${beats.length} beats / blocos cênicos</div>
+    `;
   }
 };
 

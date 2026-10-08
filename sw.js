@@ -1,8 +1,10 @@
-const CACHE_NAME = 'ensaio-teatral-v12';
+const CACHE_NAME = 'ensaio-teatral-v15';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './css/style.css',
+  './plays/default-play.js',
+  './plays/os-inventariantes.json',
   './js/config.js',
   './js/utils.js',
   './js/state.js',

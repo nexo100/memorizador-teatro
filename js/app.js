@@ -96,23 +96,53 @@
         }
       },
 
-      loadActiveScript() {
-        let scriptText = localStorage.getItem('memorizador_custom_script');
-        if (!scriptText) {
-          const defEl = Utils.$('defaultPlay');
-          scriptText = defEl ? defEl.textContent.trim() : '';
+      loadActiveScript(targetPlayId) {
+        if (targetPlayId && typeof PlayStore !== 'undefined') {
+          PlayStore.setActivePlayId(targetPlayId);
+        }
+
+        let activePlay = (typeof PlayStore !== 'undefined')
+          ? PlayStore.getActivePlay()
+          : null;
+
+        let scriptText = '';
+        if (activePlay && activePlay.rawScript) {
+          scriptText = activePlay.rawScript;
+        } else {
+          scriptText = localStorage.getItem('memorizador_custom_script');
+          if (!scriptText) {
+            if (typeof DefaultPlay !== 'undefined' && DefaultPlay.rawScript) {
+              scriptText = DefaultPlay.rawScript;
+            } else {
+              const defEl = Utils.$('defaultPlay');
+              scriptText = defEl ? defEl.textContent.trim() : '';
+            }
+          }
         }
 
         AppState.activeScriptText = scriptText;
-        const playTitle = ScriptParser.extractPlayTitle(scriptText);
+        const playTitle = (activePlay && activePlay.title) ? activePlay.title : ScriptParser.extractPlayTitle(scriptText);
+        AppState.activePlay = activePlay || ((typeof DefaultPlay !== 'undefined' && ScriptParser.isDefaultPlay(scriptText))
+          ? DefaultPlay
+          : { title: playTitle, rawScript: scriptText });
+
         document.title = 'Ensaio Teatral · ' + playTitle;
         const ptEl = Utils.$('playTitle');
         if (ptEl) ptEl.textContent = playTitle;
         const stTitle = Utils.$('stagePlayTitle');
         if (stTitle) stTitle.textContent = playTitle;
 
-        AppState.speeches = ScriptParser.parseScript(scriptText);
-        AppState.characters = [...new Set(AppState.speeches.map(s => s.who))];
+        if (activePlay && Array.isArray(activePlay.speeches) && activePlay.speeches.length > 0) {
+          AppState.speeches = activePlay.speeches;
+        } else {
+          AppState.speeches = ScriptParser.parseScript(scriptText);
+          if (activePlay && Array.isArray(activePlay.characters) && activePlay.characters.length > 0) {
+            AppState.speeches = ScriptParser.filterSpeechesByCharacters(AppState.speeches, activePlay.characters);
+          }
+        }
+        AppState.characters = (activePlay && Array.isArray(activePlay.characters) && activePlay.characters.length > 0)
+          ? [...activePlay.characters]
+          : [...new Set(AppState.speeches.map(s => s.who))];
 
         const settings = StorageManager.loadSettings();
         AppState.speechRate = settings.speechRate;
@@ -136,17 +166,19 @@
         if (Utils.$('chkHideRubrics')) Utils.$('chkHideRubrics').checked = AppState.hideRubrics;
         if (Utils.$('chkStartHidden')) Utils.$('chkStartHidden').checked = AppState.alwaysStartHidden;
 
-        const savedActor = settings.selectedActor;
+        const currentPlayId = AppState.getPlayId();
+        const savedActor = StorageManager.getSelectedActor(currentPlayId);
         AppState.hasSavedActor = !!(savedActor && AppState.characters.includes(savedActor));
         AppState.selectedActor = (savedActor && AppState.characters.includes(savedActor))
           ? savedActor
           : (AppState.characters[0] || '');
 
-        AppState.activeBeats = DramaBeats.generateBeats(AppState.speeches, scriptText);
-        AppState.selectedBeat = 'all';
+        AppState.activeBeats = DramaBeats.generateBeats(AppState.speeches, scriptText, AppState.activePlay?.beats);
+        const savedBeat = StorageManager.getSelectedBeat(currentPlayId);
+        AppState.selectedBeat = (savedBeat === 'all' || AppState.activeBeats[parseInt(savedBeat, 10)]) ? savedBeat : 'all';
         UIController.populateBeatSelector();
 
-        AppState.masteryLevels = StorageManager.loadProgress(AppState.selectedActor, AppState.speeches.length);
+        AppState.masteryLevels = StorageManager.loadProgress(AppState.selectedActor, AppState.speeches.length, currentPlayId);
 
         AudioEngine.loadVoices(() => {
           UIController.populateVoiceSelectors();
@@ -157,6 +189,25 @@
         this.goToSpeech(AppState.currentIndex, false);
         UIController.renderLobby();
         UIController.showScreen('lobby');
+      },
+
+      switchPlay(playId) {
+        AudioEngine.stopAllAudio();
+        if (AppState.pingPongInterval) {
+          clearInterval(AppState.pingPongInterval);
+          AppState.pingPongInterval = null;
+        }
+        if (AudioEngine.isRecordingNow) {
+          AudioEngine.stopCastRecording();
+        }
+        AppState.sessionRetryQueue = [];
+        AppState.isRetryState = false;
+        AppState.isSceneFinished = false;
+
+        this.loadActiveScript(playId);
+        UIController.renderView();
+        UIController.renderLobby();
+        return AppState.activePlay;
       },
 
       enterStage(mode) {
@@ -668,6 +719,19 @@
           UIController.closeModal('sheetBeat');
         } else if (id === 'btnQuickResume') {
           this.enterStage();
+        } else if (id === 'btnOpenPlayCatalog' || id === 'btnOpenCatalogHeader') {
+          UIController.openPlayCatalogModal();
+        } else if (id === 'btnClosePlayCatalog') {
+          UIController.closeModal('modalPlayCatalog');
+        } else if (id === 'btnOpenImportFlow') {
+          UIController.closeModal('modalPlayCatalog');
+          UIController.openImportPlayModal();
+        } else if (id === 'btnCloseImportPlay') {
+          UIController.closeModal('modalImportPlay');
+        } else if (id === 'btnBackToImportInput') {
+          if (Utils.$('importStepInput')) Utils.$('importStepInput').hidden = false;
+          if (Utils.$('importStepReview')) Utils.$('importStepReview').hidden = true;
+          if (Utils.$('importModalStepTitle')) Utils.$('importModalStepTitle').textContent = 'Importar Novo Roteiro';
         }
       },
 
@@ -1018,6 +1082,119 @@
             return;
           }
 
+          const btnPlaySwitch = e.target.closest('.btn-play-switch');
+          if (btnPlaySwitch) {
+            const playId = btnPlaySwitch.dataset.playId;
+            if (playId) {
+              this.switchPlay(playId);
+              UIController.closeModal('modalPlayCatalog');
+              UIController.showStatus('Peça ativada para ensaio!');
+            }
+            return;
+          }
+
+          const btnPlayDelete = e.target.closest('.btn-play-delete');
+          if (btnPlayDelete) {
+            const playId = btnPlayDelete.dataset.playId;
+            const confirmFn = typeof confirm === 'function' ? confirm : () => true;
+            if (playId && confirmFn('Deseja excluir esta peça da biblioteca?')) {
+              const wasActive = AppState.getPlayId() === playId || (typeof PlayStore !== 'undefined' && PlayStore.getActivePlayId() === playId);
+              PlayStore.delete(playId, { purgeUserData: true });
+              if (wasActive) {
+                this.switchPlay('os-inventariantes');
+              }
+              UIController.renderPlayCatalog();
+            }
+            return;
+          }
+
+          const btnSelectFile = e.target.closest('#btnSelectScriptFile');
+          if (btnSelectFile) {
+            const fileInput = Utils.$('inputScriptFile');
+            if (fileInput && typeof fileInput.click === 'function') {
+              fileInput.click();
+            }
+            return;
+          }
+
+          const btnAnalyzeImport = e.target.closest('#btnAnalyzeImport');
+          if (btnAnalyzeImport) {
+            const rawText = Utils.$('importRawScriptText') ? Utils.$('importRawScriptText').value.trim() : '';
+            if (!rawText) {
+              alert('Por favor, cole o texto do roteiro ou selecione um arquivo.');
+              return;
+            }
+            if (typeof DramaturgyAnalyzer !== 'undefined') {
+              const strat = Utils.$('importReviewBeatStrategy') ? Utils.$('importReviewBeatStrategy').value : 'headers';
+              const analysis = await DramaturgyAnalyzer.analyze(rawText, { beatStrategy: strat });
+              analysis.rawText = rawText;
+              UIController.renderImportReview(analysis);
+            }
+            return;
+          }
+
+          const btnRenameChar = e.target.closest('.btn-rename-char');
+          if (btnRenameChar) {
+            const charName = btnRenameChar.dataset.char;
+            if (charName) {
+              const promptFn = typeof prompt === 'function' ? prompt : (msg, d) => d;
+              const newName = promptFn(`Renomear personagem "${charName}" para:`, charName);
+              if (newName && newName.trim()) {
+                UIController.renameReviewCharacter(charName, newName.trim());
+              }
+            }
+            return;
+          }
+
+          const btnRemoveChar = e.target.closest('.btn-remove-char');
+          if (btnRemoveChar) {
+            const charName = btnRemoveChar.dataset.char;
+            if (charName) {
+              UIController.removeReviewCharacter(charName);
+            }
+            return;
+          }
+
+          const btnAddChar = e.target.closest('#btnAddCustomCharacter');
+          if (btnAddChar) {
+            const inp = Utils.$('inputAddCustomCharacter');
+            const val = inp ? inp.value.trim() : '';
+            if (val) {
+              UIController.addReviewCharacter(val);
+              inp.value = '';
+            }
+            return;
+          }
+
+          const btnConfirmImport = e.target.closest('#btnConfirmImportSave');
+          if (btnConfirmImport) {
+            const state = UIController.ImportFlowState;
+            if (state && state.rawText) {
+              const titleEl = Utils.$('importReviewTitle');
+              const authorEl = Utils.$('importReviewAuthor');
+              const finalTitle = (titleEl && titleEl.value.trim()) || state.title || 'Roteiro Sem Título';
+              const finalAuthor = (authorEl && authorEl.value.trim()) || state.author || 'Autor não informado';
+              const finalChars = (state.characters && state.characters.length > 0) ? state.characters : ['ATOR'];
+              const filteredSpeeches = (typeof ScriptParser !== 'undefined' && typeof ScriptParser.filterSpeechesByCharacters === 'function')
+                ? ScriptParser.filterSpeechesByCharacters(state.speeches, finalChars)
+                : state.speeches;
+              const finalBeats = (typeof DramaBeats !== 'undefined')
+                ? DramaBeats.generateBeats(filteredSpeeches, state.rawText, null, state.beatStrategy)
+                : [];
+
+              const newPlay = PlayStore.createPlayFromScript(state.rawText, finalTitle, finalAuthor, {
+                speeches: filteredSpeeches,
+                characters: finalChars,
+                beats: finalBeats
+              });
+              this.switchPlay(newPlay.id);
+              UIController.closeModal('modalImportPlay');
+              UIController.closeModal('modalPlayCatalog');
+              UIController.showStatus(`Peça "${finalTitle}" carregada com sucesso!`);
+            }
+            return;
+          }
+
           const bannerScriptEl = e.target.closest('#bannerReadFullScript');
           if (bannerScriptEl) {
             this.handleActionClick('btnReadScriptBanner');
@@ -1030,6 +1207,68 @@
             return;
           }
         });
+
+        if (Utils.$('inputScriptFile')) {
+          Utils.$('inputScriptFile').onchange = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+              const text = ev.target.result;
+              if (Utils.$('importRawScriptText')) Utils.$('importRawScriptText').value = text;
+              const fb = Utils.$('fileUploadFeedback');
+              if (fb) {
+                fb.style.display = 'flex';
+                fb.innerHTML = `${Icons.get('check', { size: 14 })} <span>Arquivo: ${Utils.escapeHtml(file.name)} (${Math.max(1, Math.round(file.size / 1024))} KB)</span>`;
+              }
+              if (typeof DramaturgyAnalyzer !== 'undefined') {
+                const strat = Utils.$('importReviewBeatStrategy') ? Utils.$('importReviewBeatStrategy').value : 'headers';
+                const analysis = await DramaturgyAnalyzer.analyze(text, { beatStrategy: strat });
+                analysis.rawText = text;
+                UIController.renderImportReview(analysis);
+              }
+            };
+            reader.readAsText(file);
+          };
+        }
+
+        if (Utils.$('importReviewBeatStrategy')) {
+          Utils.$('importReviewBeatStrategy').onchange = (e) => {
+            if (UIController.ImportFlowState) {
+              UIController.ImportFlowState.beatStrategy = e.target.value;
+              UIController.updateReviewStats();
+            }
+          };
+        }
+
+        if (Utils.$('importReviewTitle')) {
+          Utils.$('importReviewTitle').oninput = (e) => {
+            if (UIController.ImportFlowState) {
+              UIController.ImportFlowState.title = e.target.value;
+            }
+          };
+        }
+
+        if (Utils.$('importReviewAuthor')) {
+          Utils.$('importReviewAuthor').oninput = (e) => {
+            if (UIController.ImportFlowState) {
+              UIController.ImportFlowState.author = e.target.value;
+            }
+          };
+        }
+
+        if (Utils.$('inputAddCustomCharacter')) {
+          Utils.$('inputAddCustomCharacter').onkeydown = (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const val = e.target.value.trim();
+              if (val) {
+                UIController.addReviewCharacter(val);
+                e.target.value = '';
+              }
+            }
+          };
+        }
 
         if (Utils.$('cadernoFreeNotes')) {
           Utils.$('cadernoFreeNotes').oninput = (e) => {
@@ -1091,7 +1330,7 @@
           };
         });
 
-        ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat'].forEach(modalId => {
+        ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'modalPlayCatalog', 'modalImportPlay', 'sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat'].forEach(modalId => {
           const modalEl = Utils.$(modalId);
           if (modalEl) {
             modalEl.onclick = (e) => {
@@ -1299,7 +1538,12 @@
           Utils.$('btnSaveScript').onclick = () => {
             const txt = Utils.$('scriptEditor').value.trim();
             if (!txt) return;
-            localStorage.setItem('memorizador_custom_script', txt);
+            if (typeof PlayStore !== 'undefined') {
+              const newPlay = PlayStore.createPlayFromScript(txt);
+              PlayStore.setActivePlayId(newPlay.id);
+            } else {
+              localStorage.setItem('memorizador_custom_script', txt);
+            }
             UIController.closeModal('modalSettings');
             this.loadActiveScript();
           };
@@ -1307,7 +1551,11 @@
 
         if (Utils.$('btnRestoreOriginal')) {
           Utils.$('btnRestoreOriginal').onclick = () => {
-            if (confirm('Restaurar o texto original de "Os Inventariantes"?')) {
+            const defTitle = (typeof DefaultPlay !== 'undefined' && DefaultPlay.title) ? DefaultPlay.title : 'Os Inventariantes';
+            if (confirm(`Restaurar o texto original de "${defTitle}"?`)) {
+              if (typeof PlayStore !== 'undefined') {
+                PlayStore.setActivePlayId('os-inventariantes');
+              }
               localStorage.removeItem('memorizador_custom_script');
               UIController.closeModal('modalSettings');
               this.loadActiveScript();
