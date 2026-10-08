@@ -56,6 +56,10 @@ const AIService = {
     return Boolean(this.getApiKey().trim());
   },
 
+  hasApiKey() {
+    return this.hasKey();
+  },
+
   async callGeminiRaw(prompt, options = {}) {
     const apiKey = (options.apiKey || this.getApiKey()).trim();
     if (!apiKey) {

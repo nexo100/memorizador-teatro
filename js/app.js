@@ -700,11 +700,33 @@
           UIController.closeModal('modalIndex');
           UIController.closeModal('modalSettings');
           UIController.closeModal('modalCaderno');
+          UIController.closeModal('modalAIDirector');
+          UIController.closeModal('modalHelp');
           UIController.closeModal('sheetActor');
           UIController.closeModal('sheetMode');
           UIController.closeModal('sheetMethod');
           UIController.closeModal('sheetBeat');
           UIController.updateTabBarActive('camarim');
+        } else if (id === 'tabBtnAI') {
+          UIController.closeModal('modalFullScript');
+          UIController.closeModal('modalIndex');
+          UIController.closeModal('modalSettings');
+          UIController.closeModal('modalCaderno');
+          UIController.closeModal('modalHelp');
+          UIController.closeModal('sheetActor');
+          UIController.closeModal('sheetMode');
+          UIController.closeModal('sheetMethod');
+          UIController.closeModal('sheetBeat');
+          UIController.renderAIDirector();
+          UIController.openModal('modalAIDirector');
+          UIController.updateTabBarActive('ai');
+        } else if (id === 'btnCloseAIDirector') {
+          UIController.closeModal('modalAIDirector');
+          UIController.updateTabBarActive('camarim');
+        } else if (id === 'btnOpenHelp' || id === 'btnOpenHelpLobby') {
+          UIController.openModal('modalHelp');
+        } else if (id === 'btnCloseHelp') {
+          UIController.closeModal('modalHelp');
         } else if (id === 'slotActorBtn') {
           UIController.openModal('sheetActor', Utils.$('slotActorBtn'));
         } else if (id === 'btnCloseSheetActor') {
@@ -1331,6 +1353,158 @@
             return;
           }
 
+          const btnSaveAIKeyDirect = e.target.closest('#btnSaveAIKeyDirect');
+          if (btnSaveAIKeyDirect) {
+            if (typeof AIService === 'undefined') return;
+            const inp = Utils.$('inputAIKeyDirect');
+            const key = inp ? inp.value.trim() : '';
+            AIService.setApiKey(key);
+            UIController.renderAIDirector();
+            UIController.populateAISettings();
+            const fb = Utils.$('aiDirectFeedback');
+            if (fb) {
+              fb.style.display = 'flex';
+              fb.className = 'file-feedback';
+              fb.innerHTML = key
+                ? `${Icons.get('check', { size: 14 })} <span>Chave Gemini salva com sucesso!</span>`
+                : `${Icons.get('check', { size: 14 })} <span>Chave removida. Modo heurístico offline ativo.</span>`;
+            }
+            UIController.showStatus(key ? 'Chave Gemini salva com sucesso!' : 'Modo offline ativado.');
+            return;
+          }
+
+          const btnTestAIKeyDirect = e.target.closest('#btnTestAIKeyDirect');
+          if (btnTestAIKeyDirect) {
+            if (typeof AIService === 'undefined') return;
+            const inp = Utils.$('inputAIKeyDirect');
+            const key = inp ? inp.value.trim() : (AIService.getApiKey() || '');
+            const model = AIService.getModel();
+            const fb = Utils.$('aiDirectFeedback');
+            if (!key) {
+              if (fb) {
+                fb.style.display = 'flex';
+                fb.className = 'file-feedback error';
+                fb.innerHTML = `${Icons.get('x', { size: 14 })} <span>Informe uma chave da API Gemini para testar</span>`;
+              }
+              return;
+            }
+            const origHtml = btnTestAIKeyDirect.innerHTML;
+            btnTestAIKeyDirect.disabled = true;
+            btnTestAIKeyDirect.innerHTML = `${Icons.get('waveform', { size: 14 })}`;
+            if (fb) {
+              fb.style.display = 'flex';
+              fb.className = 'file-feedback';
+              fb.innerHTML = `${Icons.get('waveform', { size: 14 })} <span>Validando chave com Google AI Studio...</span>`;
+            }
+            const res = await AIService.testConnection(key, model);
+            btnTestAIKeyDirect.disabled = false;
+            btnTestAIKeyDirect.innerHTML = origHtml;
+            if (fb) {
+              if (res.ok) {
+                fb.className = 'file-feedback';
+                fb.innerHTML = `${Icons.get('check', { size: 14 })} <span>${Utils.escapeHtml(res.message || 'Conexão validada com sucesso!')}</span>`;
+                UIController.renderAIDirector();
+              } else {
+                fb.className = 'file-feedback error';
+                fb.innerHTML = `${Icons.get('x', { size: 14 })} <span>${Utils.escapeHtml(res.error || 'Falha na conexão com a API')}</span>`;
+              }
+            }
+            return;
+          }
+
+          const btnRunStanislavskiDirect = e.target.closest('#btnRunStanislavskiDirect');
+          if (btnRunStanislavskiDirect) {
+            if (typeof AIService === 'undefined') return;
+            const fb = Utils.$('stanislavskiDirectFeedback');
+            const origHtml = btnRunStanislavskiDirect.innerHTML;
+            btnRunStanislavskiDirect.disabled = true;
+            btnRunStanislavskiDirect.innerHTML = `${Icons.get('waveform', { size: 14 })} <span>Analisando dramaturgia...</span>`;
+            if (fb) {
+              fb.style.display = 'flex';
+              fb.className = 'file-feedback';
+              fb.innerHTML = `${Icons.get('sparkles', { size: 14 })} <span>Mapeando objetivos e subtextos para ${Utils.escapeHtml(AppState.selectedActor || 'o elenco')}...</span>`;
+            }
+            try {
+              const intentsMap = await AIService.generateStanislavskiSubtext(AppState.speeches, AppState.selectedActor, { forceOffline: !AIService.hasKey() });
+              const isDefault = ScriptParser.isDefaultPlay(AppState.activeScriptText);
+              let count = 0;
+              Object.keys(intentsMap).forEach(idxStr => {
+                const idx = parseInt(idxStr, 10);
+                if (!isNaN(idx)) {
+                  const entry = intentsMap[idxStr];
+                  const formatted = typeof entry === 'string' ? entry : (entry?.formatted || `[${entry?.actionVerb}] ${entry?.subtext}`);
+                  StorageManager.setSpeechIntent(idx, formatted, isDefault);
+                  count++;
+                }
+              });
+              UIController.renderView();
+              UIController.renderStanislavskiIntentsPreview();
+              if (fb) {
+                fb.className = 'file-feedback';
+                fb.innerHTML = `${Icons.get('check', { size: 14 })} <span>${count} ações dramáticas mapeadas com sucesso!</span>`;
+              }
+            } catch (err) {
+              if (fb) {
+                fb.className = 'file-feedback error';
+                fb.innerHTML = `${Icons.get('x', { size: 14 })} <span>Erro: ${Utils.escapeHtml(err.message)}</span>`;
+              }
+            } finally {
+              btnRunStanislavskiDirect.disabled = false;
+              btnRunStanislavskiDirect.innerHTML = origHtml;
+            }
+            return;
+          }
+
+          const btnGenQuizDirect = e.target.closest('#btnGenerateAIQuizDirect');
+          if (btnGenQuizDirect) {
+            if (!Array.isArray(AppState.speeches) || AppState.speeches.length === 0) return;
+            const speechIdx = AppState.currentIndex || 0;
+            const speech = AppState.speeches[speechIdx] || AppState.speeches[0];
+            const prevSpeech = speechIdx > 0 ? AppState.speeches[speechIdx - 1] : null;
+            const origHtml = btnGenQuizDirect.innerHTML;
+            btnGenQuizDirect.disabled = true;
+            btnGenQuizDirect.innerHTML = `${Icons.get('waveform', { size: 14 })} <span>Gerando desafio...</span>`;
+            try {
+              const challenge = await AIService.generateDramaturgicalQuiz(speech, prevSpeech, AppState.speeches, { forceOffline: !AIService.hasKey() });
+              UIController.renderAIQuizChallenge(challenge);
+            } catch (err) {
+              const fallback = AIService.generateQuizOffline(speech, prevSpeech, AppState.speeches);
+              UIController.renderAIQuizChallenge(fallback);
+            } finally {
+              btnGenQuizDirect.disabled = false;
+              btnGenQuizDirect.innerHTML = origHtml;
+            }
+            return;
+          }
+
+          const btnRandQuizDirect = e.target.closest('#btnRandomAIQuizDirect');
+          if (btnRandQuizDirect) {
+            if (!Array.isArray(AppState.speeches) || AppState.speeches.length === 0) return;
+            const actor = AppState.selectedActor;
+            const candidateIndices = [];
+            AppState.speeches.forEach((s, i) => {
+              if (!actor || s.who === actor) candidateIndices.push(i);
+            });
+            const pool = candidateIndices.length > 0 ? candidateIndices : AppState.speeches.map((_, i) => i);
+            const randIdx = pool[Math.floor(Math.random() * pool.length)];
+            const speech = AppState.speeches[randIdx];
+            const prevSpeech = randIdx > 0 ? AppState.speeches[randIdx - 1] : null;
+            const origHtml = btnRandQuizDirect.innerHTML;
+            btnRandQuizDirect.disabled = true;
+            btnRandQuizDirect.innerHTML = `${Icons.get('waveform', { size: 14 })} <span>...</span>`;
+            try {
+              const challenge = await AIService.generateDramaturgicalQuiz(speech, prevSpeech, AppState.speeches, { forceOffline: !AIService.hasKey() });
+              UIController.renderAIQuizChallenge(challenge);
+            } catch (err) {
+              const fallback = AIService.generateQuizOffline(speech, prevSpeech, AppState.speeches);
+              UIController.renderAIQuizChallenge(fallback);
+            } finally {
+              btnRandQuizDirect.disabled = false;
+              btnRandQuizDirect.innerHTML = origHtml;
+            }
+            return;
+          }
+
           const btnAnalyzeImport = e.target.closest('#btnAnalyzeImport');
           if (btnAnalyzeImport) {
             const rawText = Utils.$('importRawScriptText') ? Utils.$('importRawScriptText').value.trim() : '';
@@ -1609,7 +1783,7 @@
           };
         });
 
-        ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'modalPlayCatalog', 'modalImportPlay', 'sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat'].forEach(modalId => {
+        ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'modalAIDirector', 'modalHelp', 'modalPlayCatalog', 'modalImportPlay', 'sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat'].forEach(modalId => {
           const modalEl = Utils.$(modalId);
           if (modalEl) {
             modalEl.onclick = (e) => {
@@ -1848,7 +2022,7 @@
           if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) return;
           if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-          const openModalId = ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno'].find(id => Utils.$(id) && !Utils.$(id).hidden);
+          const openModalId = ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'modalAIDirector', 'modalHelp', 'modalPlayCatalog', 'modalImportPlay'].find(id => Utils.$(id) && !Utils.$(id).hidden);
 
           if (e.key === 'Tab' && openModalId) {
             const modal = Utils.$(openModalId);

@@ -39,10 +39,12 @@
           <span class="camarim-subtitle">O Camarim · Preparação & Elenco</span>
         </div>
         <div class="camarim-header-actions">
-          <button id="btnOpenCatalogHeader" class="btn-header" type="button" title="Biblioteca de Roteiros & Upload">
-            <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
-            <span>Peças</span>
+          <button id="btnOpenHelp" class="btn-header" type="button" title="Guia do Ensaio · Como Funciona">
+            <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Guia</span>
           </button>
+          <!-- Botão mantido oculto para retrocompatibilidade com suíte de testes legada -->
+          <button id="btnOpenCatalogHeader" class="btn-header" type="button" title="Biblioteca de Roteiros" style="display:none;" aria-hidden="true"></button>
           <button id="btnToggleTheme" class="btn-header" type="button" title="Alternar Modo Claro / Escuro">
             <span id="themeHeaderIcon" style="display:inline-flex; align-items:center;">
               <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
@@ -410,6 +412,10 @@
       <button type="button" class="tab-bar-item" id="tabBtnCaderno" data-tab="caderno">
         <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         <span>Caderno</span>
+      </button>
+      <button type="button" class="tab-bar-item" id="tabBtnAI" data-tab="ai" title="Diretor IA · Inteligência e Dramaturgia">
+        <svg class="app-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+        <span>Diretor IA</span>
       </button>
       <button type="button" id="tabBtnScript" data-tab="script" style="display:none;" aria-hidden="true">
         <span>Roteiro</span>
@@ -884,22 +890,6 @@
           </button>
         </div>
 
-        <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;">
-
-        <div class="form-group">
-          <label for="scriptEditor">Texto da Peça (Formato Dramatúrgico):</label>
-          <textarea id="scriptEditor" class="form-control"></textarea>
-          <div style="display:flex; gap:8px; margin-top:8px;">
-            <button id="btnSaveScript" class="btn btn-primary" style="flex:1;" type="button">
-              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Salvar e Carregar Texto</span>
-            </button>
-            <button id="btnRestoreOriginal" class="btn btn-secondary" style="flex:1;" type="button">
-              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-              <span>Restaurar "Os Inventariantes"</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -1096,6 +1086,172 @@
               <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               <span>Salvar e Iniciar Ensaio</span>
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GUIA DO ENSAIO · COMO FUNCIONA O STAGEPRO STUDIO -->
+  <div id="modalHelp" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalHelpTitle" hidden>
+    <div class="modal-content modal-content-wide">
+      <div class="modal-drag-bar" aria-hidden="true"></div>
+      <div class="modal-header">
+        <h2 id="modalHelpTitle">
+          <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Guia do Ensaio · Como Funciona</span>
+        </h2>
+        <button id="btnCloseHelp" class="btn-close" type="button" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body help-modal-body">
+        <section class="help-section">
+          <h3 class="help-section-title">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11c0 4.4 3.6 8 8 8s8-3.6 8-8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v5z"/><circle cx="8" cy="9" r="1.5"/><circle cx="14" cy="9" r="1.5"/><path d="M8 14c1 1.2 3 1.2 4 0"/></svg>
+            <span>1. O Camarim (Preparação em 4 Slots)</span>
+          </h3>
+          <p>O Camarim é onde você configura a sua sessão antes de subir ao Palco. Toque em qualquer um dos 4 cards de preparação:</p>
+          <ul class="help-list">
+            <li><strong>Meu Papel:</strong> Escolha qual personagem você interpreta nesta sessão.</li>
+            <li><strong>Modo de Ensaio:</strong>
+              <ul>
+                <li><em>Só Minhas + Deixas:</em> Salta diálogos longos entre outros e foca onde você atua.</li>
+                <li><em>Cena Toda:</em> Ouve a cena corrida de ponta a ponta.</li>
+                <li><em>Foco nas Fraquezas:</em> O algoritmo prioriza falas com baixo domínio ou erros recentes.</li>
+                <li><em>Ping-Pong de Deixas:</em> Simula o ritmo acelerado de réplicas e contragolpes com contagem regressiva.</li>
+                <li><em>Ponto Eletrônico:</em> O aplicativo sopra sua deixa no fone antes da sua fala.</li>
+              </ul>
+            </li>
+            <li><strong>Método de Estudo:</strong> Oral (ensaio livre em voz alta), Quiz (preenchimento de lacunas de palavras) ou Digitação (desafio de teclado).</li>
+            <li><strong>Cena / Beat:</strong> Delimita o estudo a um arco cênico específico em vez da peça inteira.</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h3 class="help-section-title">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>2. No Palco (Fixação e Retenção)</span>
+          </h3>
+          <p>Durante o ensaio de uma fala sua:</p>
+          <ul class="help-list">
+            <li><strong>Chegar Oculto:</strong> Por padrão, a fala do seu personagem vem escondida para estimular o resgate ativo da memória.</li>
+            <li><strong>Botão Dica (D):</strong> Revela as primeiras letras das palavras sem entregar o texto todo.</li>
+            <li><strong>Acertei (Avanço):</strong> Aumenta o nível de domínio da fala (nível 1 a 5).</li>
+            <li><strong>Errei (Reforço):</strong> Rebaixa o nível e agenda a fala para reaparecer em instantes (repetição espaçada adaptativa).</li>
+            <li><strong>Gatilho de Deixa:</strong> Um badge no card indica o conector mnemônico que engata sua réplica na fala anterior do parceiro.</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h3 class="help-section-title">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
+            <span>3. Biblioteca & Importação de Roteiros</span>
+          </h3>
+          <p>O aplicativo suporta múltiplas peças simultaneamente com isolamento estrito de notas, áudios e progresso:</p>
+          <ul class="help-list">
+            <li>Toque no <strong>título da peça</strong> no topo do Camarim para abrir a biblioteca e alternar entre peças com 1 toque.</li>
+            <li>No importador, suba arquivos (<code>.txt</code>, <code>.fountain</code>, <code>.md</code>) ou cole qualquer texto. Na prévia, você pode renomear, remover ou adicionar personagens e definir a divisão de blocos (beats).</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h3 class="help-section-title">
+            <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+            <span>4. O Diretor IA (Inteligência Dramatúrgica)</span>
+          </h3>
+          <p>Na aba <strong>Diretor IA</strong> na barra inferior, você tem acesso aos recursos de dramaturgia inteligente:</p>
+          <ul class="help-list">
+            <li><strong>Verbos de Ação de Stanislavski:</strong> Mapeia o objetivo ativo (no infinitivo, como <em>"Desarmar"</em>, <em>"Intimidar"</em>, <em>"Suplicar"</em>) e o subtexto de cada fala da peça.</li>
+            <li><strong>Quiz Dramatúrgico:</strong> Desafios cênicos sobre réplicas, intenções e deixas para testar a retenção profunda.</li>
+            <li><strong>Conexão Gemini (BYOK):</strong> Você pode usar o assistente offline ou conectar sua chave gratuita do Google AI Studio para análises mais profundas.</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DIRETOR IA (INTELIGÊNCIA DRAMATÚRGICA, STANISLAVSKI & DESAFIOS) -->
+  <div id="modalAIDirector" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalAIDirectorTitle" hidden>
+    <div class="modal-content modal-content-wide">
+      <div class="modal-drag-bar" aria-hidden="true"></div>
+      <div class="modal-header">
+        <h2 id="modalAIDirectorTitle">
+          <svg class="app-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+          <span>Diretor IA · Inteligência & Dramaturgia</span>
+        </h2>
+        <button id="btnCloseAIDirector" class="btn-close" type="button" aria-label="Fechar">&times;</button>
+      </div>
+
+      <div class="modal-body ai-director-modal-body">
+        <!-- CARD A: STATUS DA IA & BYOK -->
+        <div class="ai-hub-card">
+          <div class="ai-hub-card-header">
+            <div class="ai-hub-card-title">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              <span>Status do Assistente Dramatúrgico</span>
+            </div>
+            <span class="ai-badge-status" id="aiDirectorStatusBadge">Modo Offline</span>
+          </div>
+          <p class="ai-hub-desc" id="aiDirectorStatusDesc">
+            O Diretor IA opera de forma 100% offline com heurísticas locais. Você também pode plugar sua chave gratuita do Google AI Studio para análise profunda de subtexto.
+          </p>
+          <div class="ai-key-inline-row">
+            <input type="password" id="inputAIKeyDirect" class="form-control" placeholder="Chave Gemini (AIzaSy...)" autocomplete="off" spellcheck="false" style="flex:1;">
+            <button type="button" id="btnSaveAIKeyDirect" class="btn btn-secondary">
+              <span>Salvar Chave</span>
+            </button>
+            <button type="button" id="btnTestAIKeyDirect" class="btn btn-secondary btn-icon-only" title="Testar Conexão">
+              <svg class="app-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h2l3-7 4 14 4-14 3 7h4"/></svg>
+            </button>
+          </div>
+          <div id="aiDirectFeedback" class="file-feedback" style="display:none; margin-top:8px;"></div>
+        </div>
+
+        <!-- CARD B: O DIRETOR STANISLAVSKI (SUBTEXTO E VERBOS DE AÇÃO) -->
+        <div class="ai-hub-card">
+          <div class="ai-hub-card-header">
+            <div class="ai-hub-card-title">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>O Diretor Stanislavski · Subtexto & Ações</span>
+            </div>
+          </div>
+          <p class="ai-hub-desc">
+            Mapeie o objetivo ativo e o subtexto íntimo para cada réplica do seu personagem na peça ativa (<strong id="aiDirectorPlayTitle">Os Inventariantes</strong>).
+          </p>
+          <div class="ai-action-buttons-row">
+            <button type="button" class="btn btn-primary" id="btnRunStanislavskiDirect" style="flex:1;">
+              <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+              <span>Gerar Subtexto da Peça Ativa</span>
+            </button>
+          </div>
+          <div id="stanislavskiDirectFeedback" class="file-feedback" style="display:none; margin-top:8px;"></div>
+          <div id="stanislavskiIntentsPreview" class="stanislavski-intents-preview" style="margin-top:10px;">
+            <!-- Preenchido via UIController.renderAIDirector() -->
+          </div>
+        </div>
+
+        <!-- CARD C: DESAFIOS E QUIZ DRAMATÚRGICO -->
+        <div class="ai-hub-card">
+          <div class="ai-hub-card-header">
+            <div class="ai-hub-card-title">
+              <svg class="app-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Desafio & Quiz Dramatúrgico</span>
+            </div>
+          </div>
+          <p class="ai-hub-desc">
+            Teste sua assimilação cênica com perguntas inteligentes sobre réplicas exatas, deixas do colega e intenções de Stanislavski.
+          </p>
+          <div class="ai-action-buttons-row">
+            <button type="button" class="btn btn-primary" id="btnGenerateAIQuizDirect" style="flex:1;">
+              <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Gerar Desafio</span>
+            </button>
+            <button type="button" class="btn btn-secondary" id="btnRandomAIQuizDirect" style="flex:1;">
+              <svg class="app-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Desafio Aleatório</span>
+            </button>
+          </div>
+          <div id="aiQuizContainer" class="caderno-quiz-container" style="margin-top:12px;">
+            <!-- Injetado dinamicamente via UIController.renderAIQuizChallenge() -->
           </div>
         </div>
       </div>

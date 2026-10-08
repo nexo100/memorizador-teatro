@@ -1893,7 +1893,32 @@ Espero que isso ajude na preparação dos atores!
   assert.strictEqual(UIController.ImportFlowState.beats[0].name, 'Beat 1');
   console.log('✅ 72. Curadoria de beats: remoção total preservada para cena única e adição de novo beat validadas');
 
-  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 72 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
+  // Teste 73: Central do Diretor IA na Bottom Tab Bar
+  assert(indexHtml.includes('id="tabBtnAI"'), 'Bottom Tab Bar deve conter botão dedicado para o Diretor IA');
+  assert(indexHtml.includes('id="modalAIDirector"'), 'Deve existir modal dedicado para o Diretor IA');
+  assert(indexHtml.includes('id="btnRunStanislavskiDirect"'), 'Diretor IA deve conter botão direto de Stanislavski');
+  assert(indexHtml.includes('id="btnGenerateAIQuizDirect"'), 'Diretor IA deve conter botão direto de Quiz');
+
+  UIController.renderAIDirector();
+  assert(domStore['aiDirectorStatusBadge'], 'Deve renderizar status badge do Diretor IA');
+  assert(domStore['aiDirectorPlayTitle'], 'Deve renderizar título da peça no Diretor IA');
+  console.log('✅ 73. Central do Diretor IA: Bottom Tab Bar, modal dedicado e renderização validados');
+
+  // Teste 74: Central de Ajuda & Guia do Ensaio
+  assert(indexHtml.includes('id="btnOpenHelp"'), 'Cabeçalho deve conter botão para abrir Guia de Ajuda');
+  assert(indexHtml.includes('id="modalHelp"'), 'Deve existir modal com o Guia de Ajuda do Ensaio');
+  assert(indexHtml.includes('Guia do Ensaio · Como Funciona'), 'Guia de Ajuda deve conter título explicativo');
+  assert(indexHtml.includes('Modo de Ensaio:'), 'Guia de Ajuda deve explicar os modos de ensaio');
+  assert(indexHtml.includes('O Diretor IA (Inteligência Dramatúrgica)'), 'Guia de Ajuda deve explicar o Diretor IA');
+  console.log('✅ 74. Guia do Ensaio: botão de acesso no topo, modal ilustrado e seções conceituais validados');
+
+  // Teste 75: Faxina nas opções legadas dos Ajustes
+  assert(!indexHtml.includes('id="scriptEditor"'), 'Textarea redundante de scriptEditor não deve existir nos Ajustes');
+  assert(!indexHtml.includes('id="btnSaveScript"'), 'Botão btnSaveScript obsoleto não deve existir nos Ajustes');
+  assert(!indexHtml.includes('id="btnRestoreOriginal"'), 'Botão btnRestoreOriginal confuso não deve existir nos Ajustes');
+  console.log('✅ 75. Faxina de Ajustes: remoção de botões ambíguos e textarea inútil validada com sucesso');
+
+  console.log('\n🎉 SUCESSO ABSOLUTO: TODOS OS 75 TESTES DE INTEGRAÇÃO PASSARAM SEM NENHUM ERRO!');
 }
 
 runTestSuite().catch(err => {

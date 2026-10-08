@@ -2137,13 +2137,162 @@ const UIController = {
   },
 
   handleCadernoQuizAnswer(selectedIdx) {
+    this.handleAIQuizAnswer(selectedIdx, Utils.$('cadernoQuizContainer'));
+    const scoreEl = Utils.$('cadernoQuizScoreBadge');
+    if (scoreEl) {
+      const score = AppState.quizScore || 0;
+      scoreEl.textContent = `${score} ${score === 1 ? 'acerto' : 'acertos'}`;
+    }
+  },
+
+  renderAIDirector() {
+    const playTitleEl = Utils.$('aiDirectorPlayTitle');
+    if (playTitleEl) {
+      const activePlay = (typeof PlayStore !== 'undefined') ? PlayStore.getActivePlay() : null;
+      playTitleEl.textContent = (activePlay && activePlay.title) ? activePlay.title : (AppState.activePlay?.title || 'Peça Ativa');
+    }
+
+    const badge = Utils.$('aiDirectorStatusBadge');
+    const desc = Utils.$('aiDirectorStatusDesc');
+    const hasKey = typeof AIService !== 'undefined' && AIService.hasKey();
+
+    if (badge) {
+      badge.textContent = hasKey ? `Online (${AIService.getModel()})` : 'Modo Offline (Heurístico)';
+      badge.className = `ai-badge-status ${hasKey ? 'online' : 'offline'}`;
+    }
+
+    if (desc) {
+      desc.textContent = hasKey
+        ? 'Conectado ao Google Gemini via BYOK. Análise profunda e raciocínio dramatúrgico ativos.'
+        : 'O Diretor IA opera de forma 100% offline com heurísticas locais. Você também pode plugar sua chave gratuita do Google AI Studio para análise profunda de subtexto.';
+    }
+
+    const keyInput = Utils.$('inputAIKeyDirect');
+    if (keyInput && typeof AIService !== 'undefined') {
+      keyInput.value = AIService.getApiKey();
+    }
+
+    this.renderStanislavskiIntentsPreview();
+
+    const quizContainer = Utils.$('aiQuizContainer');
+    if (quizContainer && (!quizContainer.children || quizContainer.children.length === 0)) {
+      this.renderAIQuizChallenge(null);
+    }
+  },
+
+  renderStanislavskiIntentsPreview() {
+    const container = Utils.$('stanislavskiIntentsPreview');
+    if (!container) return;
+
+    const playId = (typeof PlayStore !== 'undefined') ? PlayStore.getActivePlayId() : 'os-inventariantes';
+    const intentsMap = (typeof StorageManager !== 'undefined') ? StorageManager.getIntents(playId) : {};
+    const keys = Object.keys(intentsMap);
+    const count = keys.length;
+
+    if (count === 0) {
+      container.innerHTML = `
+        <div class="ai-preview-empty">
+          <p>Nenhum subtexto ou verbo de ação mapeado ainda para esta peça. Toque em <strong>"Gerar Subtexto da Peça Ativa"</strong> acima para analisar todas as falas.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const actor = AppState.selectedActor;
+    const actorEntries = [];
+    keys.forEach(k => {
+      const idx = parseInt(k, 10);
+      const speech = AppState.speeches && AppState.speeches[idx];
+      if (speech && (!actor || speech.who === actor)) {
+        actorEntries.push({ idx, speech, intent: intentsMap[k] });
+      }
+    });
+
+    container.innerHTML = `
+      <div class="stanislavski-stats-bar">
+        <span>${Icons.get('sparkles', { size: 14 })} <strong>${count} falas</strong> com objetivo/subtexto mapeados</span>
+      </div>
+      <div class="stanislavski-preview-list">
+        ${actorEntries.slice(0, 5).map(item => `
+          <div class="stanislavski-preview-item">
+            <div class="stanislavski-preview-header">
+              <span class="stanislavski-fala-idx">Fala #${item.idx + 1} (${Utils.escapeHtml(item.speech.who)})</span>
+              ${item.intent.actionVerb ? `<span class="stanislavski-action-badge">${Utils.escapeHtml(item.intent.actionVerb)}</span>` : ''}
+            </div>
+            ${item.intent.subtext ? `<div class="stanislavski-subtext-quote">"${Utils.escapeHtml(item.intent.subtext)}"</div>` : ''}
+          </div>
+        `).join('')}
+        ${actorEntries.length > 5 ? `<div class="stanislavski-preview-more">+ mais ${actorEntries.length - 5} falas mapeadas para ${Utils.escapeHtml(actor || 'o elenco')}</div>` : ''}
+      </div>
+    `;
+  },
+
+  renderAIQuizChallenge(challenge) {
+    const container = Utils.$('aiQuizContainer');
+    if (!container) return;
+
+    if (!challenge) {
+      container.innerHTML = `
+        <div class="caderno-quiz-empty">
+          <p>Toque em <strong>"Gerar Desafio"</strong> ou <strong>"Desafio Aleatório"</strong> para testar sua assimilação dramatúrgica.</p>
+        </div>
+      `;
+      return;
+    }
+
+    this.currentQuizChallenge = { ...challenge };
+
+    const allOptions = [
+      { text: challenge.correctAnswer, correct: true },
+      ...(challenge.distractors || []).map(d => ({ text: d, correct: false }))
+    ];
+    for (let i = allOptions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+    }
+    this.currentQuizChallenge.shuffledOptions = allOptions;
+
+    container.innerHTML = `
+      <div class="quiz-challenge-card">
+        <div class="quiz-challenge-question">
+          ${Icons.get('sparkles', { size: 16 })}
+          <span>${Utils.escapeHtml(challenge.question)}</span>
+        </div>
+        ${challenge.keyword ? `
+          <div class="quiz-challenge-keyword-hint">
+            ${Icons.get('target', { size: 13 })}
+            <span>Palavra-chave da réplica: <strong>"${Utils.escapeHtml(challenge.keyword)}"</strong></span>
+          </div>
+        ` : ''}
+        <div class="quiz-challenge-options-grid">
+          ${allOptions.map((opt, idx) => `
+            <button type="button" class="btn-quiz-challenge-option" data-idx="${idx}">
+              <span class="quiz-opt-letter">${String.fromCharCode(65 + idx)}</span>
+              <span class="quiz-opt-text">${Utils.escapeHtml(opt.text)}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div id="quizChallengeFeedback" class="quiz-challenge-feedback" style="display:none;"></div>
+      </div>
+    `;
+
+    const btns = container.querySelectorAll('.btn-quiz-challenge-option');
+    btns.forEach(b => {
+      b.onclick = () => {
+        const idx = parseInt(b.dataset.idx, 10);
+        this.handleAIQuizAnswer(idx, container);
+      };
+    });
+  },
+
+  handleAIQuizAnswer(selectedIdx, containerEl) {
     if (!this.currentQuizChallenge || this.currentQuizChallenge.answered) return;
     this.currentQuizChallenge.answered = true;
 
     const opt = this.currentQuizChallenge.shuffledOptions[selectedIdx];
     const isCorrect = opt && opt.correct;
-    const container = Utils.$('cadernoQuizContainer');
-    const fb = Utils.$('quizChallengeFeedback');
+    const container = containerEl || Utils.$('aiQuizContainer') || Utils.$('cadernoQuizContainer');
+    const fb = (container && typeof container.querySelector === 'function' && container.querySelector('#quizChallengeFeedback')) || Utils.$('quizChallengeFeedback');
 
     if (container) {
       const btns = container.querySelectorAll('.btn-quiz-challenge-option');
@@ -2160,10 +2309,6 @@ const UIController = {
 
     if (isCorrect) {
       AppState.quizScore = (AppState.quizScore || 0) + 1;
-      const scoreEl = Utils.$('cadernoQuizScoreBadge');
-      if (scoreEl) {
-        scoreEl.textContent = `${AppState.quizScore} ${AppState.quizScore === 1 ? 'acerto' : 'acertos'}`;
-      }
     }
 
     if (fb) {

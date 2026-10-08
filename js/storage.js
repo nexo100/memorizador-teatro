@@ -214,6 +214,55 @@
         }
       },
 
+      parseIntent(val) {
+        if (!val) return { actionVerb: '', subtext: '' };
+        if (typeof val === 'object') return val;
+        const str = String(val).trim();
+        const m = str.match(/^\[(.*?)\]\s*(.*)$/);
+        if (m) {
+          return { actionVerb: m[1].trim(), subtext: m[2].trim() };
+        }
+        return { actionVerb: '', subtext: str };
+      },
+
+      getIntents(playId) {
+        const pId = playId || AppState.getPlayId();
+        const map = {};
+        if (typeof PlayStore !== 'undefined') {
+          const play = (typeof PlayStore.getPlayById === 'function') ? PlayStore.getPlayById(pId) : (typeof PlayStore.get === 'function' ? PlayStore.get(pId) : null);
+          if (play && play.intentions) {
+            Object.keys(play.intentions).forEach(k => {
+              const val = play.intentions[k];
+              map[k] = this.parseIntent(val);
+            });
+          }
+        }
+        if (pId === 'os-inventariantes' || pId === 'default') {
+          if (typeof DefaultPlay !== 'undefined' && DefaultPlay.intentions) {
+            Object.keys(DefaultPlay.intentions).forEach(k => {
+              if (!map[k]) {
+                const val = DefaultPlay.intentions[k];
+                map[k] = this.parseIntent(val);
+              }
+            });
+          }
+        }
+        try {
+          if (typeof localStorage !== 'undefined') {
+            const prefix = `intent_${pId}_`;
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k && k.startsWith(prefix)) {
+                const idx = k.slice(prefix.length);
+                const val = localStorage.getItem(k);
+                map[idx] = this.parseIntent(val);
+              }
+            }
+          }
+        } catch (e) {}
+        return map;
+      },
+
       getActorNotesKey(playId) {
         const pId = playId || AppState.getPlayId();
         return `memorizador_actor_notes_${pId}`;
@@ -513,6 +562,10 @@
         }
         const all = this.getAll();
         return all.find(p => p.id === id) || null;
+      },
+
+      getPlayById(id) {
+        return this.get(id);
       },
 
       save(playData) {

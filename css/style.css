@@ -3680,3 +3680,192 @@ textarea.form-control {
   align-self: flex-start;
   margin-top: 4px;
 }
+
+/* ==========================================================================
+   CENTRAL DO DIRETOR IA & GUIA DO ENSAIO
+   ========================================================================== */
+.ai-director-modal-body,
+.help-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.ai-hub-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-hub-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-hub-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.94rem;
+  color: var(--fg);
+}
+
+.ai-badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface-hover);
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+}
+
+.ai-badge-status.online {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.ai-badge-status.offline {
+  background: var(--surface-hover);
+  color: var(--fg-muted);
+}
+
+.ai-hub-desc {
+  font-size: 0.82rem;
+  color: var(--fg-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ai-key-inline-row,
+.ai-action-buttons-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stanislavski-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.stanislavski-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stanislavski-preview-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stanislavski-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stanislavski-fala-idx {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--fg-muted);
+}
+
+.stanislavski-action-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.stanislavski-subtext-quote {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--fg);
+  line-height: 1.4;
+}
+
+.stanislavski-preview-more {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  text-align: center;
+  padding: 4px;
+}
+
+.ai-preview-empty {
+  font-size: 0.82rem;
+  color: var(--fg-muted);
+  text-align: center;
+  padding: 12px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+}
+
+/* GUIA DO ENSAIO (HELP MODAL) */
+.help-section {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.help-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0 0 8px;
+}
+
+.help-list {
+  margin: 8px 0 0 16px;
+  padding: 0;
+  font-size: 0.82rem;
+  color: var(--fg);
+  line-height: 1.55;
+}
+
+.help-list li {
+  margin-bottom: 6px;
+}
+
+.help-list code {
+  background: var(--surface-hover);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.78rem;
+}
