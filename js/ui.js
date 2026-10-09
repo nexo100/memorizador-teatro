@@ -2,16 +2,24 @@
 const UIController = {
   currentRenderId: 0,
   lastFocusedElement: null,
+  activeModalId: null,
 
   openModal(modalId, openerEl = null) {
     const modal = Utils.$(modalId);
     if (!modal) return;
+    this.activeModalId = modalId;
     this.lastFocusedElement = openerEl || (typeof document !== 'undefined' ? document.activeElement : null);
     modal.hidden = false;
     if (modalId === 'modalSettings') {
       this.populateAISettings();
     }
-    const focusables = modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    const allElements = Array.from(modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+    const focusables = allElements.filter(el => {
+      if (el.hidden || (el.style && (el.style.display === 'none' || el.style.visibility === 'hidden'))) return false;
+      if (el.closest && el.closest('[hidden]')) return false;
+      if (el.type === 'hidden') return false;
+      return true;
+    });
     if (focusables.length > 0 && typeof focusables[0].focus === 'function') {
       focusables[0].focus();
     }
@@ -21,6 +29,9 @@ const UIController = {
     const modal = Utils.$(modalId);
     if (!modal || modal.hidden) return;
     modal.hidden = true;
+    if (this.activeModalId === modalId) {
+      this.activeModalId = null;
+    }
     if (this.lastFocusedElement && typeof this.lastFocusedElement.focus === 'function') {
       this.lastFocusedElement.focus();
       this.lastFocusedElement = null;
@@ -113,7 +124,7 @@ const UIController = {
           : `${pct}% dominado`;
 
         return `
-          <button class="char-tab char-card ${isCurrent ? 'active' : ''}" data-actor="${Utils.escapeHtml(c)}" type="button">
+          <button class="char-tab char-card ${isCurrent ? 'active' : ''}" role="tab" aria-selected="${isCurrent ? 'true' : 'false'}" data-actor="${Utils.escapeHtml(c)}" type="button">
             <div class="char-card-header">
               <div class="char-card-name">
                 ${Icons.get('user', { size: 18 })}
@@ -387,7 +398,12 @@ const UIController = {
     const pct = myIndices.length > 0 ? Math.round((100 * masteredCount) / myIndices.length) : 0;
 
     const pBar = Utils.$('progressBar');
-    if (pBar) pBar.style.width = pct + '%';
+    if (pBar) {
+      pBar.style.width = pct + '%';
+      if (pBar.parentElement && pBar.parentElement.setAttribute) {
+        pBar.parentElement.setAttribute('aria-valuenow', pct);
+      }
+    }
     const mText = Utils.$('masteryText');
     if (mText) mText.textContent = `${masteredCount} de ${myIndices.length} dominadas (${pct}%)`;
     const cText = Utils.$('counterText');
@@ -726,7 +742,7 @@ const UIController = {
         if (!t) return Utils.escapeHtml(w);
 
         const wLen = Math.max(50, t.cleanWord.length * 15);
-        return `<input type="text" class="cloze-input" data-word="${Utils.escapeHtml(t.cleanWord)}" placeholder="..." style="width:${wLen}px;" autocomplete="off" autocapitalize="off" spellcheck="false">`;
+        return `<input type="text" class="cloze-input" data-word="${Utils.escapeHtml(t.cleanWord)}" placeholder="..." aria-label="Digitar palavra lacunada" style="width:${wLen}px;" autocomplete="off" autocapitalize="off" spellcheck="false">`;
       }).join('');
     }).join('');
 
@@ -1368,7 +1384,7 @@ const UIController = {
       btn.onclick = (e) => {
         e.stopPropagation();
         const targetIdx = parseInt(btn.dataset.jump, 10);
-        if (Utils.$('modalFullScript')) Utils.$('modalFullScript').hidden = true;
+        this.closeModal('modalFullScript');
         AppController.goToSpeech(targetIdx);
         AppController.enterStage();
       };
@@ -1446,7 +1462,10 @@ const UIController = {
         else if (f === 'weak') { count = weakCount; label = 'Dúvidas'; }
         else if (f === 'recorded') { count = recCount; label = 'Áudios'; }
 
-        tab.classList.toggle('active', f === (AppState.currentFilter || 'all'));
+        const isActive = f === (AppState.currentFilter || 'all');
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
         tab.innerHTML = `<span>${label}</span><span class="filter-tab-count">${count}</span>`;
       });
     }

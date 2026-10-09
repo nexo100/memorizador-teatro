@@ -6,6 +6,13 @@
           s === 'personagens' || s === 'personagem' || s === 'elenco' ||
           s === 'dramatis personae' ||
           s === 'cenário' || s === 'cenario' ||
+          s === 'sinopse' || s === 'resumo' || s === 'argumento' ||
+          s === 'rubrica' || s === 'rubricas' ||
+          s === 'didascália' || s === 'didascalia' || s === 'didascálias' || s === 'didascalias' ||
+          s === 'ambientação' || s === 'ambientacao' ||
+          s === 'observação' || s === 'observações' || s === 'observacao' || s === 'observacoes' || s === 'obs' ||
+          s === 'nota' || s === 'notas' ||
+          s === 'após' || s === 'apos' ||
           s === 'texto' || s === 'texto teatral' || s === 'fim' ||
           s === 'prólogo' || s === 'prologo' ||
           s === 'epílogo' || s === 'epilogo' ||
@@ -14,13 +21,29 @@
           s === 'luzes' || s === 'luz' ||
           s === 'aplausos' || s === 'cai o pano' ||
           s === 'música' || s === 'musica' ||
-          s === 'title' || s === 'author' || s === 'authors' || s === 'credit' ||
+          s === 'title' || s === 'titulo' || s === 'título' ||
+          s === 'author' || s === 'authors' || s === 'autor' || s === 'autores' || s === 'autora' || s === 'autoras' ||
+          s === 'credit' ||
           s === 'source' || s === 'copyright' || s === 'contact' || s === 'date' ||
           s === 'draft date' ||
           s.startsWith('texto ') ||
+          s.startsWith('autor:') ||
+          s.startsWith('autora:') ||
+          s.startsWith('autores:') ||
+          s.startsWith('titulo:') ||
+          s.startsWith('título:') ||
           s.startsWith('ato ') ||
           s.startsWith('cena ') ||
           s.startsWith('quadro ') ||
+          s.startsWith('sinopse') ||
+          s.startsWith('resumo') ||
+          s.startsWith('argumento') ||
+          s.startsWith('rubrica') ||
+          s.startsWith('didasc') ||
+          s.startsWith('ambient') ||
+          s.startsWith('observaç') ||
+          s.startsWith('observac') ||
+          s.startsWith('nota ') ||
           s.startsWith('fim ') ||
           s.startsWith('fim da ') ||
           s.startsWith('fim do ') ||
@@ -41,6 +64,7 @@
           s.startsWith('fade ') ||
           s.startsWith('corte para') ||
           s.startsWith('dissolve para') ||
+          /^\d+\s+personagens?/i.test(s) ||
           /^ato\s+[0-9ivxlcdm]+/i.test(s) ||
           /^cena\s+[0-9ivxlcdm]+/i.test(s) ||
           /^quadro\s+[0-9ivxlcdm]+/i.test(s)
@@ -381,6 +405,8 @@
           if (this.isMetaKeyword(cand)) return true;
           const clean = cand.replace(/\*+/g, '').trim().toLowerCase();
           if (clean.startsWith('texto ') || clean.startsWith('adapt') || clean.startsWith('autor')) return true;
+          if (clean === 'após' || clean === 'apos') return true;
+          if (/^\d+\s+personagens?/i.test(clean)) return true;
           return false;
         };
 
@@ -407,11 +433,14 @@
             if (!part) continue;
             const isParenRubric = /^\*?\(.*\)\*?$/.test(part.trim());
             const isBracketRubric = /^\[.*\]$/.test(part.trim());
-            if (isParenRubric || isBracketRubric) {
+            const isItalicRubric = ((part.trim().startsWith('*') && part.trim().endsWith('*') && !part.trim().slice(1, -1).includes('*')) ||
+                                    (part.trim().startsWith('_') && part.trim().endsWith('_') && !part.trim().slice(1, -1).includes('_'))) &&
+                                    !part.includes(':');
+            if (isParenRubric || isBracketRubric || isItalicRubric) {
               const cleanRubric = part
                 .replace(/^\*?[\(\[]\s*/, '')
                 .replace(/\s*[\)\]]\*?$/, '')
-                .replace(/\*/g, '')
+                .replace(/^[*_]+|[*_]+$/g, '')
                 .trim();
               if (cleanRubric) {
                 targetSpeech.segments.push({ type: 'rubric', text: cleanRubric });
@@ -444,29 +473,6 @@
             continue;
           }
 
-          // Dramatis personae block detection (e.g. **Personagens:**)
-          if (/^(\*\*|#+\s*)?Personagens:?(\*\*)?$/i.test(line)) {
-            pushCurrent();
-            inDramatisPersonae = true;
-            lastLineWasBlank = false;
-            continue;
-          }
-          if (inDramatisPersonae) {
-            if (/^(\*\*|#+\s*)?(Cenário|Cenario|Ato|Cena|Quadro):?/i.test(line) ||
-                line.startsWith('*(') || line.startsWith('(')) {
-              inDramatisPersonae = false;
-            } else if (line.startsWith('-') || line.startsWith('•') || line.startsWith('*')) {
-              lastLineWasBlank = false;
-              continue;
-            }
-          }
-
-          if (/^(\*\*|#+\s*)?(Cenário|Cenario):?/i.test(line)) {
-            pushCurrent();
-            lastLineWasBlank = false;
-            continue;
-          }
-
           // Sluglines (Fountain/Theatrical INT. / EXT.) e Transições
           if (/^(?:int\.|ext\.|est\.|i\/e\.)\s+/i.test(line) || /^(?:fade\s+(?:in|out|to)|corte\s+para|dissolve\s+para)\b/i.test(line)) {
             pushCurrent();
@@ -475,12 +481,38 @@
             continue;
           }
 
-          // Full-line scene directions
+          // Didascálias temporais/narrativas e ações de cena (sempre encerram fala anterior e vão para pendingDirections)
+          const isNarrativeDir = /^(?:após|apos|passado|passados|decorrido|decorridos|momentos|instantes|tempo|pouco|logo|em\s+seguida)\s+(?:algum|alguns|pouco|poucos|depois|mais|a\s+seguir|tempo|minutos|instantes)\b/i.test(line);
+          const isStagingDir = !line.includes(':') && /^(?:entra|entram|sai|saem|voltam|surge|surgem|ouve-se|escuta-se|pausa|silêncio|silencio|escuridão|escuro|apagam-se|cai\s+o\s+pano|blackout)\b/i.test(line);
+
+          if (isNarrativeDir || isStagingDir) {
+            pushCurrent();
+            const cleanDir = line
+              .replace(/^\*?[\(\[]\s*/, '')
+              .replace(/\s*[\)\]]\*?$/, '')
+              .replace(/^[*_]+|[*_]+$/g, '')
+              .trim();
+            if (cleanDir) {
+              pendingDirections.push(cleanDir);
+            }
+            lastLineWasBlank = false;
+            continue;
+          }
+
+          // Full-line scene directions (parênteses, colchetes e itálico)
           const isFullParenDir = (line.startsWith('*(') && line.endsWith(')*')) ||
                                  (line.startsWith('(') && line.endsWith(')')) ||
                                  (line.startsWith('[') && line.endsWith(']'));
-          if (isFullParenDir) {
-            const cleanDir = line.replace(/^\*?[\(\[]\s*/, '').replace(/\s*[\)\]]\*?$/, '').replace(/\*/g, '').trim();
+          const isItalicDir = ((line.startsWith('*') && line.endsWith('*') && !line.slice(1, -1).includes('*')) ||
+                               (line.startsWith('_') && line.endsWith('_') && !line.slice(1, -1).includes('_'))) &&
+                               !line.includes(':');
+
+          if (isFullParenDir || isItalicDir) {
+            const cleanDir = line
+              .replace(/^\*?[\(\[]\s*/, '')
+              .replace(/\s*[\)\]]\*?$/, '')
+              .replace(/^[*_]+|[*_]+$/g, '')
+              .trim();
             if (currentSpeech && currentSpeech.segments.length === 0) {
               if (cleanDir) {
                 currentSpeech.segments.push({ type: 'rubric', text: cleanDir });
@@ -501,6 +533,48 @@
 
           // Ignore Markdown section headers and close current speech
           if (/^#+\s+/.test(line)) {
+            pushCurrent();
+            lastLineWasBlank = false;
+            continue;
+          }
+
+          // Detecção de linhas de metadados, sinopse, resumo, elenco ou cabeçalhos de seção meta
+          const cleanLineMeta = line.replace(/^(\*\*|#+\s*|\*)/, '').replace(/(\*\*|\*)$/, '').trim();
+          const colonIdx = cleanLineMeta.indexOf(':');
+          const prefixBeforeColon = colonIdx > 0 ? cleanLineMeta.slice(0, colonIdx).trim() : cleanLineMeta;
+          if (this.isMetaKeyword(cleanLineMeta) || (colonIdx > 0 && this.isMetaKeyword(prefixBeforeColon))) {
+            pushCurrent();
+            const restOfLine = colonIdx > 0 ? cleanLineMeta.slice(colonIdx + 1).trim() : '';
+            const isRubricOrDidascaliaPrefix = /^(?:rubrica|rubricas|didasc[aá]lia|didasc[aá]lias|ap[oó]s|ambient[aç][aã]o|observa[çc][aã]o|cen[aá]rio|cenario)\b/i.test(prefixBeforeColon);
+            if (isRubricOrDidascaliaPrefix && restOfLine) {
+              pendingDirections.push(restOfLine);
+            }
+            if (/^(\*\*|#+\s*)?Personagens:?(\*\*)?$/i.test(line) || /^\d+\s+personagens?/i.test(cleanLineMeta)) {
+              inDramatisPersonae = true;
+            }
+            lastLineWasBlank = false;
+            continue;
+          }
+
+          // Dramatis personae block detection (e.g. **Personagens:**)
+          if (/^(\*\*|#+\s*)?Personagens:?(\*\*)?$/i.test(line)) {
+            pushCurrent();
+            inDramatisPersonae = true;
+            lastLineWasBlank = false;
+            continue;
+          }
+          if (inDramatisPersonae) {
+            if (/^(\*\*|#+\s*)?(Cenário|Cenario|Ato|Cena|Quadro):?/i.test(line) ||
+                line.startsWith('*(') || line.startsWith('(') ||
+                (colonIdx > 0 && !this.isMetaKeyword(prefixBeforeColon))) {
+              inDramatisPersonae = false;
+            } else if (line.startsWith('-') || line.startsWith('•') || line.startsWith('*')) {
+              lastLineWasBlank = false;
+              continue;
+            }
+          }
+
+          if (/^(\*\*|#+\s*)?(Cenário|Cenario):?/i.test(line)) {
             pushCurrent();
             lastLineWasBlank = false;
             continue;
@@ -530,7 +604,7 @@
           }
 
           if (!m) {
-            const p2 = line.match(/^([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]{2,35})(?:\s*[\(\[](.*?)[\)\]])?:\s*(.*)$/);
+            const p2 = line.match(/^([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]{1,35})(?:\s*[\(\[](.*?)[\)\]])?:\s*(.*)$/);
             if (p2) {
               const whoCandidate = p2[1].trim();
               if (!isTitleOrMeta(whoCandidate)) {
@@ -563,7 +637,7 @@
           }
 
           if (!m) {
-            const p5 = line.match(/^@([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]{2,35})(?:\s*[\(\[](.*?)[\)\]])?$/);
+            const p5 = line.match(/^@([A-Za-zÀ-ÖØ-öø-ÿ0-9ºª\s_'.\-]{1,35})(?:\s*[\(\[](.*?)[\)\]])?$/);
             if (p5) {
               const whoCandidate = p5[1].trim();
               if (!isTitleOrMeta(whoCandidate)) {

@@ -962,7 +962,7 @@
           if (indexItem) {
             const idx = parseInt(indexItem.dataset.idx, 10);
             if (!isNaN(idx)) {
-              if (Utils.$('modalIndex')) Utils.$('modalIndex').hidden = true;
+              UIController.closeModal('modalIndex');
               if (AppState.currentScreen === 'lobby') {
                 this.enterStage();
               }
@@ -974,7 +974,11 @@
           const cadernoTabBtn = e.target.closest('.caderno-tab-btn');
           if (cadernoTabBtn) {
             const subtab = cadernoTabBtn.dataset.subtab;
-            document.querySelectorAll('.caderno-tab-btn').forEach(b => b.classList.toggle('active', b === cadernoTabBtn));
+            document.querySelectorAll('.caderno-tab-btn').forEach(b => {
+              const isSelected = b === cadernoTabBtn;
+              b.classList.toggle('active', isSelected);
+              b.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            });
             if (Utils.$('cadernoSubtabNotes')) Utils.$('cadernoSubtabNotes').hidden = subtab !== 'notes';
             if (Utils.$('cadernoSubtabRecordings')) Utils.$('cadernoSubtabRecordings').hidden = subtab !== 'recordings';
             if (Utils.$('cadernoSubtabQuiz')) {
@@ -1263,6 +1267,7 @@
 
           const btnPlayDelete = e.target.closest('.btn-play-delete');
           if (btnPlayDelete) {
+            e.stopPropagation();
             const playId = btnPlayDelete.dataset.playId;
             const confirmFn = typeof confirm === 'function' ? confirm : () => true;
             if (playId && confirmFn('Deseja excluir esta peça da biblioteca?')) {
@@ -1272,6 +1277,8 @@
                 this.switchPlay('os-inventariantes');
               }
               UIController.renderPlayCatalog();
+              UIController.renderLobby();
+              UIController.showStatus('Peça excluída com sucesso!');
             }
             return;
           }
@@ -1812,10 +1819,13 @@
         ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'modalAIDirector', 'modalHelp', 'modalPlayCatalog', 'modalImportPlay', 'sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat'].forEach(modalId => {
           const modalEl = Utils.$(modalId);
           if (modalEl) {
+            modalEl.hidden = true;
             modalEl.onclick = (e) => {
               if (e.target === modalEl || (e.target.classList && e.target.classList.contains('modal-drag-bar'))) {
                 UIController.closeModal(modalId);
-                UIController.updateTabBarActive('camarim');
+                if (AppState.currentScreen === 'lobby') {
+                  UIController.updateTabBarActive('camarim');
+                }
               }
             };
           }
@@ -1990,7 +2000,20 @@
           Utils.$('btnExportBackup').onclick = () => this.exportFullBackup();
         }
 
+        if (Utils.$('btnImportBackup')) {
+          Utils.$('btnImportBackup').onclick = () => {
+            const inp = Utils.$('fileImportBackup');
+            if (inp) {
+              try { inp.value = ''; } catch (err) {}
+              inp.click();
+            }
+          };
+        }
+
         if (Utils.$('fileImportBackup')) {
+          Utils.$('fileImportBackup').onclick = (e) => {
+            try { e.target.value = ''; } catch (err) {}
+          };
           Utils.$('fileImportBackup').onchange = (e) => {
             const file = e.target.files && e.target.files[0];
             if (file) {
@@ -1998,6 +2021,7 @@
                 this.importFullBackup(file);
               }
             }
+            try { e.target.value = ''; } catch (err) {}
           };
         }
 
@@ -2048,11 +2072,19 @@
           if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target?.tagName)) return;
           if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-          const openModalId = ['modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'modalAIDirector', 'modalHelp', 'modalPlayCatalog', 'modalImportPlay'].find(id => Utils.$(id) && !Utils.$(id).hidden);
+          const openModalId = (typeof UIController !== 'undefined' && UIController.activeModalId && Utils.$(UIController.activeModalId) && !Utils.$(UIController.activeModalId).hidden)
+            ? UIController.activeModalId
+            : ['sheetActor', 'sheetMode', 'sheetMethod', 'sheetBeat', 'modalIndex', 'modalSettings', 'modalFullScript', 'modalCaderno', 'modalAIDirector', 'modalHelp', 'modalPlayCatalog', 'modalImportPlay'].find(id => Utils.$(id) && !Utils.$(id).hidden);
 
           if (e.key === 'Tab' && openModalId) {
             const modal = Utils.$(openModalId);
-            const focusables = Array.from(modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+            const rawElements = Array.from(modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+            const focusables = rawElements.filter(el => {
+              if (el.hidden || (el.style && (el.style.display === 'none' || el.style.visibility === 'hidden'))) return false;
+              if (el.closest && el.closest('[hidden]')) return false;
+              if (el.type === 'hidden') return false;
+              return true;
+            });
             if (focusables.length > 0) {
               const first = focusables[0];
               const last = focusables[focusables.length - 1];
@@ -2075,7 +2107,9 @@
           if (e.key === 'Escape') {
             if (openModalId) {
               UIController.closeModal(openModalId);
-              UIController.updateTabBarActive('camarim');
+              if (AppState.currentScreen === 'lobby') {
+                UIController.updateTabBarActive('camarim');
+              }
               return;
             }
             if (AppState.currentScreen === 'stage') {

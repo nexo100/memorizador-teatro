@@ -168,102 +168,78 @@ O botão **`💡 Dica` (ou atalho `D`)** revela incrementalmente a próxima pala
 
 ---
 
-## 🧪 Suíte de Testes Automatizados (`test.cjs`)
+## 🧪 Suíte de Testes dos Motores Críticos (`test.cjs`)
 
-Para garantir que nenhuma regressão ocorra em futuras iterações, o repositório conta com uma suíte abrangente de **80 testes automatizados** em Node.js:
+Para garantir que nenhuma regressão ocorra nos motores fundamentais do aplicativo, o repositório conta com uma arquitetura de testes rigorosamente desacoplada em `tests/`, eliminando testes frágeis de marcação visual de interface e concentrando-se nos núcleos de dramaturgia, persistência, áudio, estado cênico e IA:
 
-Para rodar a suíte:
 ```bash
+# Executa todos os testes dos motores
 node test.cjs
+
+# Executa uma suíte específica
+node test.cjs parser
+node test.cjs playstore
+node test.cjs storage-backup
+node test.cjs audio
+node test.cjs rehearsal-state
+node test.cjs ai-service
 ```
 
-### Cobertura dos Testes:
-1. Sincronização estrita entre `index.html` e `Ensaio · Os Inventariantes.html`.
-2. Parsing da peça padrão *Os Inventariantes* (58 falas, 2 personagens, 5 beats).
-3. Cloze Semântico, sistema de dicas (D) e progressão de fixação.
-4. Navegação cronológica e histórico sem regressão.
-5. Alternância fluida de ator ativo.
-6. Filtro de beats dramáticos.
-7. Carregamento de peça personalizada com 5 personagens.
-8. Geração dinâmica de seletores de voz para múltiplos personagens.
-9. Restauração fiel de *Os Inventariantes*.
-10. Persistência de intenções de Stanislavski.
-11. Modal de índice de falas com filtros.
-12. ScriptParser universal (negrito isolado, maiúsculas, travessão, multilinhas).
-13. Cloze Semântico com ênclise pronominal, apóstrofos e entidades HTML.
-14. Algoritmo de fraquezas sem estouro de pilha com nível 5 universal.
-15. Isolamento de intenções dramáticas por peça (`playId`).
-16. Cancelamento de timers zumbis no modo Ping-Pong.
-17. Resiliência de `Utils.base64ToBlob` para Data URLs e raw base64.
-18. Revogação de URLs em `AudioEngine` para prevenir vazamentos de memória.
-19. Persistência íntegra de metadados em backups.
-20. Limites e barreiras de navegação em modos filtrados.
-21. Ergonomia mobile, safe-area insets e redução de poluição visual.
-22. Otimização dramática de deixas: ausência de cards redundantes na abertura.
-23. Descarte de modais bottom sheet por toque no backdrop e drag-bar.
-24. Transição fluida entre Camarim (#lobbyView) e Palco (#rehearsalView).
-25. Fluxo previsível de "Errei" com retenção cênica e ciclo de retry.
-26. One-Thumb Action Dock, ausência de ruído e suporte a modo desafio vs primeira leitura.
-27. Sincronização do One-Thumb Dock no fim de cena e reinício por ator.
-28. Isolamento de teclado no Camarim e acionamento por Enter.
-29. AudioEngine: controle bidirecional de reprodução e parada imediata (Play/Stop toggle).
-30. Ocultação determinística de rubricas entre parênteses (hideRubrics).
-31. Chegar com a fala oculta por padrão (alwaysStartHidden) e Leitura Integral (modalFullScript).
-32. Modo Quiz de Alternativas (banco de palavras, distratores e avanço).
-33. Modo Digitação (inputs inline, validação e avanço).
-34. Sanitização XSS contra injeção de atributos HTML.
-35. Backup seguro: inclusão de intenções/vozes e blindagem contra vazamento de chaves.
-36. Fila adaptativa de ensaio com reforço espaçado imediato.
-37. Suporte a roteiros no padrão da indústria Fountain (.fountain).
-38. Coerência de backup e restauração de áudio (STORE_NAME, gravação e recuperação).
-39. Restauração de configurações salvas (studyMethod, hideRubrics, alwaysStartHidden).
-40. Despacho único de eventos e eliminação de chamadas duplicadas.
-41. Prevenção de race condition em renderView (token incremental de render).
-42. Atalho de teclado I para alternância do índice.
-43. Segurança CSP e higienização limpa de dados na restauração de backup.
-44. Acessibilidade de modais: type="button", focus trap e retorno de foco.
-45. Sistema de ícones vetoriais SVG, erradicação total de emojis e alternância de temas.
-46. Arquitetura App Shell: Bottom Tab Bar, Mission Control de 4 slots e Bottom Sheets.
-47. Caderno de Ensaio: anotações livres, vinculação opcional a falas e central de voz.
-48. Leitura Dramatúrgica Contínua (ePub/PDF), Seletor de Alvo de Áudio, Marca-Texto e Onboarding.
-49. Catálogo Multi-Peças (PlayStore), integridade canônica e persistência.
-50. Criação dinâmica e coexistência de múltiplos roteiros no catálogo.
-51. Alternância atômica de peças e isolamento rigoroso de atores, progresso e notas.
-52. Cálculo de métricas dramáticas, beats e domínio por peça (PlayStore.getStats).
-53. Exclusão de peças com purga e blindagem imutável da peça canônica padrão.
-54. Ponto de acesso no Camarim e acionamento dos modais de biblioteca/importação.
-55. Biblioteca de Roteiros, estatísticas de domínio e alternância de peça com 1 toque.
-56. Fluxo de importação e leitura heurística de formatos teatrais livres.
-57. Prévia e personalização dramatúrgica de roteiros reais.
-58. Gancho arquitetural plugável para IA e resiliência offline.
-59. Curadoria de personagens (renomear, filtrar e persistir falas customizadas).
-60. ScriptParser: rubricas isoladas, transições cênicas e sluglines.
-61. Exclusão segura da peça ativa com fallback limpo para a peça padrão.
-62. AIService: BYOK Gemini, persistência de chave, modelos e ping de validação.
-63. ScriptParser.sanitizeRawText: remoção de ruídos OCR e desquebra de hifens.
-64. ScriptParser: agrupamento e canonicalização de variantes de personagens.
-65. ScriptParser.detectCueTrigger: detecção causal e badge de engate cênico.
-66. O Diretor Stanislavski: verbos de ação ativos, subtexto dramático e persistência.
-67. Curadoria de beats dramáticos, persistência e blindagem de chaves no backup.
-68. ScriptParser: preservação estrita de personagens distintos e unificação segura de abreviações.
-69. AIService.callGeminiRaw: extração e parsing resiliente de arrays JSON.
-70. AppController.importFullBackup: blindagem e preservação da chave de API Gemini no restore.
-71. Gamificação / Quiz Dramatúrgico com IA: offline fallback, mock IA e interface do Caderno.
-72. Curadoria de beats: remoção total preservada para cena única e adição de novo beat.
-73. Central do Diretor IA: Bottom Tab Bar, modal dedicado e renderização.
-74. Guia do Ensaio: botão de acesso no topo, modal ilustrado e seções conceituais.
-75. Faxina de Ajustes: remoção de botões ambíguos e textarea inútil.
-76. AudioEngine: normalização de estado isPlaying e UI no ciclo de vida de síntese de voz.
-77. PWA: Robustez do Service Worker e metadados de loja no manifest.
-78. ScriptParser: imunidade contra didascálias cênicas isoladas no elenco.
-79. StorageManager: resiliência defensiva e consistência de intenções.
-80. AppController: isolamento estrito da fila de retry entre atores.
-81. AudioEngine: chamada direta de síntese, suporte a ator não-indexado (-1) e resiliência a nulos.
-82. PlayStore.getStats: métrica de domínio isolada por personagem e teto de 100%.
-83. ScriptParser: imunidade a falsos personagens em marcações de fim de cena, música e pano.
-84. AppController: persistência de beat e isolamento de retry na troca de beat.
-85. PWA: registro adaptativo de Service Worker para inicialização pós-load.
-86. AudioEngine: ciclo de vida de liberação de Blob URL e tratamento de falhas.
+### Arquitetura e Domínios de Cobertura:
+1. **`tests/parser.test.cjs` (ScriptParser Engine & Dramaturgia)**:
+   - Parsing universal de formatos teatrais (negrito isolado, maiúsculas, travessão, multilinhas).
+   - Suporte nativo ao padrão da indústria Fountain (`.fountain`, `@Personagem`, didascálias parentéticas).
+   - Higienização OCR (`sanitizeRawText`) com junção de quebras de linha hifenizadas.
+   - Agrupamento e canonicalização de variantes de personagens (`groupCharacterVariants`), preservando nomes distintos (`ANA` vs `ANASTÁCIA`, `LEO` vs `LEONARDO`).
+   - Imunidade absoluta a falsos personagens e metadados cênicos (`isMetaKeyword`: `Sinopse`, `Resumo`, `Rubrica`, `Escuro`, `Blackout`, `Pano`, `Cortina`, `Fim de cena`, `Música`, etc.).
+   - Preservação estrita de falas de diálogo que iniciam com "Após...".
+   - Didascálias narrativas temporais isoladas do diálogo falado e vinculadas a `directions`.
+   - Detecção causal de engates cênicos (`detectCueTrigger`: eco de palavras, conectores lógicos, perguntas interrogativas).
+
+2. **`tests/playstore.test.cjs` (PlayStore Multi-Peças & Catálogo)**:
+   - Integridade canônica e blindagem imutável da peça canônica padrão (`os-inventariantes`).
+   - Cadastro dinâmico e coexistência atômica de múltiplos roteiros no catálogo.
+   - Alternância atômica de peças e isolamento rigoroso de atores, progresso e anotações.
+   - Exclusão com purga de dados do usuário e fallback automático seguro da peça ativa para a peça padrão.
+   - Blindagem contra duplicação de peças por legado de `memorizador_custom_script` (com normalização de quebras de linha Windows CRLF).
+   - Cálculo de métricas dramáticas e estatísticas por peça (`PlayStore.getStats`), com cálculo de domínio estritamente isolado por personagem e teto garantido de 100%.
+
+3. **`tests/storage-backup.test.cjs` (StorageManager, Intenções & Backup Data Integrity)**:
+   - Persistência e restauração de preferências (`studyMethod`, `hideRubrics`, `alwaysStartHidden`, `speechRate`).
+   - Isolamento estrito de intenções dramáticas de Stanislavski por peça (`playId scoping`) com fallback limpo.
+   - Caderno de Ensaio: persistência de anotações livres e notas vinculadas a falas individuais.
+   - Gravação e recuperação assíncrona de blobs de áudio no IndexedDB (`saveCastAudio` / `getCastAudio`).
+   - Exportação segura de backup com blindagem ativa de segredos (`gemini_api_key`, tokens, senhas).
+   - Restauração de backup íntegra com fidelidade de `speechIdx` e `playId`, limpeza prévia de dados fantasmas e preservação da chave de API ativa do usuário.
+
+4. **`tests/audio.test.cjs` (AudioEngine Core & Ciclo de Vida)**:
+   - Controle bidirecional de reprodução e parada imediata (Play/Stop toggle).
+   - Normalização do estado `isPlaying` no ciclo de vida de síntese de voz (`onend` e `onerror`).
+   - Revogação ativa de Blob URLs (`URL.revokeObjectURL`) ao interromper áudios para erradicar vazamentos de memória.
+   - Chamada direta de síntese de voz (`speakSynthesized`).
+   - Resiliência defensiva contra atores não indexados (`actorIndex = -1`) e nomes nulos.
+   - Conversão segura de áudio em `Utils.base64ToBlob` para Data URLs e raw base64.
+
+5. **`tests/rehearsal-state.test.cjs` (Rehearsal Engine & AppState)**:
+   - Carregamento íntegro da peça canônica (58 falas, 2 personagens, 5 beats).
+   - Cloze semântico: preservação de hífen em ênclise (`diga-me`), apóstrofos (`d'água`) e entidades HTML seguras.
+   - Navegação e limites de barreira do ator em modos filtrados (`minhas`).
+   - Partição de beats dramáticos e cálculo de intervalo cênico ativo (`getActiveBeatRange`).
+   - Cancelamento estrito de temporizadores zumbis no modo Ping-Pong ao navegar.
+   - Fluxo previsível do botão "Errei": retenção cênica, ciclo de retry e avanço.
+   - Algoritmo de fraquezas (`pickNextWeakness`): proteção universal contra estouro de pilha quando todas as falas estão em nível 5.
+   - Fila adaptativa de ensaio com buffer de repetição imediata (reforço espaçado ativo).
+   - Isolamento estrito da fila de retry na troca de ator e na troca de beat.
+   - Ocultação determinística de didascálias parentéticas (`hideRubrics`).
+   - Progressão de domínio e avanço nos modos Quiz de Alternativas e Digitação Interativa.
+
+6. **`tests/ai-service.test.cjs` (AIService & Inteligência Dramatúrgica)**:
+   - Configuração BYOK (Gemini), persistência de chave no storage e alternância de modelos.
+   - Ping de conexão defensivo (tratamento de sucesso, 403 e ausência de chave).
+   - Extração e parsing resiliente de arrays JSON encapsulados em respostas de IA conversacionais e blocos markdown.
+   - O Diretor Stanislavski: geração determinística offline de verbos de ação e mock IA estruturado.
+   - Gamificação e Quiz Dramatúrgico: geração offline de distratores e integração com mock IA.
+   - Gancho arquitetural plugável para IA no `DramaturgyAnalyzer` com fallback transparente para heurística offline.
 
 ---
 

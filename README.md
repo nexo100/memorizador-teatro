@@ -133,13 +133,25 @@ Para evitar que o ator fique com o texto "engessado" ou "viciado" em uma única 
 
 ---
 
-## 🧪 Testes Automatizados de Integração
+## 🧪 Testes Automatizados dos Motores Críticos
 
-O projeto possui uma suíte rigorosa de **44 testes automatizados** para assegurar que nenhuma regressão ocorra em navegação, parsing (incluindo Fountain), cloze semântico, memória, persistência, ergonomia de palco, sincronização de fim de cena, transição de telas, sanitização XSS, política CSP, acessibilidade com focus trap, integridade e limpeza de backups, despacho de eventos, concorrência assíncrona e fila adaptativa de ensaio:
+O projeto adota uma arquitetura de testes modularizada em `tests/`, desacoplada e estritamente focada na integridade lógica dos motores da aplicação, sem poluição por testes visuais efêmeros de UI:
+
+- **`tests/parser.test.cjs`**: ScriptParser universal, parsing Fountain, sanitização OCR, unificação de variantes, detecção de engates cênicos e didascálias.
+- **`tests/playstore.test.cjs`**: Catálogo multi-peças, imutabilidade canônica, purga atômica, resiliência CRLF e métricas de domínio por personagem.
+- **`tests/storage-backup.test.cjs`**: Intenções de Stanislavski com playId scoping, gravações IndexedDB, blindagem de segredos no backup e restore íntegro.
+- **`tests/audio.test.cjs`**: AudioEngine, play/stop toggle, ciclo de vida da síntese Web Speech, revogação de blob URLs e prevenção de memory leaks.
+- **`tests/rehearsal-state.test.cjs`**: AppState, Cloze semântico (ênclise, apóstrofo e HTML), fluxo de erro com ciclo de retry, fila espaçada adaptativa e isolamento de retry.
+- **`tests/ai-service.test.cjs`**: AIService BYOK Gemini, extração resiliente de arrays JSON de markdown e fallbacks offline do Diretor Stanislavski e Quiz.
 
 ```bash
-# Executa todos os 44 testes de integração
+# Executa todos os testes dos motores
 node test.cjs
+
+# Executa uma suíte específica
+node test.cjs parser
+node test.cjs audio
+node test.cjs playstore
 ```
 
 ---
@@ -160,13 +172,21 @@ memorizador-teatro/
 │   ├── audio.js                   # Síntese Web Speech e MediaRecorder
 │   ├── ui.js                      # Renderização da interface (Camarim e Palco)
 │   └── app.js                     # Controlador principal e eventos do ciclo de vida
+├── tests/                         # Suíte de testes modular por domínio
+│   ├── setup.cjs                  # Harness de teste isolado e mocks de ambiente
+│   ├── parser.test.cjs            # Testes do ScriptParser e dramaturgia
+│   ├── playstore.test.cjs         # Testes do catálogo de peças PlayStore
+│   ├── storage-backup.test.cjs    # Testes de persistência, intenções e backup
+│   ├── audio.test.cjs             # Testes do AudioEngine e ciclo de vida
+│   ├── rehearsal-state.test.cjs   # Testes do AppState, cloze e ensaio
+│   └── ai-service.test.cjs        # Testes do AIService e inteligência teatral
 ├── Ensaio · Os Inventariantes.html # Redirecionamento canônico para index.html
 ├── manifest.json                  # Manifesto PWA com suporte a ícones PNG e SVG
 ├── sw.js                          # Service Worker para suporte 100% offline (v10)
 ├── icon.svg                       # Ícone vetorial das máscaras teatrais
 ├── icon-192.png                   # Ícone PWA 192x192 para Android e iOS
 ├── icon-512.png                   # Ícone PWA 512x512 para Android e instalação
-├── test.cjs                       # Suíte automatizada com 44 testes de integração
+├── test.cjs                       # Executor master das suítes de teste (CI)
 ├── MANUAL_DO_ATOR.md              # Guia prático de ensaio e memorização para o elenco
 ├── ARQUITETURA.md                 # Especificação técnica dos módulos e dados
 ├── LICENSE                        # Licença MIT e ressalva de direitos autorais

@@ -574,8 +574,20 @@
             const legacyCustom = localStorage.getItem('memorizador_custom_script');
             if (legacyCustom && (!ScriptParser || !ScriptParser.isDefaultPlay(legacyCustom))) {
               const title = (typeof ScriptParser !== 'undefined') ? ScriptParser.extractPlayTitle(legacyCustom) : 'Peça Personalizada';
+              const normTitle = (title || '').trim().toLowerCase();
               const customId = 'play_' + Utils.sanitizeId(title || 'customizada');
-              if (!playsMap[customId]) {
+              const normLegacy = (legacyCustom || '').replace(/\r\n/g, '\n').trim();
+              
+              // Blindagem contra duplicação: não recriar se já existir no catálogo por ID, script normalizado ou título
+              const alreadyExists = playsMap[customId] || Object.values(playsMap).some(p => {
+                if (p.isDefault) return false;
+                const pNormScript = (p.rawScript || '').replace(/\r\n/g, '\n').trim();
+                if (pNormScript && pNormScript === normLegacy) return true;
+                const pNorm = (p.title || '').trim().toLowerCase();
+                return pNorm && pNorm === normTitle;
+              });
+
+              if (!alreadyExists) {
                 const speeches = (typeof ScriptParser !== 'undefined') ? ScriptParser.parseScript(legacyCustom) : [];
                 const characters = [...new Set(speeches.map(s => s.who))];
                 const beats = (typeof DramaBeats !== 'undefined') ? DramaBeats.generateBeats(speeches, legacyCustom) : [];
@@ -691,13 +703,35 @@
           return false;
         }
 
+        const normScript = (s) => (s || '').replace(/\r\n/g, '\n').trim();
+        const normStr = (s) => (s || '').trim().toLowerCase();
+
+        const playToDelete = this.get(id);
         const all = this.getAll().filter(p => p.id !== id);
         try {
           if (typeof localStorage !== 'undefined') {
             localStorage.setItem(this.STORAGE_KEY_CATALOG, JSON.stringify(all));
-            if (this.getActivePlayId() === id) {
+            const wasActive = this.getActivePlayId() === id;
+            if (wasActive) {
               this.setActivePlayId('os-inventariantes');
-              localStorage.removeItem('memorizador_custom_script');
+            }
+            const legacyCustom = localStorage.getItem('memorizador_custom_script');
+            if (legacyCustom) {
+              const legacyNorm = normScript(legacyCustom);
+              const deletedNorm = playToDelete ? normScript(playToDelete.rawScript) : '';
+              const deletedTitleNorm = playToDelete ? normStr(playToDelete.title) : '';
+              const legacyTitle = (typeof ScriptParser !== 'undefined') ? ScriptParser.extractPlayTitle(legacyCustom) : '';
+              const matchesDeleted = (deletedNorm && legacyNorm === deletedNorm) || (deletedTitleNorm && normStr(legacyTitle) === deletedTitleNorm);
+
+              if (wasActive || matchesDeleted) {
+                const currentActiveId = this.getActivePlayId();
+                const remainingActive = all.find(p => p.id === currentActiveId && !p.isDefault);
+                if (remainingActive && remainingActive.rawScript) {
+                  localStorage.setItem('memorizador_custom_script', remainingActive.rawScript);
+                } else {
+                  localStorage.removeItem('memorizador_custom_script');
+                }
+              }
             }
           }
         } catch (e) {}
