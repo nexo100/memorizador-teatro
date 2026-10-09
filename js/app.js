@@ -64,9 +64,14 @@
 
       setupPWA() {
         if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
+          const registerSW = () => {
             navigator.serviceWorker.register('./sw.js').catch(() => {});
-          });
+          };
+          if (typeof document !== 'undefined' && document.readyState === 'complete') {
+            registerSW();
+          } else if (typeof window !== 'undefined') {
+            window.addEventListener('load', registerSW);
+          }
         }
         if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
           navigator.storage.persist().catch(() => {});
@@ -554,7 +559,8 @@
         } else if (id === 'btnStopRecord') {
           AudioEngine.stopCastRecording();
         } else if (id === 'btnDeleteCastAudio') {
-          if (confirm('Excluir o áudio gravado desta fala?')) {
+          const shouldDelete = (typeof confirm === 'function') ? confirm('Excluir o áudio gravado desta fala?') : true;
+          if (shouldDelete) {
             StorageManager.deleteCastAudio(AppState.currentIndex).then(() => UIController.renderView());
           }
         } else if (id === 'btnContinuePartner') {
@@ -786,16 +792,19 @@
 
           const storeName = StorageManager.STORE_NAME || 'recordings';
           const db = await StorageManager.getIndexedDB();
-          const tx = db.transaction(storeName, 'readonly');
-          const store = tx.objectStore(storeName);
+          let records = [];
+          if (db) {
+            const tx = db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
 
-          const getAllAudios = () => new Promise((resolve, reject) => {
-            const req = store.getAll();
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = () => reject(req.error);
-          });
+            const getAllAudios = () => new Promise((resolve, reject) => {
+              const req = store.getAll();
+              req.onsuccess = () => resolve(req.result || []);
+              req.onerror = () => reject(req.error);
+            });
 
-          const records = await getAllAudios();
+            records = await getAllAudios();
+          }
           const seenAudioKeys = new Set();
           for (const item of records) {
             const audioData = item && (item.blob || item.audioBlob);
@@ -804,13 +813,17 @@
               // Evitar exportar duplicatas numéricas legadas se temos chaves estruturadas
               if (seenAudioKeys.has(stringId)) continue;
               seenAudioKeys.add(stringId);
-              const b64 = await Utils.blobToBase64(audioData);
-              data.recordings.push({
-                id: item.id,
-                speechIdx: item.speechIdx,
-                playId: item.playId || 'default',
-                base64: b64
-              });
+              try {
+                const b64 = await Utils.blobToBase64(audioData);
+                data.recordings.push({
+                  id: item.id,
+                  speechIdx: item.speechIdx,
+                  playId: item.playId || 'default',
+                  base64: b64
+                });
+              } catch (convErr) {
+                console.warn('Falha ao serializar áudio ' + item.id + ' para base64:', convErr);
+              }
             }
           }
 
@@ -868,20 +881,30 @@
             await StorageManager.clearAllCastAudios();
             const storeName = StorageManager.STORE_NAME || 'recordings';
             const db = await StorageManager.getIndexedDB();
-            const tx = db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
+            if (db && data.recordings.length > 0) {
+              await new Promise((resolve, reject) => {
+                try {
+                  const tx = db.transaction(storeName, 'readwrite');
+                  const store = tx.objectStore(storeName);
 
-            for (const item of data.recordings) {
-              if (item.base64 && item.id !== undefined) {
-                const blob = Utils.base64ToBlob(item.base64);
-                let speechIdx = item.speechIdx;
-                let playId = item.playId || 'default';
-                if (speechIdx === undefined) {
-                  const parts = String(item.id).split('_');
-                  speechIdx = parseInt(parts[parts.length - 1], 10);
+                  for (const item of data.recordings) {
+                    if (item.base64 && item.id !== undefined) {
+                      const blob = Utils.base64ToBlob(item.base64);
+                      let speechIdx = item.speechIdx;
+                      let playId = item.playId || 'default';
+                      if (speechIdx === undefined) {
+                        const parts = String(item.id).split('_');
+                        speechIdx = parseInt(parts[parts.length - 1], 10);
+                      }
+                      store.put({ id: item.id, speechIdx, playId, blob, audioBlob: blob, timestamp: Date.now() });
+                    }
+                  }
+                  tx.oncomplete = () => resolve();
+                  tx.onerror = () => reject(tx.error);
+                } catch (err) {
+                  resolve();
                 }
-                store.put({ id: item.id, speechIdx, playId, blob, audioBlob: blob, timestamp: Date.now() });
-              }
+              });
             }
           }
 
@@ -906,6 +929,7 @@
               AppState.selectedActor = actor;
               StorageManager.saveSettings(AppState);
               if (changed) {
+                AppState.sessionRetryQueue = [];
                 AppState.masteryLevels = StorageManager.loadProgress(actor, AppState.speeches.length);
                 const myIndices = AppState.getMySpeechIndices();
                 this.goToSpeech(myIndices[0] !== undefined ? myIndices[0] : 0, false);
@@ -1762,6 +1786,8 @@
         if (Utils.$('selectBeat')) {
           Utils.$('selectBeat').onchange = (e) => {
             AppState.selectedBeat = e.target.value;
+            AppState.sessionRetryQueue = [];
+            StorageManager.setSelectedBeat(e.target.value);
             const range = AppState.getActiveBeatRange();
             if (AppState.rehearsalMode === 'minhas' || AppState.rehearsalMode === 'pingpong' || AppState.rehearsalMode === 'ponto') {
               const myIndices = AppState.getMySpeechIndices();

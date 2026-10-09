@@ -165,33 +165,48 @@
       },
 
       getActorVoice(actor) {
-        const direct = localStorage.getItem(this.getActorVoiceKey(actor));
-        if (direct) return direct;
-        const raw = localStorage.getItem('voice_actor_' + (actor || 'padrao'));
-        if (raw) return raw;
-        const legacySanitized = localStorage.getItem('voice_actor_' + Utils.sanitizeId(actor || 'padrao').toUpperCase());
-        if (legacySanitized) return legacySanitized;
+        try {
+          if (typeof localStorage === 'undefined') return null;
+          const direct = localStorage.getItem(this.getActorVoiceKey(actor));
+          if (direct) return direct;
+          const raw = localStorage.getItem('voice_actor_' + (actor || 'padrao'));
+          if (raw) return raw;
+          const legacySanitized = localStorage.getItem('voice_actor_' + Utils.sanitizeId(actor || 'padrao').toUpperCase());
+          if (legacySanitized) return legacySanitized;
+        } catch (e) {}
         return null;
       },
 
       setActorVoice(actor, voiceName) {
-        localStorage.setItem(this.getActorVoiceKey(actor), voiceName);
-        localStorage.setItem('voice_actor_' + (actor || 'padrao'), voiceName);
+        try {
+          if (typeof localStorage === 'undefined') return;
+          localStorage.setItem(this.getActorVoiceKey(actor), voiceName);
+          localStorage.setItem('voice_actor_' + (actor || 'padrao'), voiceName);
+        } catch (e) {}
       },
 
       getSpeechIntent(idx, isDefaultPlay, playId) {
         const pId = playId || (isDefaultPlay ? 'default' : AppState.getPlayId());
         const scopedKey = `intent_${pId}_${idx}`;
-        const custom = localStorage.getItem(scopedKey);
-        if (custom !== null && custom !== undefined) return custom;
+        try {
+          if (typeof localStorage !== 'undefined') {
+            const custom = localStorage.getItem(scopedKey);
+            if (custom !== null && custom !== undefined) return custom;
+          }
+        } catch (e) {}
 
         if (AppState.activePlay && AppState.activePlay.intentions && AppState.activePlay.intentions[idx]) {
-          return AppState.activePlay.intentions[idx];
+          const pi = AppState.activePlay.intentions[idx];
+          return (typeof pi === 'object' && pi !== null) ? (pi.formatted || `[${pi.actionVerb || ''}] ${pi.subtext || ''}`) : pi;
         }
 
         if (pId === 'default') {
-          const leg = localStorage.getItem('intent_' + idx);
-          if (leg !== null && leg !== undefined) return leg;
+          try {
+            if (typeof localStorage !== 'undefined') {
+              const leg = localStorage.getItem('intent_' + idx);
+              if (leg !== null && leg !== undefined) return leg;
+            }
+          } catch (e) {}
           if (typeof DefaultPlay !== 'undefined' && DefaultPlay.intentions) {
             return DefaultPlay.intentions[idx] || '';
           }
@@ -203,26 +218,39 @@
       setSpeechIntent(idx, val, isDefaultPlay, playId) {
         const pId = playId || (isDefaultPlay ? 'default' : AppState.getPlayId());
         const scopedKey = `intent_${pId}_${idx}`;
-        const isReset = val === '__padrao__' || (val && val.toLowerCase() === 'padrao') || (val && val.toLowerCase() === 'padrão');
+        const isReset = val === '__padrao__' || (typeof val === 'string' && (val.toLowerCase() === 'padrao' || val.toLowerCase() === 'padrão'));
 
-        if (isReset) {
-          localStorage.removeItem(scopedKey);
-          if (pId === 'default') localStorage.removeItem('intent_' + idx);
-        } else if (val !== undefined && val !== null) {
-          localStorage.setItem(scopedKey, val);
-          if (pId === 'default') localStorage.setItem('intent_' + idx, val);
-        }
+        try {
+          if (typeof localStorage === 'undefined') return;
+          if (isReset) {
+            localStorage.removeItem(scopedKey);
+            if (pId === 'default') localStorage.removeItem('intent_' + idx);
+          } else if (val !== undefined && val !== null) {
+            const strVal = typeof val === 'object'
+              ? (val.formatted || `[${val.actionVerb || 'Agir'}] ${val.subtext || ''}`)
+              : String(val).trim();
+            localStorage.setItem(scopedKey, strVal);
+            if (pId === 'default') localStorage.setItem('intent_' + idx, strVal);
+          }
+        } catch (e) {}
       },
 
       parseIntent(val) {
-        if (!val) return { actionVerb: '', subtext: '' };
-        if (typeof val === 'object') return val;
+        if (!val) return { actionVerb: '', subtext: '', formatted: '' };
+        if (typeof val === 'object') {
+          const verb = (val.actionVerb || '').trim();
+          const sub = (val.subtext || '').trim();
+          const fmt = val.formatted || (verb ? `[${verb}] ${sub}` : sub);
+          return { actionVerb: verb, subtext: sub, formatted: fmt };
+        }
         const str = String(val).trim();
         const m = str.match(/^\[(.*?)\]\s*(.*)$/);
         if (m) {
-          return { actionVerb: m[1].trim(), subtext: m[2].trim() };
+          const verb = m[1].trim();
+          const sub = m[2].trim();
+          return { actionVerb: verb, subtext: sub, formatted: `[${verb}] ${sub}` };
         }
-        return { actionVerb: '', subtext: str };
+        return { actionVerb: '', subtext: str, formatted: str };
       },
 
       getIntents(playId) {
@@ -370,8 +398,9 @@
                   store.delete(item.id);
                 }
               });
-              resolve();
             };
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
             req.onerror = () => reject(req.error);
           } catch (err) {
             resolve();
@@ -431,19 +460,37 @@
       },
 
       loadSettings() {
-        return {
-          speechRate: parseFloat(localStorage.getItem('memorizador_rate')) || 0.95,
-          partnerVoiceEnabled: localStorage.getItem('memorizador_voice') !== 'false',
-          autoAdvanceEnabled: localStorage.getItem('memorizador_autoadvance') === 'true',
-          wakeLockEnabled: localStorage.getItem('memorizador_wakelock') !== 'false',
-          rehearsalMode: localStorage.getItem('memorizador_mode') || 'cena',
-          rehearsalTempo: localStorage.getItem('memorizador_tempo') || 'normal',
-          studyMethod: localStorage.getItem('memorizador_study_method') || 'oral',
-          hideRubrics: localStorage.getItem('memorizador_hide_rubrics') === 'true',
-          alwaysStartHidden: localStorage.getItem('memorizador_start_hidden') !== 'false',
-          customScript: localStorage.getItem('memorizador_custom_script') || null,
-          selectedActor: localStorage.getItem('memorizador_actor') || ''
+        const defaults = {
+          speechRate: 0.95,
+          partnerVoiceEnabled: true,
+          autoAdvanceEnabled: false,
+          wakeLockEnabled: true,
+          rehearsalMode: 'cena',
+          rehearsalTempo: 'normal',
+          studyMethod: 'oral',
+          hideRubrics: false,
+          alwaysStartHidden: true,
+          customScript: null,
+          selectedActor: ''
         };
+        try {
+          if (typeof localStorage === 'undefined') return defaults;
+          return {
+            speechRate: parseFloat(localStorage.getItem('memorizador_rate')) || 0.95,
+            partnerVoiceEnabled: localStorage.getItem('memorizador_voice') !== 'false',
+            autoAdvanceEnabled: localStorage.getItem('memorizador_autoadvance') === 'true',
+            wakeLockEnabled: localStorage.getItem('memorizador_wakelock') !== 'false',
+            rehearsalMode: localStorage.getItem('memorizador_mode') || 'cena',
+            rehearsalTempo: localStorage.getItem('memorizador_tempo') || 'normal',
+            studyMethod: localStorage.getItem('memorizador_study_method') || 'oral',
+            hideRubrics: localStorage.getItem('memorizador_hide_rubrics') === 'true',
+            alwaysStartHidden: localStorage.getItem('memorizador_start_hidden') !== 'false',
+            customScript: localStorage.getItem('memorizador_custom_script') || null,
+            selectedActor: localStorage.getItem('memorizador_actor') || ''
+          };
+        } catch (e) {
+          return defaults;
+        }
       },
 
       saveSettings(state) {
@@ -758,12 +805,14 @@
         const actor = StorageManager.getSelectedActor(pId) || characters[0] || '';
         const progress = StorageManager.loadProgress(actor, totalSpeeches, pId);
         let masteredCount = 0;
-        progress.forEach(lvl => {
-          if (lvl >= 3) masteredCount++;
+        speeches.forEach((s, idx) => {
+          if (s.who === actor && (progress[idx] || 0) >= 3) {
+            masteredCount++;
+          }
         });
 
         const actorSpeechCount = characterCounts[actor] || 0;
-        const masteryPercentage = actorSpeechCount > 0 ? Math.round((masteredCount / actorSpeechCount) * 100) : 0;
+        const masteryPercentage = actorSpeechCount > 0 ? Math.min(100, Math.round((masteredCount / actorSpeechCount) * 100)) : 0;
 
         return {
           id: play.id,

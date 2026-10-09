@@ -9,6 +9,11 @@
           s === 'texto' || s === 'texto teatral' || s === 'fim' ||
           s === 'prólogo' || s === 'prologo' ||
           s === 'epílogo' || s === 'epilogo' ||
+          s === 'escuro' || s === 'blackout' || s === 'pano' || s === 'cortina' ||
+          s === 'intervalo' || s === 'pausa' || s === 'silêncio' || s === 'silencio' ||
+          s === 'luzes' || s === 'luz' ||
+          s === 'aplausos' || s === 'cai o pano' ||
+          s === 'música' || s === 'musica' ||
           s === 'title' || s === 'author' || s === 'authors' || s === 'credit' ||
           s === 'source' || s === 'copyright' || s === 'contact' || s === 'date' ||
           s === 'draft date' ||
@@ -16,6 +21,19 @@
           s.startsWith('ato ') ||
           s.startsWith('cena ') ||
           s.startsWith('quadro ') ||
+          s.startsWith('fim ') ||
+          s.startsWith('fim da ') ||
+          s.startsWith('fim do ') ||
+          s.startsWith('fim de ') ||
+          s.startsWith('cai o pano') ||
+          s.startsWith('pano ') ||
+          s.startsWith('cortina ') ||
+          s.startsWith('música ') ||
+          s.startsWith('musica ') ||
+          s.startsWith('som de ') ||
+          s.startsWith('ruído de ') ||
+          s.startsWith('ruido de ') ||
+          s.startsWith('barulho de ') ||
           s.startsWith('int.') ||
           s.startsWith('ext.') ||
           s.startsWith('est.') ||
@@ -30,11 +48,13 @@
       },
 
       isDefaultPlay(rawText) {
+        if (!rawText) return false;
+        const norm = rawText.toUpperCase();
         if (typeof DefaultPlay !== 'undefined' && DefaultPlay.title) {
-          const norm = (rawText || '').toUpperCase();
-          return norm.includes(DefaultPlay.title.toUpperCase()) || norm.includes('WALTER PAIVA');
+          const titleUpper = DefaultPlay.title.toUpperCase();
+          if (norm.includes(titleUpper)) return true;
         }
-        return (rawText || '').includes('OS INVENTARIANTES') || (rawText || '').includes('Walter Paiva');
+        return norm.includes('OS INVENTARIANTES') || (norm.includes('INVENTARIANTES') && norm.includes('WALTER PAIVA'));
       },
 
       extractPlayTitle(rawText) {
@@ -231,7 +251,7 @@
           const isAllConsonants = /^[BCDFGHJKLMNPQRSTVWXYZÇ]+$/.test(canonicalUpper);
 
           if ((hasAbbrDot || isAllConsonants) && canonicalUpper.length >= 2 && canonicalUpper.length <= 5) {
-            const fuller = allCleanUppers.find(cand => cand.length > canonicalUpper.length && cand.startsWith(canonicalUpper));
+            const fuller = allCleanUppers.find(cand => cand.length > canonicalUpper.length + 1 && cand.startsWith(canonicalUpper));
             if (fuller) {
               list.forEach(raw => {
                 variantMap[raw] = fuller;

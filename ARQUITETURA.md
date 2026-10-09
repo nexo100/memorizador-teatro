@@ -170,7 +170,7 @@ O botão **`💡 Dica` (ou atalho `D`)** revela incrementalmente a próxima pala
 
 ## 🧪 Suíte de Testes Automatizados (`test.cjs`)
 
-Para garantir que nenhuma regressão ocorra em futuras iterações, o repositório conta com uma suíte abrangente de **37 testes automatizados** em Node.js:
+Para garantir que nenhuma regressão ocorra em futuras iterações, o repositório conta com uma suíte abrangente de **80 testes automatizados** em Node.js:
 
 Para rodar a suíte:
 ```bash
@@ -215,6 +215,55 @@ node test.cjs
 35. Backup seguro: inclusão de intenções/vozes e blindagem contra vazamento de chaves.
 36. Fila adaptativa de ensaio com reforço espaçado imediato.
 37. Suporte a roteiros no padrão da indústria Fountain (.fountain).
+38. Coerência de backup e restauração de áudio (STORE_NAME, gravação e recuperação).
+39. Restauração de configurações salvas (studyMethod, hideRubrics, alwaysStartHidden).
+40. Despacho único de eventos e eliminação de chamadas duplicadas.
+41. Prevenção de race condition em renderView (token incremental de render).
+42. Atalho de teclado I para alternância do índice.
+43. Segurança CSP e higienização limpa de dados na restauração de backup.
+44. Acessibilidade de modais: type="button", focus trap e retorno de foco.
+45. Sistema de ícones vetoriais SVG, erradicação total de emojis e alternância de temas.
+46. Arquitetura App Shell: Bottom Tab Bar, Mission Control de 4 slots e Bottom Sheets.
+47. Caderno de Ensaio: anotações livres, vinculação opcional a falas e central de voz.
+48. Leitura Dramatúrgica Contínua (ePub/PDF), Seletor de Alvo de Áudio, Marca-Texto e Onboarding.
+49. Catálogo Multi-Peças (PlayStore), integridade canônica e persistência.
+50. Criação dinâmica e coexistência de múltiplos roteiros no catálogo.
+51. Alternância atômica de peças e isolamento rigoroso de atores, progresso e notas.
+52. Cálculo de métricas dramáticas, beats e domínio por peça (PlayStore.getStats).
+53. Exclusão de peças com purga e blindagem imutável da peça canônica padrão.
+54. Ponto de acesso no Camarim e acionamento dos modais de biblioteca/importação.
+55. Biblioteca de Roteiros, estatísticas de domínio e alternância de peça com 1 toque.
+56. Fluxo de importação e leitura heurística de formatos teatrais livres.
+57. Prévia e personalização dramatúrgica de roteiros reais.
+58. Gancho arquitetural plugável para IA e resiliência offline.
+59. Curadoria de personagens (renomear, filtrar e persistir falas customizadas).
+60. ScriptParser: rubricas isoladas, transições cênicas e sluglines.
+61. Exclusão segura da peça ativa com fallback limpo para a peça padrão.
+62. AIService: BYOK Gemini, persistência de chave, modelos e ping de validação.
+63. ScriptParser.sanitizeRawText: remoção de ruídos OCR e desquebra de hifens.
+64. ScriptParser: agrupamento e canonicalização de variantes de personagens.
+65. ScriptParser.detectCueTrigger: detecção causal e badge de engate cênico.
+66. O Diretor Stanislavski: verbos de ação ativos, subtexto dramático e persistência.
+67. Curadoria de beats dramáticos, persistência e blindagem de chaves no backup.
+68. ScriptParser: preservação estrita de personagens distintos e unificação segura de abreviações.
+69. AIService.callGeminiRaw: extração e parsing resiliente de arrays JSON.
+70. AppController.importFullBackup: blindagem e preservação da chave de API Gemini no restore.
+71. Gamificação / Quiz Dramatúrgico com IA: offline fallback, mock IA e interface do Caderno.
+72. Curadoria de beats: remoção total preservada para cena única e adição de novo beat.
+73. Central do Diretor IA: Bottom Tab Bar, modal dedicado e renderização.
+74. Guia do Ensaio: botão de acesso no topo, modal ilustrado e seções conceituais.
+75. Faxina de Ajustes: remoção de botões ambíguos e textarea inútil.
+76. AudioEngine: normalização de estado isPlaying e UI no ciclo de vida de síntese de voz.
+77. PWA: Robustez do Service Worker e metadados de loja no manifest.
+78. ScriptParser: imunidade contra didascálias cênicas isoladas no elenco.
+79. StorageManager: resiliência defensiva e consistência de intenções.
+80. AppController: isolamento estrito da fila de retry entre atores.
+81. AudioEngine: chamada direta de síntese, suporte a ator não-indexado (-1) e resiliência a nulos.
+82. PlayStore.getStats: métrica de domínio isolada por personagem e teto de 100%.
+83. ScriptParser: imunidade a falsos personagens em marcações de fim de cena, música e pano.
+84. AppController: persistência de beat e isolamento de retry na troca de beat.
+85. PWA: registro adaptativo de Service Worker para inicialização pós-load.
+86. AudioEngine: ciclo de vida de liberação de Blob URL e tratamento de falhas.
 
 ---
 

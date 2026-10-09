@@ -52,6 +52,9 @@
       },
 
       stopAllAudio() {
+        if (this.isRecordingNow) {
+          this.stopCastRecording();
+        }
         this.isPlaying = false;
         this.updateAudioButtonsUI(false);
         if (this.autoAdvanceTimer) {
@@ -112,6 +115,11 @@
         } catch (err) {
           this.isPlaying = false;
           this.updateAudioButtonsUI(false);
+          if (this.activeAudioUrl) {
+            try { URL.revokeObjectURL(this.activeAudioUrl); } catch (e) {}
+            this.activeAudioUrl = null;
+          }
+          this.activeAudioPlayer = null;
           if (callbacks.onError) callbacks.onError(err);
           return false;
         }
@@ -136,7 +144,9 @@
       },
 
       findVoiceForActor(characterName, actorIndex) {
-        const savedName = StorageManager.getActorVoice(characterName);
+        const charName = (characterName || '').trim();
+        const safeIndex = Math.max(0, actorIndex || 0);
+        const savedName = StorageManager.getActorVoice(charName);
         if (savedName) {
           const match = this.availableVoices.find(v => v.name === savedName);
           if (match) return match;
@@ -145,27 +155,29 @@
         const list = ptVoices.length > 0 ? ptVoices : this.availableVoices;
         if (list.length === 0) return null;
 
-        const isFeminine = /a$|bárbara|barbara|nina|arkadina|julieta|mulher|mãe|ofélia|ofelia|gertrudes|senhora|rainha|donzela|menina/i.test(characterName.trim());
+        const isFeminine = /a$|bárbara|barbara|nina|arkadina|julieta|mulher|mãe|ofélia|ofelia|gertrudes|senhora|rainha|donzela|menina/i.test(charName);
         if (isFeminine) {
           const femaleVoices = list.filter(v => /female|feminina|luciana|francisca|maria|vitória|letícia|helena|camila|raquel|fernanda/i.test(v.name));
           if (femaleVoices.length > 0) {
-            return femaleVoices[actorIndex % femaleVoices.length];
+            return femaleVoices[safeIndex % femaleVoices.length];
           }
         }
-        const offset = actorIndex >= 0 ? actorIndex % list.length : 0;
+        const offset = safeIndex % list.length;
         return list[offset] || list[0];
       },
 
       getPitchForActor(characterName, actorIndex) {
-        const isFeminine = /a$|bárbara|barbara|nina|arkadina|julieta|mulher|mãe|ofélia|ofelia|gertrudes|senhora|rainha|donzela|menina/i.test(characterName.trim());
+        const charName = (characterName || '').trim();
+        const safeIndex = Math.max(0, actorIndex || 0);
+        const isFeminine = /a$|bárbara|barbara|nina|arkadina|julieta|mulher|mãe|ofélia|ofelia|gertrudes|senhora|rainha|donzela|menina/i.test(charName);
         if (isFeminine) {
           const femPitches = [1.15, 1.25, 1.08, 1.18];
-          return femPitches[actorIndex % femPitches.length];
+          return femPitches[safeIndex % femPitches.length];
         }
-        if (actorIndex === 0) return 0.88;
-        if (actorIndex === 1) return 1.08;
+        if (safeIndex === 0) return 0.88;
+        if (safeIndex === 1) return 1.08;
         const pitches = [0.90, 1.10, 0.85, 1.15, 1.0];
-        return pitches[actorIndex % pitches.length];
+        return pitches[safeIndex % pitches.length];
       },
 
       async playSpeechAudio(speechIndex, speech, characterName, actorIndex, baseRate, tempo, callbacks = {}) {
@@ -205,8 +217,6 @@
               if (callbacks.onEnd) callbacks.onEnd();
             };
             audio.onerror = () => {
-              this.isPlaying = false;
-              this.updateAudioButtonsUI(false);
               if (this.activeAudioUrl) {
                 try { URL.revokeObjectURL(this.activeAudioUrl); } catch (e) {}
                 this.activeAudioUrl = null;
@@ -216,8 +226,16 @@
             };
             const playPromise = audio.play();
             if (playPromise !== undefined) {
-              playPromise.catch(() => {
+              playPromise.catch((err) => {
+                this.isPlaying = false;
+                this.updateAudioButtonsUI(false);
+                if (this.activeAudioUrl) {
+                  try { URL.revokeObjectURL(this.activeAudioUrl); } catch (e) {}
+                  this.activeAudioUrl = null;
+                }
+                this.activeAudioPlayer = null;
                 if (callbacks.onStatus) callbacks.onStatus('Toque no botão para ouvir o áudio.');
+                if (callbacks.onError) callbacks.onError(err);
               });
             }
             if (callbacks.onStatus) callbacks.onStatus(`Tocando voz real do elenco (${effectiveTempo}x)...`);
@@ -229,14 +247,31 @@
       },
 
       speakSynthesized(text, characterName, actorIndex, rate, callbacks = {}) {
-        if (typeof window === 'undefined' || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+        const UtteranceClass = (typeof SpeechSynthesisUtterance !== 'undefined')
+          ? SpeechSynthesisUtterance
+          : (typeof window !== 'undefined' && window.SpeechSynthesisUtterance ? window.SpeechSynthesisUtterance : null);
+
+        if (!UtteranceClass || typeof window === 'undefined' || !window.speechSynthesis) {
+          this.isPlaying = false;
+          this.updateAudioButtonsUI(false);
           if (callbacks.onStatus) callbacks.onStatus('Voz indisponível neste navegador.');
+          if (callbacks.onError) callbacks.onError(new Error('speechSynthesis indisponível'));
           return;
         }
 
+        if (!text || !text.trim()) {
+          this.isPlaying = false;
+          this.updateAudioButtonsUI(false);
+          if (callbacks.onEnd) callbacks.onEnd();
+          return;
+        }
+
+        this.isPlaying = true;
+        this.updateAudioButtonsUI(true);
+
         try {
           this.loadVoices();
-          const utterance = new SpeechSynthesisUtterance(text);
+          const utterance = new UtteranceClass(text);
           utterance.lang = 'pt-BR';
 
           const chosenVoice = this.findVoiceForActor(characterName, actorIndex);
@@ -246,34 +281,72 @@
           utterance.rate = rate || 0.95;
 
           utterance.onstart = () => {
+            this.isPlaying = true;
+            this.updateAudioButtonsUI(true);
             if (callbacks.onStatus) callbacks.onStatus('');
+            if (callbacks.onStart) callbacks.onStart();
           };
           utterance.onend = () => {
+            this.isPlaying = false;
+            this.updateAudioButtonsUI(false);
             this.activeUtterance = null;
             if (callbacks.onEnd) callbacks.onEnd();
           };
           utterance.onerror = (e) => {
+            this.isPlaying = false;
+            this.updateAudioButtonsUI(false);
+            this.activeUtterance = null;
             if (e && e.error !== 'canceled' && e.error !== 'interrupted') {
               if (callbacks.onStatus) callbacks.onStatus('Erro no áudio (' + (e.error || 'falha') + ').');
             }
+            if (callbacks.onError) callbacks.onError(e);
           };
 
           this.activeUtterance = utterance;
           setTimeout(() => {
-            try { window.speechSynthesis.speak(utterance); } catch (e) {}
+            try {
+              window.speechSynthesis.speak(utterance);
+            } catch (e) {
+              this.isPlaying = false;
+              this.updateAudioButtonsUI(false);
+              if (callbacks.onError) callbacks.onError(e);
+            }
           }, 50);
         } catch (e) {
+          this.isPlaying = false;
+          this.updateAudioButtonsUI(false);
           if (callbacks.onStatus) callbacks.onStatus('Erro ao inicializar voz.');
+          if (callbacks.onError) callbacks.onError(e);
         }
       },
 
       async startCastRecording(speechIndex, callbacks = {}) {
         try {
+          if (this.isRecordingNow) {
+            this.stopCastRecording();
+          }
           this.stopAllAudio();
+          if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (typeof alert === 'function') {
+              alert('Gravação de áudio não suportada neste navegador.');
+            }
+            this.isRecordingNow = false;
+            if (callbacks.onError) callbacks.onError(new Error('getUserMedia indisponível'));
+            return;
+          }
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          this.activeStream = stream;
           this.audioChunks = [];
           const mimeType = this.getSupportedMimeType();
           const options = mimeType ? { mimeType } : {};
+          if (typeof MediaRecorder === 'undefined') {
+            if (typeof alert === 'function') {
+              alert('MediaRecorder não suportado neste navegador.');
+            }
+            this.isRecordingNow = false;
+            if (callbacks.onError) callbacks.onError(new Error('MediaRecorder indisponível'));
+            return;
+          }
           this.mediaRecorder = new MediaRecorder(stream, options);
           this.isRecordingNow = true;
 
@@ -281,10 +354,20 @@
             if (e.data.size > 0) this.audioChunks.push(e.data);
           };
 
+          this.mediaRecorder.onerror = (e) => {
+            this.stopCastRecording();
+            if (callbacks.onError) callbacks.onError(e);
+          };
+
           this.mediaRecorder.onstop = async () => {
             const finalMime = this.mediaRecorder.mimeType || mimeType || 'audio/webm';
             const blob = new Blob(this.audioChunks, { type: finalMime });
-            stream.getTracks().forEach(t => t.stop());
+            if (this.activeStream) {
+              try { this.activeStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+              this.activeStream = null;
+            } else {
+              try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+            }
             await StorageManager.saveCastAudio(speechIndex, blob);
             this.isRecordingNow = false;
             Utils.triggerHaptic('success');
@@ -303,7 +386,9 @@
             }
           }, 1000);
         } catch (err) {
-          alert('Não foi possível acessar o microfone. Verifique as permissões do navegador.');
+          if (typeof alert === 'function') {
+            alert('Não foi possível acessar o microfone. Verifique as permissões do navegador.');
+          }
           this.isRecordingNow = false;
           if (callbacks.onError) callbacks.onError(err);
         }
@@ -316,6 +401,10 @@
         }
         if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
           try { this.mediaRecorder.stop(); } catch(e) {}
+        }
+        if (this.activeStream) {
+          try { this.activeStream.getTracks().forEach(t => t.stop()); } catch(e) {}
+          this.activeStream = null;
         }
         this.isRecordingNow = false;
       }

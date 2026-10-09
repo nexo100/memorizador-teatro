@@ -115,7 +115,12 @@ const AIService = {
 
     let cleaned = (rawText || '').trim();
     // 1. Remove markdown code fences if present (```json ... ``` or ``` ...)
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    if (fenceMatch) {
+      cleaned = fenceMatch[1].trim();
+    } else {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    }
 
     try {
       return JSON.parse(cleaned);

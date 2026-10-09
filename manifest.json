@@ -1,13 +1,18 @@
 {
+  "id": "./index.html",
   "name": "Ensaio Teatral · Memorizador",
   "short_name": "Ensaio",
   "description": "Aplicativo para memorização de textos teatrais e ensaios dramáticos",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["entertainment", "education", "books"],
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0a0c10",
   "theme_color": "#0a0c10",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-192.png",

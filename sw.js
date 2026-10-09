@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ensaio-teatral-v16';
+const CACHE_NAME = 'ensaio-teatral-v17';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -43,6 +43,10 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Ignorar requisições não-GET e esquemas não-HTTP (ex: POST do Gemini, chrome-extension:)
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
